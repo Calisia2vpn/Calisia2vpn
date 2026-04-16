@@ -121,7 +121,9 @@ const DASHBOARD_STORAGE_SYNC_KEYS = [
     'financeAssets',
     'meditationStats',
     'fitnessExercises',
-    'nutritionTargets'
+    'nutritionTargets',
+    'socialUsers',
+    'socialMessages'
 ];
 
 function normalizeGregorianDate(dateLike) {
@@ -1112,7 +1114,9 @@ function readLifeSyncArrays() {
         goals: safeJsonParse(localStorage.getItem('goals') || '[]', []),
         assets: safeJsonParse(localStorage.getItem('financeAssets') || '[]', []),
         meditationStats: safeJsonParse(localStorage.getItem('meditationStats') || '{}', {}),
-        exercises: safeJsonParse(localStorage.getItem('fitnessExercises') || '[]', [])
+        exercises: safeJsonParse(localStorage.getItem('fitnessExercises') || '[]', []),
+        socialUsers: safeJsonParse(localStorage.getItem('socialUsers') || '[]', []),
+        socialMessages: safeJsonParse(localStorage.getItem('socialMessages') || '[]', [])
     };
 }
 
@@ -1251,6 +1255,94 @@ function renderLocalAiPhone(signals) {
     widget.classList.add('visible');
 }
 
+function renderSmartModules() {
+    const host = document.getElementById('smartModulesGrid');
+    if (!host) return;
+    const { tasks, habits, dietLog, goals, assets, exercises, socialMessages } = readLifeSyncArrays();
+    const signals = collectLocalAiSignals({ tasks, habits, dietLog, exercises });
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active');
+    const avgGoalProgress = activeGoals.length
+        ? activeGoals.reduce((sum, goal) => sum + Math.max(0, Math.min(100, Number(goal.progress) || 0)), 0) / activeGoals.length
+        : 0;
+    const openTasks = tasks.filter(task => !task.completed).length;
+    const weeklyExerciseMinutes = exercises
+        .filter(item => (new Date() - new Date(item.date || item.createdAt || 0)) <= (7 * 24 * 60 * 60 * 1000))
+        .reduce((sum, item) => sum + (Number(item.duration) || 0), 0);
+    const avgCalories7 = calculateLastDaysAverageCalories(dietLog, 7);
+    const financeTotal = assets.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0);
+    const lastMessage = socialMessages
+        .slice()
+        .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))[0];
+    const daysSinceSocialTouch = lastMessage?.timestamp
+        ? Math.floor((new Date() - new Date(lastMessage.timestamp)) / (24 * 60 * 60 * 1000))
+        : 99;
+
+    const modules = [
+        {
+            title: 'AI Weekly CEO',
+            score: Math.max(0, 100 - (openTasks * 2) - (signals.overdueTasks.length * 4)),
+            text: signals.overdueTasks.length > 0
+                ? `این هفته ${formatFa(signals.overdueTasks.length)} عقب‌ماندگی داری؛ ۳ کار کم‌اثر را حذف و روی ۱ خروجی اصلی تمرکز کن.`
+                : 'حجم کار کنترل شده است؛ هفته بعد یک هدف درآمدی/یادگیریِ سطح بالا تعریف کن.'
+        },
+        {
+            title: 'Conflict Auto-Resolver',
+            score: signals.scheduleConflicts.length === 0 ? 92 : Math.max(20, 80 - signals.scheduleConflicts.length * 18),
+            text: signals.scheduleConflicts.length
+                ? `امروز ${formatFa(signals.scheduleConflicts.length)} تداخل زمانی تشخیص داده شد؛ پیشنهاد: جابه‌جایی اولین تداخل به +۳۰ دقیقه.`
+                : 'تداخل زمانی بحرانی دیده نشد؛ برنامه روزانه هماهنگ است.'
+        },
+        {
+            title: 'Energy & Focus Forecast',
+            score: Math.max(10, Math.min(100, 55 + Math.round((weeklyExerciseMinutes / 30) * 5) - (signals.overdueTasks.length * 3))),
+            text: `برآورد انرژی فردا: ${weeklyExerciseMinutes >= 90 ? 'بالا' : 'متوسط'}. بلوک تمرکز عمیق را صبح ۹ تا ۱۱ بگذار.`
+        },
+        {
+            title: 'Habit Protocol Generator',
+            score: Math.max(0, 100 - (signals.missedHabits.length * 9)),
+            text: signals.missedHabits.length
+                ? `${formatFa(signals.missedHabits.length)} عادت جا مانده؛ نسخه ۲ دقیقه‌ای همان عادت را امروز انجام بده تا زنجیره حفظ شود.`
+                : 'پایداری عادت خوب است؛ از فردا شدت یکی از عادت‌ها را ۱۰٪ بالا ببر.'
+        },
+        {
+            title: 'Financial Drift Detector',
+            score: financeTotal > 0 ? 78 : 35,
+            text: financeTotal > 0
+                ? `دارایی تجمیعی: ${formatFa(Math.round(financeTotal))}. نسبت هدف فعال به بودجه را هفتگی بازبینی کن.`
+                : 'داده مالی کافی نیست؛ حداقل یک دارایی یا برنامه اقساط ثبت کن تا تحلیل دقیق شود.'
+        },
+        {
+            title: 'Goal Probability Engine',
+            score: Math.round(avgGoalProgress),
+            text: activeGoals.length
+                ? `میانگین احتمال تحقق اهداف فعال: ${formatFa(Math.round(avgGoalProgress))}٪. اهداف زیر ۴۰٪ را بازطراحی کن.`
+                : 'هدف فعالی ثبت نشده؛ یک هدف ۳۰ روزه با KPI واضح تعریف کن.'
+        },
+        {
+            title: 'Social Relationship Intelligence',
+            score: Math.max(5, 100 - (daysSinceSocialTouch * 8)),
+            text: daysSinceSocialTouch > 3
+                ? `${formatFa(daysSinceSocialTouch)} روز از آخرین تعامل گذشته؛ یک پیام پیگیری کوتاه ارسال کن.`
+                : 'ریتم ارتباط اجتماعی مناسب است؛ روی کیفیت مکالمه بعدی تمرکز کن.'
+        },
+        {
+            title: 'Recovery Guard',
+            score: Math.max(15, 100 - (signals.overdueTasks.length * 6) - (signals.todayProtein < signals.proteinGoal ? 18 : 0)),
+            text: signals.overdueTasks.length >= 3 || signals.todayProtein < signals.proteinGoal
+                ? 'ریسک فرسودگی بالا رفته؛ برنامه ۴۸ ساعته سبک با خواب، پیاده‌روی و کاهش بار تسک اجرا شود.'
+                : 'نشانه فرسودگی حاد دیده نشد؛ تعادل فعلی را حفظ کن.'
+        }
+    ];
+
+    host.innerHTML = modules.map(item => `
+        <article class="smart-module-card">
+            <h4>${item.title}</h4>
+            <div class="smart-score">Smart Score: ${formatFa(Math.round(item.score))} / ۱۰۰</div>
+            <p>${item.text}</p>
+        </article>
+    `).join('');
+}
+
 function renderLifeSyncInsights() {
     const container = document.getElementById('lifeSyncList');
     const meter = document.getElementById('lifeSyncMeter');
@@ -1312,6 +1404,7 @@ function renderLifeSyncInsights() {
     meter.textContent = `شاخص پیوستگی زندگی: ${formatFa(Math.round(score))} از ۱۰۰ — ${status}.`;
 
     renderLocalAiPhone(collectLocalAiSignals({ tasks, habits, dietLog, exercises }));
+    renderSmartModules();
 }
 
 window.addEventListener('load', () => {
