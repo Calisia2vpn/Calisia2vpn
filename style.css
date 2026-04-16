@@ -15,6 +15,9 @@
     --text: #2e241c;
     --text-muted: #77665a;
     --pattern-line: rgba(161, 117, 54, 0.14);
+    --focus-ring: rgba(33, 76, 99, 0.45);
+    --focus-ring-dark: rgba(213, 171, 88, 0.55);
+    --radius-md: 14px;
 }
 
 * {
@@ -28,6 +31,38 @@
 
 html {
     scroll-behavior: smooth;
+}
+
+html,
+body {
+    line-height: 1.65;
+}
+
+button,
+input,
+select,
+textarea {
+    min-height: 42px;
+    border-radius: var(--radius-md);
+}
+
+a,
+button,
+input,
+select,
+textarea,
+[role="button"] {
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+    outline: 0;
+    box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 body {
@@ -92,6 +127,15 @@ body[data-theme='dark'] {
                 radial-gradient(circle at bottom right, rgba(212, 164, 86, 0.12), transparent 20%),
                 linear-gradient(180deg, #1f242b 0%, #2d3745 48%, #1d2a3a 100%);
     color: #e8e2d8;
+}
+
+body[data-theme='dark'] a:focus-visible,
+body[data-theme='dark'] button:focus-visible,
+body[data-theme='dark'] input:focus-visible,
+body[data-theme='dark'] select:focus-visible,
+body[data-theme='dark'] textarea:focus-visible,
+body[data-theme='dark'] [role="button"]:focus-visible {
+    box-shadow: 0 0 0 3px var(--focus-ring-dark);
 }
 
 body[data-theme='dark'] .page-shell,
@@ -249,6 +293,21 @@ body[data-theme='dark'] .hero-panel-card {
     font-weight: 700;
     cursor: pointer;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
 }
 
 .hero-action:hover,

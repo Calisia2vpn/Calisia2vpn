@@ -87,6 +87,16 @@
         return new Date(gregorian.gy, gregorian.gm - 1, gregorian.gd);
     }
 
+    function getCurrentJalaaliYear() {
+        if (typeof jalaali === 'undefined') return null;
+        return jalaali.toJalaali(new Date()).jy;
+    }
+
+    function getAdhanStorageKey(year = getCurrentJalaaliYear()) {
+        if (!year) return 'adhanEvents1405';
+        return `adhanEvents${year}`;
+    }
+
     function getPersianWeekdayIndex(dateLike) {
         const date = stripTime(dateLike);
         if (!date) return 0;
@@ -204,7 +214,8 @@
             dayOfMonth: Number(habit?.dayOfMonth) || 1,
             history: Array.isArray(habit?.history) ? habit.history.map(normalizeGregorianDate).filter(Boolean) : [],
             createdAtG: createdAt,
-            createdAtJ: normalizeJalaaliDateKey(habit?.createdAtJ)
+            createdAtJ: normalizeJalaaliDateKey(habit?.createdAtJ),
+            syncToCalendar: Boolean(habit?.syncToCalendar)
         };
     }
 
@@ -758,6 +769,7 @@
         forEachDayInRange(rangeStart, rangeEnd, currentDate => {
             const dateKey = gregorianDateToJalaaliKey(currentDate);
             readHabits().forEach(habit => {
+                if (!habit.syncToCalendar) return;
                 if (String(habit.title || '').includes('نماز')) return;
                 if (!habitOccursOnDate(habit, currentDate)) return;
                 const meta = getHabitCategoryMeta(habit.category);
@@ -836,7 +848,9 @@
             events.push(...buildHabitEvents(start, end));
         }
         if (settings.includeAdhan) {
-            events.push(...filterEventsInRange(safeReadArray('adhanEvents1405'), start, end));
+            const adhanEvents = safeReadArray(getAdhanStorageKey());
+            const legacyEvents = safeReadArray('adhanEvents1405');
+            events.push(...filterEventsInRange(adhanEvents.length ? adhanEvents : legacyEvents, start, end));
         }
 
         return sortEvents(events);

@@ -846,22 +846,22 @@
 </head>
 <body>
 
-    <a href="index.html" class="back-link">🔙 بازگشت</a>
+    <a href="index.html" class="back-link">بازگشت</a>
 
     <div class="header-top">
-        <h1>🎯 ردیاب عادت‌های من</h1>
+        <h1>ردیاب عادت‌ها</h1>
         <div class="stats-quick">
             <div class="stat-item">
-                <span>🔥 Streak:</span>
-                <span id="globalStreak" style="font-weight: bold;">0</span>
+                <span>پیوستگی:</span>
+                <span id="globalStreak" style="font-weight: bold;">۰</span>
             </div>
             <div class="stat-item">
-                <span>⭐ امتیاز:</span>
-                <span id="globalXP" style="font-weight: bold;">0</span>
+                <span>امتیاز:</span>
+                <span id="globalXP" style="font-weight: bold;">۰</span>
             </div>
             <div class="stat-item">
-                <span>📊 عادت‌ها:</span>
-                <span id="globalCount" style="font-weight: bold;">0</span>
+                <span>عادت‌ها:</span>
+                <span id="globalCount" style="font-weight: bold;">۰</span>
             </div>
         </div>
     </div>
@@ -872,10 +872,10 @@
             <div class="today-section">
                 <div class="today-header">
                     <div>
-                        <h2>🌟 چک‌لیست امروز</h2>
+                        <h2>چک‌لیست امروز</h2>
                         <div class="today-date" id="todayDateDisplay"></div>
                     </div>
-                    <div class="today-progress" id="todayProgress">0/0</div>
+                    <div class="today-progress" id="todayProgress">۰/۰</div>
                 </div>
                 <div class="today-items" id="todayItems"></div>
             </div>
@@ -885,21 +885,13 @@
                 <div class="panel-content">
                     <div class="habit-form">
                         <input type="text" id="hTitle" class="input-box" placeholder="نام عادت جدید...">
-                        <select id="hIcon" class="input-box">
-                            <option value="📚">📚 کتاب</option>
-                            <option value="🏃">🏃 ورزش</option>
-                            <option value="💧">💧 آب</option>
-                            <option value="🧘">🧘 مدیتیشن</option>
-                            <option value="🍎">🍎 غذا</option>
-                            <option value="💪">💪 تمرین</option>
-                        </select>
                         <select id="hCategory" class="input-box">
-                            <option value="health">🏥 سلامتی</option>
-                            <option value="learning">🎓 آموزش</option>
-                            <option value="fitness">💪 فیتنس</option>
-                            <option value="personal">👤 شخصی</option>
+                            <option value="health">سلامتی</option>
+                            <option value="learning">آموزش</option>
+                            <option value="fitness">فیتنس</option>
+                            <option value="personal">شخصی</option>
                         </select>
-                        <button onclick="openAddModal()" class="btn-add">⚙️ جزئیات</button>
+                        <button onclick="openAddModal()" class="btn-add">جزئیات</button>
                     </div>
                 </div>
             </div>
@@ -907,7 +899,7 @@
             <!-- عادت‌ها -->
             <div class="panel">
                 <div class="panel-header">
-                    <h2 style="margin: 0; font-size: 18px;">📋 تمام عادت‌ها</h2>
+                    <h2 style="margin: 0; font-size: 18px;">تمام عادت‌ها</h2>
                 </div>
                 <div class="panel-content">
                     <div id="habitsGrid" class="habits-grid"></div>
@@ -918,30 +910,30 @@
         <!-- سایدبار -->
         <div class="sidebar">
             <div class="sidebar-card">
-                <h3>🏆 دستاورد</h3>
+                <h3>دستاورد</h3>
                 <div class="achievement-box">
-                    <div class="achievement-value" id="bestStreak">0</div>
-                    <div class="achievement-label">بهترین Streak</div>
+                    <div class="achievement-value" id="bestStreak">۰</div>
+                    <div class="achievement-label">بهترین پیوستگی</div>
                 </div>
                 <div class="achievement-box" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
-                    <div class="achievement-value" id="totalCompleted">0</div>
+                    <div class="achievement-value" id="totalCompleted">۰</div>
                     <div class="achievement-label">کل انجام‌شده‌ها</div>
                 </div>
             </div>
 
             <div class="sidebar-card">
-                <h3>� یادآوری امروز</h3>
+                <h3>یادآوری امروز</h3>
                 <div id="remindersBox" class="reminders-box"></div>
             </div>
 
             <div class="sidebar-card">
-                <h3>�🔍 فیلتر</h3>
+                <h3>فیلتر</h3>
                 <div class="filter-group">
                     <button class="filter-btn active" onclick="filterHabits('all', this)">همه</button>
-                    <button class="filter-btn" onclick="filterHabits('health', this)">🏥 سلامتی</button>
-                    <button class="filter-btn" onclick="filterHabits('learning', this)">🎓 آموزش</button>
-                    <button class="filter-btn" onclick="filterHabits('fitness', this)">💪 فیتنس</button>
-                    <button class="filter-btn" onclick="filterHabits('personal', this)">👤 شخصی</button>
+                    <button class="filter-btn" onclick="filterHabits('health', this)">سلامتی</button>
+                    <button class="filter-btn" onclick="filterHabits('learning', this)">آموزش</button>
+                    <button class="filter-btn" onclick="filterHabits('fitness', this)">فیتنس</button>
+                    <button class="filter-btn" onclick="filterHabits('personal', this)">شخصی</button>
                 </div>
             </div>
         </div>
@@ -949,9 +941,9 @@
 
     <!-- Add Habit Modal -->
     <div class="modal" id="addModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <span>📝 تنظیم جزئیات عادت</span>
+            <div class="modal-content">
+                <div class="modal-header">
+                <span>تنظیم جزئیات عادت</span>
                 <button class="close-modal" onclick="closeAddModal()">✕</button>
             </div>
 
@@ -965,15 +957,15 @@
                     <label style="display: block; margin-bottom: 12px; font-weight: bold;">نوع تکرار:</label>
                     <div class="recurring-option">
                         <input type="radio" name="recurring" value="daily" id="daily" checked>
-                        <label for="daily">روزانه ↩️</label>
+                        <label for="daily">روزانه</label>
                     </div>
                     <div class="recurring-option">
                         <input type="radio" name="recurring" value="weekly" id="weekly">
-                        <label for="weekly">هفتگی 📅</label>
+                        <label for="weekly">هفتگی</label>
                     </div>
                     <div class="recurring-option">
                         <input type="radio" name="recurring" value="monthly" id="monthly">
-                        <label for="monthly">ماهانه 📆</label>
+                        <label for="monthly">ماهانه</label>
                     </div>
                 </div>
 
@@ -995,7 +987,7 @@
                     <div class="recurring-days" id="monthlyDaysGrid"></div>
                 </div>
 
-                <button class="btn-modal" onclick="finalAddHabit()">ذخیره و شروع ✅</button>
+                <button class="btn-modal" onclick="finalAddHabit()">ذخیره و شروع</button>
             </div>
         </div>
     </div>
@@ -1004,11 +996,21 @@
     <script>
         const jMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
         const jDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
+        const categoryLabels = {
+            health: 'سلامتی',
+            learning: 'آموزش',
+            fitness: 'فیتنس',
+            personal: 'شخصی'
+        };
         let currentFilter = 'all';
         let newHabitData = {};
 
         function getDateStrG() { 
             return new Date().toLocaleDateString('en-CA');
+        }
+
+        function toPersianNumber(value) {
+            return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[digit]);
         }
 
         function getDateStrJ() {
@@ -1081,22 +1083,21 @@
 
         function finalAddHabit() {
             const title = document.getElementById('hTitle').value.trim();
-            const icon = document.getElementById('hIcon').value;
             const category = document.getElementById('hCategory').value;
             const time = document.getElementById('habitTime').value;
             const recurring = document.querySelector('input[name="recurring"]:checked').value;
             
-            if(!title) return alert('نام عادت رو وارد کن!');
+            if(!title) return alert('نام عادت را وارد کنید.');
 
             let recurringDays = [0];
             let dayOfMonth = null;
             if(recurring === 'weekly') {
                 recurringDays = Array.from(document.querySelectorAll('#weeklyDaysContainer .day-checkbox.selected')).map(el => parseInt(el.dataset.day));
-                if(recurringDays.length === 0) return alert('حداقل یک روز هفته را انتخاب کن!');
+                if(recurringDays.length === 0) return alert('حداقل یک روز هفته را انتخاب کنید.');
             }
             if(recurring === 'monthly') {
                 const selectedDay = document.querySelector('#monthlyDayContainer .day-checkbox.selected');
-                if (!selectedDay) return alert('یک روز ماه شمسی انتخاب کن!');
+                if (!selectedDay) return alert('یک روز ماه شمسی انتخاب کنید.');
                 dayOfMonth = parseInt(selectedDay.dataset.day);
             }
 
@@ -1104,7 +1105,6 @@
             const newHabit = {
                 id: Date.now(),
                 title: title,
-                icon: icon,
                 category: category,
                 time: time,
                 recurring: recurring,
@@ -1112,7 +1112,8 @@
                 dayOfMonth: dayOfMonth || todayJ.jd,
                 history: [],
                 createdAtG: getDateStrG(),
-                createdAtJ: getDateStrJ()
+                createdAtJ: getDateStrJ(),
+                syncToCalendar: false
             };
 
             const habits = JSON.parse(localStorage.getItem('myHabits')) || [];
@@ -1190,7 +1191,7 @@
 
         function formatDateFarsi(todayJ) {
             const dayName = jDays[new Date().getDay()];
-            return `${dayName}، ${todayJ.jd} ${jMonths[todayJ.jm - 1]} ${todayJ.jy}`;
+            return `${dayName}، ${toPersianNumber(todayJ.jd)} ${jMonths[todayJ.jm - 1]} ${toPersianNumber(todayJ.jy)}`;
         }
 
         function getLast30DaysData(habit) {
@@ -1201,7 +1202,7 @@
             for (let i = 29; i >= 0; i--) {
                 const date = new Date(today);
                 date.setDate(date.getDate() - i);
-                labels.push(date.getDate());
+                labels.push(toPersianNumber(date.getDate()));
                 const dateStr = date.toLocaleDateString('en-CA');
                 data.push(habit.history.includes(dateStr) ? 1 : 0);
             }
@@ -1265,14 +1266,14 @@
             if (!remindersBox) return;
 
             if (missedHabits.length === 0) {
-                remindersBox.innerHTML = '<div class="reminder-item" style="background: #e8f5e9; border-color: #2ecc71; color: #217a4b;">🎉 تمام عادت‌های امروز کامل شدند!</div>';
+                remindersBox.innerHTML = '<div class="reminder-item" style="background: #e8f5e9; border-color: #2ecc71; color: #217a4b;">تمام عادت‌های امروز کامل شدند.</div>';
                 return;
             }
 
             remindersBox.innerHTML = missedHabits.map(habit => `
                 <div class="reminder-item">
-                    🔔 ${habit.title}
-                    <span>⏰ ${habit.time} — ${habit.recurring === 'daily' ? 'روزانه' : habit.recurring === 'weekly' ? 'هفتگی' : 'ماهانه'}</span>
+                    ${habit.title}
+                    <span>${toPersianNumber(habit.time)} — ${habit.recurring === 'daily' ? 'روزانه' : habit.recurring === 'weekly' ? 'هفتگی' : 'ماهانه'}</span>
                 </div>
             `).join('');
 
@@ -1281,14 +1282,15 @@
 
         function showReminderNotification(count) {
             if (!('Notification' in window)) return;
+            const countLabel = toPersianNumber(count);
             if (Notification.permission === 'granted') {
-                new Notification('یادآوری عادات', { body: `${count} عادت امروز هنوز انجام نشده است.` });
+                new Notification('یادآوری عادات', { body: `${countLabel} عادت امروز هنوز انجام نشده است.` });
                 return;
             }
             if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        new Notification('یادآوری عادات', { body: `${count} عادت امروز هنوز انجام نشده است.` });
+                        new Notification('یادآوری عادات', { body: `${countLabel} عادت امروز هنوز انجام نشده است.` });
                     }
                 });
             }
@@ -1319,7 +1321,7 @@
                 const isDone = habit.history.includes(dateStr);
                 const isToday = d === todayJ.jd;
                 
-                html += `<div class="month-day ${isDone ? 'done' : ''} ${isToday ? 'today' : ''}" onclick="toggleDay('${dateStr}', ${habit.id})" title="${jDate}">${d}</div>`;
+                html += `<div class="month-day ${isDone ? 'done' : ''} ${isToday ? 'today' : ''}" onclick="toggleDay('${dateStr}', ${habit.id})" title="${toPersianNumber(jDate)}">${toPersianNumber(d)}</div>`;
             }
 
             html += '</div>';
@@ -1344,14 +1346,15 @@
             let globalStreak = 0, globalXP = 0, bestStreak = 0, totalCompleted = 0;
 
             if(filteredHabits.length === 0) {
-                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">هنوز عادتی اضافه نکردی. یکی اضافه کن! 🚀</div>';
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">هنوز عادتی اضافه نشده است. یک عادت جدید ثبت کنید.</div>';
                 todayDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">در حال حاضر عادت جدیدی وجود ندارد.</div>';
             } else {
                 filteredHabits.forEach(habit => {
                     const isDoneToday = habit.history.includes(dateStrG);
                     const streak = getCurrentStreak(habit.history);
-                    const completionRate = getCompletionRate(habit.history, habit.createdAt);
+                    const completionRate = getCompletionRate(habit.history, habit.createdAtG);
                     const shouldDo = shouldDoHabitToday(habit);
+                    const categoryLabel = categoryLabels[habit.category] || 'عمومی';
                     
                     if(shouldDo) {
                         todayCount++;
@@ -1368,61 +1371,59 @@
                         todayDiv.innerHTML += `
                             <div class="today-item ${isDoneToday ? 'completed' : ''}">
                                 <div class="today-item-name">
-                                    <div class="today-item-icon">${habit.icon}</div>
                                     <div class="today-item-info">
                                         <h3>${habit.title}</h3>
                                         <p>
-                                            <span class="time-display">${habit.time}</span>
-                                            ${streak > 0 ? `<span class="recurring-badge">🔥 ${streak}</span>` : ''}
+                                            <span class="time-display">${toPersianNumber(habit.time)}</span>
+                                            ${streak > 0 ? `<span class="recurring-badge">${toPersianNumber(streak)} روز پیوستگی</span>` : ''}
                                         </p>
                                     </div>
                                 </div>
                                 <button onclick="toggleDay('${dateStrG}', ${habit.id})" class="tick-btn ${isDoneToday ? 'done' : ''}">
-                                    ${isDoneToday ? '✅ انجام شد' : '⭕ تیک بزن'}
+                                    ${isDoneToday ? 'انجام شد' : 'ثبت انجام'}
                                 </button>
                             </div>
                         `;
                     }
 
                     // کارت
-                    const recurringLabel = habit.recurring === 'daily' ? '↩️ روزانه' : (habit.recurring === 'weekly' ? '📅 هفتگی' : `📆 ماهانه - روز ${habit.dayOfMonth}`);
+                    const recurringLabel = habit.recurring === 'daily' ? 'روزانه' : (habit.recurring === 'weekly' ? 'هفتگی' : `ماهانه - روز ${toPersianNumber(habit.dayOfMonth)}`);
                     
                     grid.innerHTML += `
                         <div class="habit-card ${habit.category}">
-                            <button class="habit-delete" onclick="deleteHabit(${habit.id})">🗑️</button>
+                            <button class="habit-delete" onclick="deleteHabit(${habit.id})">حذف</button>
                             <div class="habit-header">
-                                <div class="habit-icon">${habit.icon}</div>
                                 <div class="habit-title">
                                     <h3>${habit.title}</h3>
-                                    <p class="habit-category">${habit.category}</p>
+                                    <p class="habit-category">${categoryLabel}</p>
                                 </div>
                             </div>
                             <div class="habit-stats">
                                 <div class="stat">
-                                    <div class="stat-value" style="color: #f39c12; font-size: 22px;">🔥 ${streak}</div>
-                                    <div class="stat-label">Streak</div>
+                                    <div class="stat-value" style="color: #f39c12; font-size: 22px;">${toPersianNumber(streak)}</div>
+                                    <div class="stat-label">پیوستگی</div>
                                 </div>
                                 <div class="stat">
-                                    <div class="stat-value" style="color: #3498db; font-size: 22px;">${completionRate}%</div>
+                                    <div class="stat-value" style="color: #3498db; font-size: 22px;">${toPersianNumber(completionRate)}٪</div>
                                     <div class="stat-label">درصد</div>
                                 </div>
                                 <div class="stat">
-                                    <div class="stat-value" style="color: #2ecc71; font-size: 22px;">${habit.history.length}</div>
+                                    <div class="stat-value" style="color: #2ecc71; font-size: 22px;">${toPersianNumber(habit.history.length)}</div>
                                     <div class="stat-label">کل</div>
                                 </div>
                             </div>
                             <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
-                                <span class="time-display">${habit.time}</span>
+                                <span class="time-display">${toPersianNumber(habit.time)}</span>
                                 <span class="recurring-badge">${recurringLabel}</span>
                             </div>
                             <div class="habit-chart">
-                                <div class="chart-label">📊 آخرین ۳۰ روز</div>
+                                <div class="chart-label">آخرین ۳۰ روز</div>
                                 <div class="habit-chart-canvas">
                                     <canvas id="chart-${habit.id}"></canvas>
                                 </div>
                             </div>
                             <div class="habit-chart">
-                                <div class="chart-label">📊 ماه شمسی جاری (${jMonths[todayJ.jm - 1]} ${todayJ.jy})</div>
+                                <div class="chart-label">ماه شمسی جاری (${jMonths[todayJ.jm - 1]} ${toPersianNumber(todayJ.jy)})</div>
                                 ${renderMonthlyCalendar(habit)}
                             </div>
                         </div>
@@ -1436,27 +1437,19 @@
             }
 
             // آپدیت آمار
-            document.getElementById('todayProgress').innerText = `${todayDone}/${todayCount}`;
-            document.getElementById('globalStreak').innerText = globalStreak;
-            document.getElementById('globalXP').innerText = globalXP;
-            document.getElementById('globalCount').innerText = filteredHabits.length;
-            document.getElementById('bestStreak').innerText = bestStreak;
-            document.getElementById('totalCompleted').innerText = totalCompleted;
+            document.getElementById('todayProgress').innerText = `${toPersianNumber(todayDone)}/${toPersianNumber(todayCount)}`;
+            document.getElementById('globalStreak').innerText = toPersianNumber(globalStreak);
+            document.getElementById('globalXP').innerText = toPersianNumber(globalXP);
+            document.getElementById('globalCount').innerText = toPersianNumber(filteredHabits.length);
+            document.getElementById('bestStreak').innerText = toPersianNumber(bestStreak);
+            document.getElementById('totalCompleted').innerText = toPersianNumber(totalCompleted);
 
             updateReminders();
-
-            // آپدیت رادیو بتن‌ها
-            document.querySelectorAll('input[name="recurring"]').forEach(radio => {
-                radio.addEventListener('change', () => {
-                    const weeklyContainer = document.getElementById('weeklyDaysContainer');
-                    if(radio.value === 'weekly') {
-                        weeklyContainer.style.display = 'block';
-                    } else {
-                        weeklyContainer.style.display = 'none';
-                    }
-                });
-            });
         }
+
+        document.querySelectorAll('input[name="recurring"]').forEach(radio => {
+            radio.addEventListener('change', updateRecurrenceControls);
+        });
 
         window.onload = loadHabits;
     </script>
