@@ -1282,14 +1282,15 @@
 
         function showReminderNotification(count) {
             if (!('Notification' in window)) return;
+            const countLabel = toPersianNumber(count);
             if (Notification.permission === 'granted') {
-                new Notification('یادآوری عادات', { body: `${count} عادت امروز هنوز انجام نشده است.` });
+                new Notification('یادآوری عادات', { body: `${countLabel} عادت امروز هنوز انجام نشده است.` });
                 return;
             }
             if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
                     if (permission === 'granted') {
-                        new Notification('یادآوری عادات', { body: `${count} عادت امروز هنوز انجام نشده است.` });
+                        new Notification('یادآوری عادات', { body: `${countLabel} عادت امروز هنوز انجام نشده است.` });
                     }
                 });
             }
