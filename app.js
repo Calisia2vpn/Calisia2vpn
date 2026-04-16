@@ -112,6 +112,17 @@ const ADHAN_PRAYER_ENTRIES = [
     ['Sunset', 'غروب'],
     ['Maghrib', 'اذان مغرب']
 ];
+const DASHBOARD_STORAGE_SYNC_KEYS = [
+    'advancedTasks',
+    'myHabits',
+    'myDietLog',
+    'proEvents',
+    'goals',
+    'financeAssets',
+    'meditationStats',
+    'fitnessExercises',
+    'nutritionTargets'
+];
 
 function normalizeGregorianDate(dateLike) {
     if (dashboardData?.normalizeGregorianDate) {
@@ -1237,7 +1248,7 @@ window.addEventListener('load', () => {
 
 window.addEventListener('storage', event => {
     const adhanStoragePrefixMatch = String(event.key || '').startsWith(ADHAN_STORAGE_KEY_PREFIX);
-    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals', 'financeAssets', 'meditationStats', 'fitnessExercises', 'nutritionTargets'].includes(event.key) && !adhanStoragePrefixMatch) {
+    if (!DASHBOARD_STORAGE_SYNC_KEYS.includes(event.key) && !adhanStoragePrefixMatch) {
         return;
     }
     loadDashboardSnapshot();
