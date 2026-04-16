@@ -651,6 +651,13 @@
                 select.appendChild(option);
             });
 
+            // اگر از نسخه‌های قدیمی المان پکیج باقی مانده باشد، خنثی می‌کنیم تا خطا رخ ندهد.
+            const legacyPackageSelect = document.getElementById('packageSelect');
+            if (legacyPackageSelect) {
+                legacyPackageSelect.innerHTML = '<option value="">پکیج‌ها در این نسخه غیرفعال هستند</option>';
+                legacyPackageSelect.disabled = true;
+            }
+
         }
 
         function addDietLog() {
