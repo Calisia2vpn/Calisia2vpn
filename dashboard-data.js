@@ -214,7 +214,8 @@
             dayOfMonth: Number(habit?.dayOfMonth) || 1,
             history: Array.isArray(habit?.history) ? habit.history.map(normalizeGregorianDate).filter(Boolean) : [],
             createdAtG: createdAt,
-            createdAtJ: normalizeJalaaliDateKey(habit?.createdAtJ)
+            createdAtJ: normalizeJalaaliDateKey(habit?.createdAtJ),
+            syncToCalendar: Boolean(habit?.syncToCalendar)
         };
     }
 
@@ -768,6 +769,7 @@
         forEachDayInRange(rangeStart, rangeEnd, currentDate => {
             const dateKey = gregorianDateToJalaaliKey(currentDate);
             readHabits().forEach(habit => {
+                if (!habit.syncToCalendar) return;
                 if (String(habit.title || '').includes('نماز')) return;
                 if (!habitOccursOnDate(habit, currentDate)) return;
                 const meta = getHabitCategoryMeta(habit.category);
