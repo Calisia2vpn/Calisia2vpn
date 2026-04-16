@@ -485,6 +485,13 @@
                 </select>
                 <button class="btn btn-green" onclick="addDietLog()">ثبت در برنامه ✅</button>
             </div>
+            <div class="form-grid" style="margin-top:12px;">
+                <select id="packageSelect" class="input-box">
+                    <option value="">-- انتخاب غذای پکیجی --</option>
+                </select>
+                <input type="number" id="packageCount" class="input-box" placeholder="تعداد پکیج..." min="0.25" step="0.25">
+                <button class="btn btn-blue" onclick="addPackageLog()">ثبت پکیج 🍱</button>
+            </div>
         </div>
 
         <div id="mealsContainer"></div>
