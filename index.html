@@ -1,0 +1,1540 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>داشبورد روزانه | MyDashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="jalaali.min.js"></script>
+    <style>
+        :root {
+            --page-bg: #d9f6f2;
+            --page-bg-alt: #c8ece6;
+            --surface: rgba(255, 255, 255, 0.76);
+            --surface-strong: rgba(255, 255, 255, 0.9);
+            --surface-soft: rgba(255, 255, 255, 0.58);
+            --border: rgba(15, 23, 42, 0.08);
+            --text: #073b3a;
+            --text-muted: #2d6b69;
+            --accent: #139c8d;
+            --accent-strong: #0f766e;
+            --accent-soft: rgba(15, 118, 110, 0.14);
+            --accent-warm: #1f8f86;
+            --shadow: 0 28px 80px rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            font-family: 'Vazirmatn', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(31, 143, 134, 0.3), transparent 28%),
+                radial-gradient(circle at 10% 80%, rgba(20, 184, 166, 0.22), transparent 30%),
+                linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-alt) 100%);
+        }
+
+        body::before {
+            display: none;
+        }
+
+        body[data-theme='dark'] {
+            --surface: rgba(15, 23, 42, 0.66);
+            --surface-strong: rgba(15, 23, 42, 0.82);
+            --surface-soft: rgba(15, 23, 42, 0.5);
+            --border: rgba(148, 163, 184, 0.16);
+            --text: #ecf2f8;
+            --text-muted: #99a8b8;
+            background:
+                radial-gradient(circle at top right, rgba(196, 139, 50, 0.12), transparent 24%),
+                radial-gradient(circle at bottom left, rgba(15, 118, 110, 0.12), transparent 24%),
+                linear-gradient(180deg, #0f172a 0%, #111827 54%, #0b1220 100%);
+        }
+
+        h1, h2, h3, h4, h5, h6,
+        .nav-logo,
+        .list-title,
+        .card-title-main,
+        .section-title {
+            font-family: 'Vazirmatn', sans-serif !important;
+            letter-spacing: -0.04em;
+        }
+
+        .page-shell {
+            max-width: 1260px;
+            padding: 28px 20px 72px;
+        }
+
+        .nav-sidebar {
+            position: fixed;
+            right: -280px;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(18px);
+            border-left: 1px solid var(--border);
+            z-index: 1000;
+            transition: right 0.3s ease;
+            overflow-y: auto;
+            box-shadow: -16px 0 50px rgba(15, 23, 42, 0.12);
+        }
+
+        .nav-sidebar.open {
+            right: 0;
+        }
+
+        body[data-theme='dark'] .nav-sidebar {
+            background: rgba(15, 23, 42, 0.92);
+        }
+
+        .nav-header {
+            padding: 22px 18px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .nav-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text);
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .nav-close:hover {
+            opacity: 1;
+        }
+
+        .nav-modules {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 16px;
+        }
+
+        .nav-module {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 10px;
+            border-radius: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+        }
+
+        body[data-theme='dark'] .nav-module {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-module:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px rgba(15, 118, 110, 0.2);
+        }
+
+        .nav-module-icon {
+            font-size: 24px;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 16px 16px;
+        }
+
+        .nav-tools {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .nav-tool-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            background: var(--surface-soft);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        body[data-theme='dark'] .nav-tool-btn {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-tool-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .nav-toggle {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 54px;
+            height: 54px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            font-size: 22px;
+            z-index: 999;
+            box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .nav-toggle:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.28);
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .nav-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .dashboard-hero {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(360px, 470px);
+            gap: 24px;
+            margin-bottom: 28px;
+            padding: 30px;
+            border-radius: 34px;
+            background:
+                radial-gradient(circle at 90% 20%, rgba(37, 99, 235, 0.14), transparent 26%),
+                radial-gradient(circle at 15% 80%, rgba(16, 185, 129, 0.12), transparent 20%),
+                linear-gradient(180deg, rgba(255,255,255,0.86), rgba(247,250,252,0.78));
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 30px 90px rgba(15, 23, 42, 0.12);
+            overflow: hidden;
+        }
+
+        .dashboard-hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 10% 15%, rgba(196, 139, 50, 0.12), transparent 24%),
+                radial-gradient(circle at 90% 80%, rgba(15, 118, 110, 0.12), transparent 22%);
+            pointer-events: none;
+        }
+
+        .dashboard-hero::after {
+            display: none;
+        }
+
+        .hero-copy,
+        .hero-corner-card {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            border: 1px solid rgba(15, 118, 110, 0.12);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        body[data-theme='dark'] .hero-label {
+            color: #7dd3c7;
+            background: rgba(20, 184, 166, 0.12);
+        }
+
+        body[data-theme='dark'] .hero-corner-card {
+            background:
+                linear-gradient(180deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.74)),
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 34%);
+            border-color: rgba(148, 163, 184, 0.14);
+            color: #ecf2f8;
+            box-shadow: 0 28px 72px rgba(2, 8, 23, 0.3);
+        }
+
+        body[data-theme='dark'] .hero-corner-kicker,
+        body[data-theme='dark'] .hero-next-prayer-time,
+        body[data-theme='dark'] .hero-corner-bottom-label {
+            color: #7dd3c7;
+        }
+
+        body[data-theme='dark'] .hero-corner-value--clock {
+            color: #7cc3ff;
+        }
+
+        body[data-theme='dark'] .hero-corner-value--date,
+        body[data-theme='dark'] .hero-next-prayer-label,
+        body[data-theme='dark'] .hero-prayer-pill strong,
+        body[data-theme='dark'] .hero-shortcut {
+            color: #f8fafc;
+        }
+
+        body[data-theme='dark'] .hero-corner-sub,
+        body[data-theme='dark'] .hero-prayer-pill span,
+        body[data-theme='dark'] .hero-corner-bottom-copy p {
+            color: rgba(226, 232, 240, 0.72);
+        }
+
+        body[data-theme='dark'] .hero-corner-prayer,
+        body[data-theme='dark'] .hero-corner-bottom,
+        body[data-theme='dark'] .hero-prayer-pill,
+        body[data-theme='dark'] .hero-shortcut {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(148, 163, 184, 0.14);
+        }
+
+        body[data-theme='dark'] .hero-shortcut:hover {
+            background: rgba(20, 184, 166, 0.14);
+            border-color: rgba(125, 211, 199, 0.18);
+            color: #7dd3c7;
+            box-shadow: 0 14px 24px rgba(8, 145, 178, 0.16);
+        }
+
+        .hero-header h1 {
+            margin: 20px 0 12px;
+            font-size: clamp(38px, 5.8vw, 66px);
+            line-height: 0.98;
+            color: var(--text);
+            letter-spacing: -0.06em;
+        }
+
+        .hero-subtitle {
+            margin: 0;
+            max-width: 620px;
+            font-size: 18px;
+            line-height: 1.9;
+            color: var(--text-muted);
+        }
+
+        .hero-quote-strip {
+            margin: 24px 0 26px;
+            padding: 18px 20px;
+            border-radius: 24px;
+            background: rgba(255,255,255,0.52);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
+        }
+
+        .hero-quote-strip p {
+            margin: 0;
+        }
+
+        .hero-quote-label {
+            display: inline-flex;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--accent-strong);
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .hero-action,
+        .button-accent,
+        .button-outline,
+        .button-ghost {
+            border: 1px solid transparent;
+            border-radius: 18px;
+            padding: 14px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .hero-action:hover,
+        .button-accent:hover,
+        .button-outline:hover,
+        .button-ghost:hover {
+            transform: translateY(-2px);
+        }
+
+        .button-accent {
+            background: linear-gradient(135deg, #0f766e, #0891b2);
+            color: #fff;
+            box-shadow: 0 18px 36px rgba(8, 145, 178, 0.24);
+        }
+
+        .button-outline {
+            background: var(--surface-soft);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .button-ghost {
+            min-width: 52px;
+            padding-inline: 16px;
+            background: var(--surface-soft);
+            color: var(--text);
+            border-color: var(--border);
+        }
+
+        .dashboard-card,
+        .plan-list,
+        .section-frame {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .quote-author {
+            margin: 12px 0 0;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .hero-corner-card {
+            display: grid;
+            gap: 0;
+            border-radius: 30px;
+            overflow: hidden;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.88), rgba(247,250,252,0.84)),
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.08), transparent 34%);
+            color: var(--text);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 0 28px 70px rgba(15, 23, 42, 0.12);
+            backdrop-filter: blur(16px);
+        }
+
+        .hero-corner-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .hero-corner-cell,
+        .hero-corner-prayer {
+            padding: 20px 22px;
+            position: relative;
+        }
+
+        .hero-corner-cell {
+            min-height: 164px;
+        }
+
+        .hero-corner-cell--time {
+            border-left: 1px solid rgba(148, 163, 184, 0.14);
+        }
+
+        .hero-corner-kicker {
+            display: inline-flex;
+            margin-bottom: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--accent-strong);
+        }
+
+        .hero-corner-value {
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .hero-corner-value--clock {
+            font-size: clamp(38px, 5vw, 56px);
+            color: #2563eb;
+            font-family: 'Vazirmatn', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hero-corner-value--date {
+            font-size: 24px;
+            line-height: 1.7;
+            color: var(--text);
+        }
+
+        .hero-corner-sub {
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .hero-corner-prayer {
+            grid-column: 1 / -1;
+            border-top: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(255,255,255,0.54);
+        }
+
+        .hero-corner-prayer-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .hero-next-prayer-label {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .hero-next-prayer-time {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--accent-strong);
+            font-family: 'Vazirmatn', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hero-prayer-pills {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .hero-prayer-pill {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 68px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .hero-prayer-pill span {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .hero-prayer-pill strong {
+            font-size: 15px;
+            color: var(--text);
+            font-family: 'Vazirmatn', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .hero-prayer-pill--empty {
+            grid-column: 1 / -1;
+            justify-content: center;
+        }
+
+        .hero-corner-bottom {
+            display: grid;
+            gap: 14px;
+            padding: 22px;
+            border-top: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(255,255,255,0.42);
+        }
+
+        .hero-corner-bottom-label {
+            display: inline-flex;
+            margin-bottom: 6px;
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--accent-strong);
+        }
+
+        .hero-corner-bottom-copy p {
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .hero-shortcuts {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .hero-shortcut {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 56px;
+            padding: 14px 12px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            text-decoration: none;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 800;
+            transition: all 0.2s ease;
+        }
+
+        .hero-shortcut:hover {
+            background: rgba(15, 118, 110, 0.12);
+            border-color: rgba(15, 118, 110, 0.18);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 14px 24px rgba(15, 118, 110, 0.12);
+            color: var(--accent-strong);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-card {
+            border-radius: 28px;
+            padding: 24px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .card-header-accent {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .card-icon {
+            display: grid;
+            place-items: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--accent-soft);
+            font-size: 22px;
+        }
+
+        .card-title-main {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .section-title {
+            margin: 0 0 8px;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .section-subtitle {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text-muted);
+        }
+
+        .timer-shell {
+            margin-top: 20px;
+            padding: 22px;
+            border-radius: 24px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .timer-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .timer-display {
+            margin: 16px 0 0;
+            font-size: clamp(44px, 7vw, 68px);
+            text-align: center;
+            letter-spacing: 0.08em;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "liga" 1, "kern" 1, "calt" 1, "zero" 1, "lnum" 1;
+            font-family: 'Vazirmatn', monospace;
+            font-weight: 700;
+        }
+
+        .timer-presets {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .timer-preset {
+            min-height: 68px;
+            padding: 12px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .timer-preset:hover,
+        .timer-preset.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: transparent;
+        }
+
+        .timer-preset strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 20px;
+        }
+
+        .timer-actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .calendar-card-body {
+            margin-top: 18px;
+        }
+
+        .mini-calendar {
+            background: var(--surface-strong);
+            border-radius: 24px;
+            padding: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .calendar-weekdays,
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .calendar-weekdays div,
+        .calendar-day,
+        .calendar-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            border-radius: 14px;
+            font-size: 12px;
+        }
+
+        .calendar-weekdays div {
+            color: var(--text-muted);
+            font-weight: 800;
+        }
+
+        .calendar-day,
+        .calendar-empty {
+            background: var(--surface-soft);
+            border: 1px solid var(--border);
+        }
+
+        .calendar-day {
+            cursor: pointer;
+            color: var(--text);
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .calendar-day:hover {
+            background: rgba(15, 118, 110, 0.14);
+        }
+
+        .calendar-day.today {
+            background: var(--accent-strong);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .calendar-day.selected {
+            background: var(--accent-warm);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .calendar-day.has-items {
+            background: rgba(15, 118, 110, 0.08);
+            border-color: rgba(15, 118, 110, 0.18);
+        }
+
+        .calendar-day.has-items::after {
+            content: '';
+            position: absolute;
+            bottom: 7px;
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--accent-strong);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+        }
+
+        .calendar-day.has-items.selected::after,
+        .calendar-day.today::after {
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .calendar-events {
+            margin-top: 14px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .calendar-event {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .calendar-event span {
+            white-space: nowrap;
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+
+        .section-frame {
+            position: relative;
+            padding: 24px;
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .section-frame::before,
+        .plan-list::before {
+            display: none;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .goal-focus-wrap {
+            margin-top: 18px;
+            border-radius: 28px;
+            padding: 20px;
+            background: linear-gradient(145deg, rgba(11, 116, 108, 0.9), rgba(20, 154, 140, 0.88));
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 24px 44px rgba(7, 59, 58, 0.18);
+        }
+
+        .goal-focus-wrap .list-title {
+            color: #ecfffb;
+        }
+
+        .goal-focus-wrap .section-subtitle {
+            color: rgba(236, 255, 251, 0.8);
+        }
+
+        .goal-focus-list {
+            display: grid;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .goal-focus-item {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.22);
+            backdrop-filter: blur(8px);
+        }
+
+        .goal-focus-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #f2fffd;
+        }
+
+        .goal-focus-progress-track {
+            width: 100%;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.18);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.24);
+        }
+
+        .goal-focus-progress-fill {
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #d1fae5, #99f6e4);
+        }
+
+        .goal-focus-actions {
+            margin-top: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .goal-focus-status {
+            font-size: 12px;
+            color: rgba(236, 255, 251, 0.84);
+            font-weight: 600;
+        }
+
+        .goal-mini-btn {
+            border: 1px solid rgba(236,255,251,0.4);
+            background: rgba(236,255,251,0.16);
+            color: #ebfffb;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .goal-mini-btn:hover {
+            background: rgba(236,255,251,0.26);
+        }
+
+        .plan-list {
+            border-radius: 26px;
+            padding: 22px;
+        }
+
+        .list-title {
+            margin: 0 0 16px;
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .plan-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            min-height: 60px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: var(--text);
+            transition: transform 0.2s ease;
+        }
+
+        .plan-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .priority-badge {
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .priority-high { background: #d64545; }
+        .priority-medium { background: #d48717; }
+        .priority-low { background: #188d75; }
+
+        .event-time {
+            color: var(--text-muted);
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .dashboard-footer {
+            display: none;
+        }
+
+        .dashboard-hero {
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 470px);
+            align-items: start;
+            gap: 24px;
+        }
+
+        .dashboard-card--wide {
+            grid-column: span 2;
+        }
+
+        .time-tools-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        .time-tool-panel {
+            padding: 18px;
+            border-radius: 24px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+        }
+
+        .time-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .time-panel-title {
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--text);
+        }
+
+        .time-tool-display {
+            margin: 14px 0 0;
+            font-size: clamp(34px, 5vw, 56px);
+            font-family: 'Vazirmatn', monospace;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.08em;
+            color: var(--text);
+            text-align: center;
+        }
+
+        .time-tool-status {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .timer-shell {
+            margin-top: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+
+        .timer-presets {
+            margin-top: 16px;
+        }
+
+        .timer-actions {
+            margin-top: 14px;
+        }
+
+        .calendar-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .calendar-nav-btn {
+            min-width: 88px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: var(--surface-strong);
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-nav-btn:hover {
+            background: var(--accent);
+            border-color: transparent;
+            color: #fff;
+        }
+
+        .plan-item-main {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .plan-item-main > span:first-child {
+            font-weight: 700;
+            line-height: 1.7;
+        }
+
+        .plan-item-meta {
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .priority-overdue {
+            background: #b91c1c;
+        }
+
+        .module-hub-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 20px;
+        }
+
+        .module-hub-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 118px;
+            padding: 18px 14px;
+            border-radius: 22px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.84), rgba(241,245,249,0.66));
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            text-decoration: none;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 700;
+            transition: all 0.24s ease;
+            text-align: center;
+            box-shadow: 0 18px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .module-hub-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            background: linear-gradient(135deg, #0f766e, #2563eb);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 24px 40px rgba(37, 99, 235, 0.24);
+        }
+
+        .module-hub-icon {
+            display: grid;
+            place-items: center;
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: rgba(37, 99, 235, 0.08);
+            font-size: 22px;
+        }
+
+        @media (max-width: 1080px) {
+            .dashboard-hero,
+            .plans-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid,
+            .time-tools-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .module-hub-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .dashboard-card--wide {
+                grid-column: span 1;
+            }
+
+            .hero-prayer-pills {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 720px) {
+            .page-shell {
+                padding: 20px 16px 72px;
+            }
+
+            .dashboard-hero,
+            .dashboard-card,
+            .section-frame,
+            .plan-list {
+                padding: 20px;
+                border-radius: 24px;
+            }
+
+            .hero-meta,
+            .hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .hero-shortcuts,
+            .timer-presets,
+            .timer-actions {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .module-hub-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .hero-corner-top,
+            .hero-prayer-pills {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-corner-cell--time,
+            .hero-corner-prayer {
+                border-left: none;
+                border-top: 1px solid rgba(148, 163, 184, 0.14);
+            }
+
+            .hero-corner-cell--date {
+                border-top: none;
+            }
+
+            .calendar-toolbar {
+                flex-wrap: wrap;
+            }
+
+            .nav-toggle {
+                left: 16px;
+                bottom: 16px;
+            }
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <!-- Navigation Sidebar -->
+    <div class="nav-sidebar" id="navSidebar">
+        <div class="nav-header">
+            <div class="nav-logo">MyDashboard</div>
+            <button class="nav-close" onclick="toggleNav(false)">✕</button>
+        </div>
+
+        <div class="nav-modules">
+            <a href="tasks.html" class="nav-module" title="تسک‌ها">
+                <div class="nav-module-icon">📝</div>
+                <span>تسک‌ها</span>
+            </a>
+            <a href="habits.html" class="nav-module" title="عادت‌ها">
+                <div class="nav-module-icon">🌿</div>
+                <span>عادت‌ها</span>
+            </a>
+            <a href="meditation.html" class="nav-module" title="مدیتیشن">
+                <div class="nav-module-icon">🧘</div>
+                <span>مدیتیشن</span>
+            </a>
+            <a href="finance.html" class="nav-module" title="دارایی">
+                <div class="nav-module-icon">💰</div>
+                <span>دارایی</span>
+            </a>
+            <a href="diet.html" class="nav-module" title="تغذیه">
+                <div class="nav-module-icon">🍎</div>
+                <span>تغذیه</span>
+            </a>
+            <a href="fitness.html" class="nav-module" title="جسم‌پرداز">
+                <div class="nav-module-icon">💪</div>
+                <span>جسم‌پرداز</span>
+            </a>
+            <a href="calendar.html" class="nav-module" title="تقویم">
+                <div class="nav-module-icon">📅</div>
+                <span>تقویم</span>
+            </a>
+            <a href="goals.html" class="nav-module" title="اهداف">
+                <div class="nav-module-icon">🎯</div>
+                <span>اهداف</span>
+            </a>
+            <a href="notes.html" class="nav-module" title="یادداشت‌ها">
+                <div class="nav-module-icon">✍️</div>
+                <span>یادداشت‌ها</span>
+            </a>
+            <a href="social.html" class="nav-module" title="روابط">
+                <div class="nav-module-icon">👥</div>
+                <span>روابط</span>
+            </a>
+        </div>
+
+        <div class="nav-divider"></div>
+
+        <div class="nav-tools">
+            <button class="nav-tool-btn" onclick="toggleThemeNav()">
+                <span id="themeNavIcon">🌙</span>
+                <span id="themeNavLabel">تم تاریک</span>
+            </button>
+            <a href="index.html" class="nav-tool-btn">
+                <span>🏠</span>
+                <span>خانه داشبورد</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="nav-overlay" id="navOverlay" onclick="toggleNav(false)"></div>
+    <button class="nav-toggle" onclick="toggleNav(true)" title="منو">☰</button>
+
+    <div class="page-shell">
+        <header class="hero-header dashboard-hero">
+            <div class="hero-copy">
+                <span class="hero-label">داشبورد روزانه</span>
+                <h1>روزت را جمع‌وجور و بدون شلوغی جلو ببر</h1>
+                <p class="hero-subtitle">صفحه‌ی اول را جوری چیدم که هم چشم‌نوازتر باشد، هم اطلاعات مهم و لینک‌های اصلی در یک نقطه‌ی تمیز و زنده جمع شوند.</p>
+                <div class="hero-quote-strip">
+                    <span class="hero-quote-label">فکر امروز</span>
+                    <p id="dailyQuote">هر روز فرصتی تازه است تا وجود را به نظم بکشی.</p>
+                    <p class="quote-author" id="quoteAuthor">- حکیم ایرانی</p>
+                </div>
+                <div class="hero-actions">
+                    <button class="hero-action button-accent" type="button" onclick="scrollToTodayPlans()">برنامه‌ی امروز</button>
+                    <button class="hero-action button-outline" type="button" onclick="goToCalendarPage()">تقویم کامل</button>
+                    <button class="hero-action button-ghost" id="themeToggle" type="button" aria-label="تغییر تم">🌙</button>
+                </div>
+            </div>
+            <div class="hero-corner-card">
+                <div class="hero-corner-top">
+                    <div class="hero-corner-cell hero-corner-cell--time">
+                        <span class="hero-corner-kicker">وقت جاری</span>
+                        <div id="headerClock" class="hero-corner-value hero-corner-value--clock">00:00:00</div>
+                        <div id="headerDateSecondary" class="hero-corner-sub">در حال بارگذاری...</div>
+                    </div>
+                    <div class="hero-corner-cell hero-corner-cell--date">
+                        <span class="hero-corner-kicker">روز و تاریخ</span>
+                        <div id="headerDate" class="hero-corner-value hero-corner-value--date">در حال بارگذاری...</div>
+                        <div class="hero-corner-sub">تقویم امروز</div>
+                    </div>
+                    <div class="hero-corner-prayer">
+                        <div class="hero-corner-prayer-head">
+                            <div>
+                                <span class="hero-corner-kicker">اوقات شرعی</span>
+                                <div id="nextPrayerLabel" class="hero-next-prayer-label">نماز بعدی</div>
+                            </div>
+                            <strong id="nextPrayerTime" class="hero-next-prayer-time">--:--</strong>
+                        </div>
+                        <div class="hero-prayer-pills" id="prayerTimesList">
+                            <div class="hero-prayer-pill hero-prayer-pill--empty">
+                                <span>اوقات شرعی</span>
+                                <strong>در حال بارگذاری</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-corner-bottom">
+                    <div class="hero-corner-bottom-copy">
+                        <span class="hero-corner-bottom-label">لینک‌های کاربردی داخلی</span>
+                        <p>سه مسیر سریع برای چیزهایی که بیشتر از همه لازم می‌شوند.</p>
+                    </div>
+                    <div class="hero-shortcuts hero-shortcuts--corner">
+                        <a href="tasks.html" class="hero-shortcut">📝 تسک‌ها</a>
+                        <a href="habits.html" class="hero-shortcut">🌿 عادت‌ها</a>
+                        <a href="calendar.html" class="hero-shortcut">📅 تقویم</a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="dashboard-grid">
+                <article class="dashboard-card dashboard-card--wide">
+                    <div class="card-header-accent">
+                        <span class="card-icon">⏱️</span>
+                        <div class="card-title-main">ابزار زمان</div>
+                    </div>
+                    <p class="section-subtitle">هم تایمر تمرکز را داشته باش، هم استاپ‌واچ را کنار دستت.</p>
+                    <div class="time-tools-grid">
+                        <div class="time-tool-panel">
+                            <div class="time-panel-header">
+                                <div class="time-panel-title">تایمر تمرکز</div>
+                                <div class="time-tool-status" id="timerStatus">آماده</div>
+                            </div>
+                            <div class="timer-shell">
+                                <div class="timer-display time-tool-display" id="timerDisplay">۲۵:۰۰</div>
+                            </div>
+                            <div class="timer-presets">
+                                <button class="timer-preset" data-minutes="5" type="button"><strong>۵</strong><span>دقیقه</span></button>
+                                <button class="timer-preset" data-minutes="15" type="button"><strong>۱۵</strong><span>دقیقه</span></button>
+                                <button class="timer-preset active" data-minutes="25" type="button"><strong>۲۵</strong><span>دقیقه</span></button>
+                                <button class="timer-preset" data-minutes="50" type="button"><strong>۵۰</strong><span>دقیقه</span></button>
+                            </div>
+                            <div class="timer-actions">
+                                <button id="timerToggleBtn" class="button-accent" type="button">شروع</button>
+                                <button id="timerResetBtn" class="button-outline" type="button">بازنشانی</button>
+                            </div>
+                        </div>
+                        <div class="time-tool-panel">
+                            <div class="time-panel-header">
+                                <div class="time-panel-title">استاپ‌واچ</div>
+                                <div class="time-tool-status" id="stopwatchStatus">آماده</div>
+                            </div>
+                            <div class="time-tool-display" id="stopwatchDisplay">۰۰:۰۰:۰۰</div>
+                            <div class="timer-actions">
+                                <button id="stopwatchToggleBtn" class="button-accent" type="button">شروع</button>
+                                <button id="stopwatchResetBtn" class="button-outline" type="button">بازنشانی</button>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="dashboard-card">
+                    <div class="card-header-accent">
+                        <span class="card-icon">📅</span>
+                        <div class="card-title-main">تقویم</div>
+                    </div>
+                    <div class="calendar-toolbar">
+                        <button class="calendar-nav-btn" type="button" onclick="shiftMiniCalendarMonth(-1)">ماه قبل</button>
+                        <p class="section-subtitle" id="calendarMonthLabel">فروردین ۱۴۰۵</p>
+                        <button class="calendar-nav-btn" type="button" onclick="shiftMiniCalendarMonth(1)">ماه بعد</button>
+                    </div>
+                    <div class="calendar-card-body">
+                        <div class="mini-calendar" id="miniCalendar"></div>
+                        <div class="calendar-events"></div>
+                    </div>
+                    <button class="button-outline" type="button" onclick="goToCalendarPage()" style="width: 100%; margin-top: 16px;">تقویم کامل</button>
+                </article>
+
+            </div>
+
+            <section class="section-frame" id="todaySection">
+                <div class="section-title">امروز</div>
+                <p class="section-subtitle">فقط همان چیزهایی که الان برای تصمیم گرفتن لازم داری.</p>
+                <div class="plans-grid">
+                    <div class="plan-list">
+                        <div class="list-title">اولویت‌ها و عقب‌مانده‌ها</div>
+                        <div id="priorityTasksList"></div>
+                    </div>
+                    <div class="plan-list">
+                        <div class="list-title">رویدادهای امروز</div>
+                        <div id="todayProgramsList"></div>
+                    </div>
+                </div>
+                <div class="goal-focus-wrap">
+                    <div class="list-title">اهداف بزرگ من</div>
+                    <p class="section-subtitle">درصد پیشرفت را همین‌جا ثبت کن تا همیشه جلوی چشم باشد.</p>
+                    <div id="goalFocusList" class="goal-focus-list"></div>
+                </div>
+            </section>
+
+            <section class="section-frame" style="margin-top: 22px;">
+                <div class="section-title">همه ماژول‌ها</div>
+                <p class="section-subtitle">همه‌ی بخش‌ها یکجا جمع شده‌اند تا لازم نباشد دنبالش بگردی.</p>
+                <div class="module-hub-grid">
+                    <a href="tasks.html" class="module-hub-card"><div class="module-hub-icon">📝</div><span>تسک‌ها</span></a>
+                    <a href="habits.html" class="module-hub-card"><div class="module-hub-icon">🌿</div><span>عادت‌ها</span></a>
+                    <a href="calendar.html" class="module-hub-card"><div class="module-hub-icon">📅</div><span>تقویم</span></a>
+                    <a href="goals.html" class="module-hub-card"><div class="module-hub-icon">🎯</div><span>اهداف</span></a>
+                    <a href="notes.html" class="module-hub-card"><div class="module-hub-icon">✍️</div><span>یادداشت‌ها</span></a>
+                    <a href="meditation.html" class="module-hub-card"><div class="module-hub-icon">🧘</div><span>مدیتیشن</span></a>
+                    <a href="finance.html" class="module-hub-card"><div class="module-hub-icon">💰</div><span>دارایی</span></a>
+                    <a href="diet.html" class="module-hub-card"><div class="module-hub-icon">🍎</div><span>تغذیه</span></a>
+                    <a href="fitness.html" class="module-hub-card"><div class="module-hub-icon">💪</div><span>جسم‌پرداز</span></a>
+                    <a href="social.html" class="module-hub-card"><div class="module-hub-icon">👥</div><span>روابط</span></a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Navigation Functions
+        function toggleNav(open) {
+            const sidebar = document.getElementById('navSidebar');
+            const overlay = document.getElementById('navOverlay');
+            if (open) {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+            } else {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+        }
+
+        function toggleThemeNav() {
+            const current = document.body.getAttribute('data-theme');
+            setTheme(current === 'dark' ? 'light' : 'dark');
+            updateThemeNavLabel();
+        }
+
+        function updateThemeNavLabel() {
+            const theme = document.body.getAttribute('data-theme');
+            const icon = document.getElementById('themeNavIcon');
+            const label = document.getElementById('themeNavLabel');
+            if (theme === 'dark') {
+                icon.textContent = '☀️';
+                label.textContent = 'تم روشن';
+            } else {
+                icon.textContent = '🌙';
+                label.textContent = 'تم تاریک';
+            }
+        }
+
+        // Close nav when clicking a link
+        document.querySelectorAll('.nav-module').forEach(link => {
+            link.addEventListener('click', () => toggleNav(false));
+        });
+
+        // Load theme and init
+        const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+        updateThemeNavLabel();
+
+    </script>
+    <script src="dashboard-data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

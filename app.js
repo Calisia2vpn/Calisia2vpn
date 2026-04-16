@@ -1,0 +1,1141 @@
+const motivationQuotes = [
+    { quote: 'هر لحظه از امروز می‌تواند گامی خردمندانه به سوی فردای بهتر باشد.', author: 'حکمت ایرانی' },
+    { quote: 'سکوت صبحگاهی، بهترین فرصت برای شنیدن صدای وجود است.', author: 'یادآور سنت' },
+    { quote: 'تمرکز، هنر مرتب کردن دل مشغولی‌های ذهن است.', author: 'فیلسوف بومی' },
+    { quote: 'کار امروزت را با آرامش آغاز کن تا دستاوردت با حکمت همراه باشد.', author: 'اهل دل' },
+    { quote: 'هر روز تمرین یک انتخاب آگاهانه است.', author: 'پژوهشگر زندگی' }
+];
+
+const today = new Date();
+const dashboardData = window.DashboardData || null;
+
+const weekDates = Array.from({ length: 7 }).map((_, index) => {
+    const date = new Date();
+    date.setDate(today.getDate() - (6 - index));
+    return date.toLocaleDateString('en-CA');
+});
+
+const body = document.body;
+
+function setTheme(theme) {
+    body.setAttribute('data-theme', theme);
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+    if (typeof window.updateThemeNavLabel === 'function') {
+        window.updateThemeNavLabel();
+    }
+    localStorage.setItem('dashboardTheme', theme);
+}
+
+function toggleTheme() {
+    const current = body.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+function updateHeaderClock() {
+    const now = new Date();
+    const jDate = jalaali.toJalaali(now);
+    const monthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    const weekdayNames = ['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه','شنبه'];
+    const dayName = weekdayNames[now.getDay()];
+
+    document.getElementById('headerDate').textContent = `${dayName} ${formatFaPlain(jDate.jd)} ${monthNames[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
+    document.getElementById('headerClock').textContent = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const secondaryDate = document.getElementById('headerDateSecondary');
+    if (secondaryDate) {
+        const gregorianText = new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }).format(now);
+        secondaryDate.textContent = gregorianText;
+    }
+}
+
+function pickDailyQuote() {
+    const index = today.getDate() % motivationQuotes.length;
+    const quote = motivationQuotes[index];
+    document.getElementById('dailyQuote').textContent = quote.quote;
+    document.getElementById('quoteAuthor').textContent = `- ${quote.author}`;
+}
+
+function formatFa(value) {
+    // Format number as Persian with proper numeral shaping
+    return new Intl.NumberFormat('fa-IR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        useGrouping: true
+    }).format(value);
+}
+
+function formatFaPlain(value) {
+    return new Intl.NumberFormat('fa-IR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+        useGrouping: false
+    }).format(value);
+}
+
+function formatFaText(value) {
+    return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
+}
+
+function loadDashboardSnapshot() {
+    const calories = Number(localStorage.getItem('todayCalories')) || 1450;
+    const snapshotCalories = document.getElementById('snapshotCalories');
+    if (snapshotCalories) {
+        snapshotCalories.textContent = `${formatFa(calories)} کیلوکالری`;
+    }
+    const snapshotMood = document.getElementById('snapshotMood');
+    if (snapshotMood) {
+        snapshotMood.textContent = 'آرام و پرانرژی';
+    }
+}
+
+const TIMER_STORAGE_KEY = 'dashboardTimerState';
+const STOPWATCH_STORAGE_KEY = 'dashboardStopwatchState';
+const ADHAN_STORAGE_KEY = 'adhanEvents1405';
+const ADHAN_META_KEY = 'adhanEvents1405Meta';
+const ADHAN_CONFIG_VERSION = 3;
+const ADHAN_DEFAULTS = {
+    city: 'Tehran',
+    country: 'Iran',
+    method: 7,
+    jalaaliYear: 1405
+};
+const ADHAN_PRAYER_ENTRIES = [
+    ['Fajr', 'اذان صبح'],
+    ['Sunrise', 'طلوع آفتاب'],
+    ['Dhuhr', 'اذان ظهر'],
+    ['Sunset', 'غروب'],
+    ['Maghrib', 'اذان مغرب']
+];
+
+function normalizeGregorianDate(dateLike) {
+    if (dashboardData?.normalizeGregorianDate) {
+        return dashboardData.normalizeGregorianDate(dateLike);
+    }
+    if (!dateLike) return '';
+    const date = new Date(dateLike);
+    if (Number.isNaN(date.getTime())) {
+        return String(dateLike);
+    }
+    return date.toLocaleDateString('en-CA');
+}
+
+function normalizeJalaaliDateKey(value) {
+    if (dashboardData?.normalizeJalaaliDateKey) {
+        return dashboardData.normalizeJalaaliDateKey(value);
+    }
+    if (!value) return '';
+    const parts = String(value).split('-').map(Number);
+    if (parts.length !== 3 || parts.some(Number.isNaN)) return String(value);
+    return `${parts[0]}-${parts[1]}-${parts[2]}`;
+}
+
+function sanitizeTimingValue(value) {
+    if (dashboardData?.sanitizeTimingValue) {
+        return dashboardData.sanitizeTimingValue(value);
+    }
+    return String(value || '').split(' ')[0];
+}
+
+function getStoredAdhanEvents() {
+    const rawEvents = JSON.parse(localStorage.getItem(ADHAN_STORAGE_KEY) || '[]');
+    const sanitizedEvents = sanitizeStoredAdhanEvents(rawEvents);
+    if (sanitizedEvents.length !== rawEvents.length) {
+        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(sanitizedEvents));
+    }
+    return sanitizedEvents;
+}
+
+function sanitizeStoredAdhanEvents(events) {
+    if (!Array.isArray(events)) return [];
+    const allowedKeys = new Set(ADHAN_PRAYER_ENTRIES.map(([apiKey]) => apiKey.toLowerCase()));
+    return events.filter(event => allowedKeys.has(String(event?.id || '').split('-').pop()));
+}
+
+function getStoredUserEvents() {
+    if (dashboardData?.readUserEvents) {
+        return dashboardData.readUserEvents();
+    }
+    return JSON.parse(localStorage.getItem('proEvents') || '[]');
+}
+
+function getAllCalendarEvents(rangeStart, rangeEnd, options) {
+    if (dashboardData?.getAllCalendarEvents) {
+        return dashboardData.getAllCalendarEvents({ rangeStart, rangeEnd, ...(options || {}) });
+    }
+    return (options?.includeAdhan === false)
+        ? [...getStoredUserEvents()]
+        : [...getStoredUserEvents(), ...getStoredAdhanEvents()];
+}
+
+function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings) {
+    const jalaaliDate = jalaali.toJalaali(new Date(gregorianYear, gregorianMonth - 1, gregorianDay));
+    if (jalaaliDate.jy !== ADHAN_DEFAULTS.jalaaliYear) {
+        return [];
+    }
+
+    const dateKey = normalizeJalaaliDateKey(`${jalaaliDate.jy}-${jalaaliDate.jm}-${jalaaliDate.jd}`);
+    return ADHAN_PRAYER_ENTRIES.map(([apiKey, title], index) => ({
+        id: `adhan-${dateKey}-${apiKey.toLowerCase()}`,
+        source: 'adhan',
+        date: dateKey,
+        title,
+        hour: sanitizeTimingValue(timings[apiKey]).split(':')[0],
+        time: sanitizeTimingValue(timings[apiKey]),
+        color: index < 2 ? '#c08a2b' : '#1d7562',
+        category: 'اوقات شرعی',
+        priority: 'low',
+        desc: `اوقات شرعی ${title} برای ${ADHAN_DEFAULTS.city}`
+    }));
+}
+
+async function ensureAdhanData1405() {
+    const cachedRaw = getStoredAdhanEvents();
+    const existing = sanitizeStoredAdhanEvents(cachedRaw);
+    const meta = JSON.parse(localStorage.getItem(ADHAN_META_KEY) || 'null');
+    const cacheMatches = meta?.city === ADHAN_DEFAULTS.city
+        && meta?.year === ADHAN_DEFAULTS.jalaaliYear
+        && meta?.version === ADHAN_CONFIG_VERSION;
+
+    if (existing.length && cacheMatches) {
+        if (existing.length !== cachedRaw.length) {
+            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
+        }
+        return existing;
+    }
+
+    const monthRequests = [
+        [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], [2026, 8],
+        [2026, 9], [2026, 10], [2026, 11], [2026, 12], [2027, 1], [2027, 2], [2027, 3]
+    ];
+
+    try {
+        const responses = await Promise.all(monthRequests.map(async ([year, month]) => {
+            const url = `https://api.aladhan.com/v1/calendarByCity/${year}/${month}?city=${encodeURIComponent(ADHAN_DEFAULTS.city)}&country=${encodeURIComponent(ADHAN_DEFAULTS.country)}&method=${ADHAN_DEFAULTS.method}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Failed to fetch prayer times for ${year}-${month}`);
+            }
+            const payload = await response.json();
+            return payload.data || [];
+        }));
+
+        const adhanEvents = responses.flatMap(monthData => monthData.flatMap(item => {
+            const gregorian = item?.date?.gregorian;
+            if (!gregorian) return [];
+            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {});
+        }));
+
+        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(adhanEvents));
+        localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+            city: ADHAN_DEFAULTS.city,
+            country: ADHAN_DEFAULTS.country,
+            method: ADHAN_DEFAULTS.method,
+            year: ADHAN_DEFAULTS.jalaaliYear,
+            version: ADHAN_CONFIG_VERSION,
+            generatedAt: new Date().toISOString()
+        }));
+
+        return adhanEvents;
+    } catch (error) {
+        if (existing.length) {
+            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
+            localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+                city: ADHAN_DEFAULTS.city,
+                country: ADHAN_DEFAULTS.country,
+                method: ADHAN_DEFAULTS.method,
+                year: ADHAN_DEFAULTS.jalaaliYear,
+                version: ADHAN_CONFIG_VERSION,
+                generatedAt: meta?.generatedAt || new Date().toISOString()
+            }));
+            return existing;
+        }
+        throw error;
+    }
+}
+
+function getPriorityMeta(priority) {
+    if (priority === 'high') return { label: 'فوری', className: 'priority-high' };
+    if (priority === 'medium') return { label: 'مهم', className: 'priority-medium' };
+    return { label: 'عادی', className: 'priority-low' };
+}
+
+function getTaskLink(task) {
+    const category = task?.category || '';
+    if (category === 'health') return 'fitness.html';
+    if (category === 'study') return 'goals.html';
+    return 'tasks.html';
+}
+
+function getTaskPriorityRank(priority) {
+    if (priority === 'high') return 0;
+    if (priority === 'medium') return 1;
+    return 2;
+}
+
+function readDashboardTasks() {
+    return dashboardData?.readTasks
+        ? dashboardData.readTasks()
+        : JSON.parse(localStorage.getItem('advancedTasks') || '[]');
+}
+
+function formatFaJalaaliFromGregorian(dateLike) {
+    const date = new Date(dateLike);
+    if (Number.isNaN(date.getTime())) return '';
+    const jDate = jalaali.toJalaali(date);
+    const monthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    return `${formatFaPlain(jDate.jd)} ${monthNames[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
+}
+
+function getTodayTasks() {
+    if (dashboardData?.getTaskOccurrencesForDate) {
+        return dashboardData.getTaskOccurrencesForDate(new Date(), { includeCompleted: false })
+            .sort((a, b) => {
+                const priorityDiff = getTaskPriorityRank(a.task.priority) - getTaskPriorityRank(b.task.priority);
+                if (priorityDiff !== 0) return priorityDiff;
+                return new Date(a.task.createdAt || 0) - new Date(b.task.createdAt || 0);
+            })
+            .map(({ task }) => {
+                const priority = getPriorityMeta(task.priority);
+                return {
+                    id: task.id,
+                    title: task.title,
+                    badge: priority.label,
+                    className: priority.className,
+                    link: getTaskLink(task),
+                    meta: task.dueDate ? `موعد امروز` : 'بدون موعد'
+                };
+            });
+    }
+
+    const tasks = JSON.parse(localStorage.getItem('advancedTasks') || '[]');
+    const todayDate = normalizeGregorianDate(new Date());
+
+    return tasks
+        .filter(task => !task.completed)
+        .filter(task => !task.dueDate || normalizeGregorianDate(task.dueDate) === todayDate)
+        .sort((a, b) => {
+            const priorityDiff = getTaskPriorityRank(a.priority) - getTaskPriorityRank(b.priority);
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        })
+        .map(task => {
+            const priority = getPriorityMeta(task.priority);
+            return {
+                id: task.id,
+                title: task.title,
+                badge: priority.label,
+                className: priority.className,
+                link: getTaskLink(task),
+                meta: task.dueDate ? 'موعد امروز' : 'بدون موعد'
+            };
+        });
+}
+
+function getOverdueTasks() {
+    const todayKey = normalizeGregorianDate(new Date());
+
+    return readDashboardTasks()
+        .filter(task => !task.completed)
+        .filter(task => (task.recurring || 'none') === 'none')
+        .filter(task => task.dueDate && normalizeGregorianDate(task.dueDate) < todayKey)
+        .sort((a, b) => {
+            const dueCompare = normalizeGregorianDate(a.dueDate).localeCompare(normalizeGregorianDate(b.dueDate));
+            if (dueCompare !== 0) return dueCompare;
+            const priorityDiff = getTaskPriorityRank(a.priority) - getTaskPriorityRank(b.priority);
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+        })
+        .map(task => ({
+            id: task.id,
+            title: task.title,
+            badge: 'عقب‌مانده',
+            className: 'priority-overdue',
+            link: getTaskLink(task),
+            meta: task.dueDate ? `موعد ${formatFaJalaaliFromGregorian(task.dueDate)}` : 'موعد گذشته'
+        }));
+}
+
+function getDashboardTaskItems() {
+    const overdueTasks = getOverdueTasks();
+    const todayTasks = getTodayTasks().filter(item => !overdueTasks.some(overdue => overdue.id === item.id));
+    return [...overdueTasks, ...todayTasks].slice(0, 6);
+}
+
+function getTodayPrograms() {
+    const todayJ = jalaali.toJalaali(new Date());
+    const todayKey = normalizeJalaaliDateKey(`${todayJ.jy}-${todayJ.jm}-${todayJ.jd}`);
+    const events = getAllCalendarEvents(new Date(), new Date(), { includeAdhan: false });
+
+    return events
+        .filter(event => normalizeJalaaliDateKey(event.date) === todayKey)
+        .filter(event => !String(event.title || '').includes('نماز'))
+        .sort((a, b) => Number(a.hour ?? 99) - Number(b.hour ?? 99))
+        .slice(0, 5)
+        .map(event => ({
+            title: event.title,
+            time: event.time
+                ? formatFaText(event.time)
+                : event.hour !== undefined && event.hour !== '' ? `${formatFaText(String(event.hour).padStart(2, '0'))}:۰۰` : 'تمام روز',
+            link: event.link || 'calendar.html'
+        }));
+}
+
+function getTodayPrayerTimes() {
+    const todayJ = jalaali.toJalaali(new Date());
+    const todayKey = normalizeJalaaliDateKey(`${todayJ.jy}-${todayJ.jm}-${todayJ.jd}`);
+    return getStoredAdhanEvents()
+        .filter(event => normalizeJalaaliDateKey(event.date) === todayKey)
+        .sort((a, b) => sanitizeTimingValue(a.time).localeCompare(sanitizeTimingValue(b.time)))
+        .map(event => ({
+            title: event.title === 'طلوع آفتاب'
+                ? 'طلوع'
+                : event.title.replace('اذان ', ''),
+            rawTime: sanitizeTimingValue(event.time),
+            time: formatFaText(sanitizeTimingValue(event.time))
+        }));
+}
+
+function getCalendarDecoratedDates() {
+    const decoratedDates = new Map();
+
+    getStoredUserEvents().forEach(event => {
+        const key = normalizeJalaaliDateKey(event.date);
+        if (!key) return;
+        const current = decoratedDates.get(key) || { hasEvent: false, hasTask: false };
+        current.hasEvent = true;
+        decoratedDates.set(key, current);
+    });
+
+    readDashboardTasks()
+        .filter(task => !task.completed && task.dueDate)
+        .forEach(task => {
+            const dueDate = new Date(task.dueDate);
+            if (Number.isNaN(dueDate.getTime())) return;
+            const jDate = jalaali.toJalaali(dueDate);
+            const key = normalizeJalaaliDateKey(`${jDate.jy}-${jDate.jm}-${jDate.jd}`);
+            const current = decoratedDates.get(key) || { hasEvent: false, hasTask: false };
+            current.hasTask = true;
+            decoratedDates.set(key, current);
+        });
+
+    return decoratedDates;
+}
+
+function getTasksForJalaaliDateKey(dateKey) {
+    return readDashboardTasks()
+        .filter(task => !task.completed && task.dueDate)
+        .filter(task => {
+            const dueDate = new Date(task.dueDate);
+            if (Number.isNaN(dueDate.getTime())) return false;
+            const jDate = jalaali.toJalaali(dueDate);
+            return normalizeJalaaliDateKey(`${jDate.jy}-${jDate.jm}-${jDate.jd}`) === dateKey;
+        })
+        .sort((a, b) => {
+            const priorityDiff = getTaskPriorityRank(a.priority) - getTaskPriorityRank(b.priority);
+            if (priorityDiff !== 0) return priorityDiff;
+            return new Date(a.dueDate) - new Date(b.dueDate);
+        })
+        .map(task => ({
+            time: task.dueTime ? formatFaText(task.dueTime) : 'تسک',
+            title: task.title
+        }));
+}
+
+function renderTodayPrayerTimes() {
+    const container = document.getElementById('prayerTimesList');
+    const nextPrayerLabel = document.getElementById('nextPrayerLabel');
+    const nextPrayerTime = document.getElementById('nextPrayerTime');
+    if (!container) return;
+    const prayerTimes = getTodayPrayerTimes();
+    const now = new Date();
+    const currentMinutes = (now.getHours() * 60) + now.getMinutes();
+    const nextPrayer = prayerTimes.find(item => {
+        const [hour, minute] = item.rawTime.split(':').map(Number);
+        return ((hour || 0) * 60) + (minute || 0) >= currentMinutes;
+    }) || prayerTimes[0];
+
+    if (nextPrayerLabel) {
+        nextPrayerLabel.textContent = nextPrayer ? `بعدی: ${nextPrayer.title}` : 'نماز بعدی';
+    }
+
+    if (nextPrayerTime) {
+        nextPrayerTime.textContent = nextPrayer ? nextPrayer.time : '--:--';
+    }
+
+    container.innerHTML = prayerTimes.length
+        ? prayerTimes.map(item => `
+            <div class="hero-prayer-pill">
+                <span>${item.title}</span>
+                <strong>${item.time}</strong>
+            </div>
+        `).join('')
+        : `
+            <div class="hero-prayer-pill hero-prayer-pill--empty">
+                <span>اوقات شرعی</span>
+                <strong>در دسترس نیست</strong>
+            </div>
+        `;
+}
+
+function renderTodaySchedule() {
+    const priorityList = document.getElementById('priorityTasksList');
+    const programsList = document.getElementById('todayProgramsList');
+    if (!priorityList || !programsList) return;
+
+    const dashboardTasks = getDashboardTaskItems();
+    const todayPrograms = getTodayPrograms();
+
+    priorityList.innerHTML = dashboardTasks.length ? dashboardTasks.map(item => `
+        <a href="${item.link}" class="plan-item">
+            <div class="plan-item-main">
+                <span>${item.title}</span>
+                <span class="plan-item-meta">${item.meta || ''}</span>
+            </div>
+            <span class="priority-badge ${item.className}">${item.badge}</span>
+        </a>
+    `).join('') : `
+        <div class="plan-item">
+            <div class="plan-item-main">
+                <span>تسک فعالی برای امروز ثبت نشده است.</span>
+                <span class="plan-item-meta">چیزی عقب نمانده</span>
+            </div>
+            <span class="event-time">آزاد</span>
+        </div>
+    `;
+
+    programsList.innerHTML = todayPrograms.length ? todayPrograms.map(item => `
+        <a href="${item.link}" class="plan-item">
+            <div class="plan-item-main">
+                <span>${item.title}</span>
+                <span class="plan-item-meta">${item.time}</span>
+            </div>
+            <span class="event-time">امروز</span>
+        </a>
+    `).join('') : `
+        <div class="plan-item">
+            <div class="plan-item-main">
+                <span>برای امروز رویدادی در تقویم ثبت نشده است.</span>
+                <span class="plan-item-meta">نمازها در کارت جداگانه نمایش داده می‌شوند</span>
+            </div>
+            <span class="event-time">خالی</span>
+        </div>
+    `;
+}
+
+function readDashboardGoals() {
+    try {
+        const goals = JSON.parse(localStorage.getItem('goals') || '[]');
+        return Array.isArray(goals) ? goals : [];
+    } catch {
+        return [];
+    }
+}
+
+function saveDashboardGoals(goals) {
+    localStorage.setItem('goals', JSON.stringify(goals));
+}
+
+function updateGoalProgress(goalId, progress) {
+    const goals = readDashboardGoals();
+    const nextGoals = goals.map(goal => {
+        if (goal.id !== goalId) return goal;
+        return { ...goal, progress: Math.max(0, Math.min(100, Number(progress) || 0)) };
+    });
+    saveDashboardGoals(nextGoals);
+    renderGoalFocus();
+}
+
+function saveMonthlyGoalProgress(goalId) {
+    const goals = readDashboardGoals();
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const nextGoals = goals.map(goal => {
+        if (goal.id !== goalId) return goal;
+        const history = Array.isArray(goal.progressHistory) ? [...goal.progressHistory] : [];
+        const progressValue = Math.max(0, Math.min(100, Number(goal.progress) || 0));
+        const existingIndex = history.findIndex(item => item?.month === monthKey);
+        if (existingIndex >= 0) {
+            history[existingIndex] = { month: monthKey, progress: progressValue, updatedAt: new Date().toISOString() };
+        } else {
+            history.push({ month: monthKey, progress: progressValue, updatedAt: new Date().toISOString() });
+        }
+        return { ...goal, progressHistory: history };
+    });
+    saveDashboardGoals(nextGoals);
+    renderGoalFocus();
+}
+
+function renderGoalFocus() {
+    const container = document.getElementById('goalFocusList');
+    if (!container) return;
+    const activeGoals = readDashboardGoals()
+        .filter(goal => (goal.status || 'active') === 'active')
+        .sort((a, b) => Number(b.priority === 'high') - Number(a.priority === 'high'))
+        .slice(0, 4);
+
+    container.innerHTML = activeGoals.length ? activeGoals.map(goal => {
+        const progress = Math.max(0, Math.min(100, Number(goal.progress) || 0));
+        const latestMonthly = Array.isArray(goal.progressHistory) && goal.progressHistory.length
+            ? goal.progressHistory[goal.progressHistory.length - 1]
+            : null;
+        const monthlyText = goal.trackMonthly
+            ? (latestMonthly ? `پیشرفت ماهانه: ${formatFaText(String(latestMonthly.progress))}%` : 'پیشرفت ماهانه هنوز ثبت نشده')
+            : 'هدف در حال پیگیری';
+        return `
+            <div class="goal-focus-item">
+                <div class="goal-focus-head">
+                    <span>${goal.title}</span>
+                    <strong>${formatFaText(String(progress))}%</strong>
+                </div>
+                <div class="goal-focus-progress-track">
+                    <div class="goal-focus-progress-fill" style="width: ${progress}%;"></div>
+                </div>
+                <div class="goal-focus-actions">
+                    <span class="goal-focus-status">${monthlyText}</span>
+                    <button class="goal-mini-btn" type="button" onclick="window.location.href='goals.html'">مشاهده در اهداف</button>
+                </div>
+            </div>
+        `;
+    }).join('') : `
+        <div class="plan-item">
+            <div class="plan-item-main">
+                <span>هنوز هدف فعالی ثبت نشده است.</span>
+                <span class="plan-item-meta">از بخش اهداف شروع کن</span>
+            </div>
+            <span class="event-time">---</span>
+        </div>
+    `;
+}
+
+let dashboardTimerSeconds = 25 * 60;
+let dashboardTimerInterval = null;
+let dashboardTimerRunning = false;
+
+let dashboardStopwatchSeconds = 0;
+let dashboardStopwatchInterval = null;
+let dashboardStopwatchRunning = false;
+let dashboardStopwatchStartedAt = null;
+
+let miniCalendarState = null;
+
+function updateDashboardTimerDisplay() {
+    const display = document.getElementById('timerDisplay');
+    if (!display) return;
+    const minutes = Math.floor(dashboardTimerSeconds / 60).toString().padStart(2, '0');
+    const seconds = (dashboardTimerSeconds % 60).toString().padStart(2, '0');
+    display.textContent = `${formatFaText(minutes)}:${formatFaText(seconds)}`;
+}
+
+function updateDashboardTimerUi() {
+    const timerToggle = document.getElementById('timerToggleBtn');
+    const timerStatus = document.getElementById('timerStatus');
+
+    if (timerToggle) {
+        timerToggle.textContent = dashboardTimerRunning ? 'توقف' : dashboardTimerSeconds === 0 ? 'شروع دوباره' : 'شروع';
+    }
+
+    if (timerStatus) {
+        if (dashboardTimerRunning) {
+            timerStatus.textContent = 'در حال اجرا';
+        } else if (dashboardTimerSeconds === 0) {
+            timerStatus.textContent = 'پایان یافت';
+        } else {
+            timerStatus.textContent = 'آماده';
+        }
+    }
+}
+
+function syncTimerPresetState(minutes = null) {
+    let activeMinutes = minutes;
+    if (activeMinutes === null && dashboardTimerSeconds % 60 === 0) {
+        const derivedMinutes = dashboardTimerSeconds / 60;
+        if ([5, 15, 25, 50].includes(derivedMinutes)) {
+            activeMinutes = derivedMinutes;
+        }
+    }
+
+    document.querySelectorAll('.timer-preset').forEach(button => {
+        const isActive = activeMinutes !== null && Number(button.dataset.minutes) === activeMinutes;
+        button.classList.toggle('active', isActive);
+    });
+}
+
+function initializeDashboardTimerControls() {
+    document.querySelectorAll('.timer-preset').forEach(button => {
+        button.addEventListener('click', () => {
+            const minutes = Number(button.dataset.minutes);
+            if (Number.isFinite(minutes)) {
+                setDashboardTimer(minutes);
+            }
+        });
+    });
+
+    const timerToggle = document.getElementById('timerToggleBtn');
+    if (timerToggle) {
+        timerToggle.addEventListener('click', toggleDashboardTimer);
+    }
+
+    const timerReset = document.getElementById('timerResetBtn');
+    if (timerReset) {
+        timerReset.addEventListener('click', resetDashboardTimer);
+    }
+}
+
+function persistTimerState() {
+    localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify({
+        remainingSeconds: dashboardTimerSeconds,
+        running: dashboardTimerRunning,
+        endAt: dashboardTimerRunning ? Date.now() + (dashboardTimerSeconds * 1000) : null
+    }));
+}
+
+function restoreDashboardTimer() {
+    const raw = localStorage.getItem(TIMER_STORAGE_KEY);
+    if (!raw) {
+        setDashboardTimer(25);
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed.running && parsed.endAt) {
+            dashboardTimerSeconds = Math.max(0, Math.ceil((parsed.endAt - Date.now()) / 1000));
+            updateDashboardTimerDisplay();
+            if (dashboardTimerSeconds <= 0) {
+                handleTimerEnd();
+                return;
+            }
+            startDashboardTimer();
+        } else {
+            const remainingSeconds = Number(parsed.remainingSeconds);
+            dashboardTimerSeconds = Number.isFinite(remainingSeconds) ? remainingSeconds : 25 * 60;
+            updateDashboardTimerDisplay();
+            updateDashboardTimerUi();
+            syncTimerPresetState();
+        }
+    } catch {
+        setDashboardTimer(25);
+    }
+}
+
+function setDashboardTimer(minutes) {
+    stopDashboardTimer();
+    dashboardTimerSeconds = minutes * 60;
+    updateDashboardTimerDisplay();
+    updateDashboardTimerUi();
+    syncTimerPresetState(minutes);
+    persistTimerState();
+}
+
+function handleTimerEnd() {
+    stopDashboardTimer();
+    dashboardTimerSeconds = 0;
+    updateDashboardTimerDisplay();
+    updateDashboardTimerUi();
+    syncTimerPresetState();
+    persistTimerState();
+    const audio = new Audio('https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg');
+    audio.play().catch(() => {});
+}
+
+function startDashboardTimer() {
+    if (dashboardTimerInterval || dashboardTimerSeconds <= 0) return;
+    dashboardTimerRunning = true;
+    updateDashboardTimerUi();
+    persistTimerState();
+    dashboardTimerInterval = setInterval(() => {
+        if (dashboardTimerSeconds <= 0) {
+            handleTimerEnd();
+            return;
+        }
+        dashboardTimerSeconds -= 1;
+        updateDashboardTimerDisplay();
+        persistTimerState();
+    }, 1000);
+}
+
+function stopDashboardTimer() {
+    clearInterval(dashboardTimerInterval);
+    dashboardTimerInterval = null;
+    dashboardTimerRunning = false;
+    updateDashboardTimerUi();
+    persistTimerState();
+}
+
+function toggleDashboardTimer() {
+    if (dashboardTimerRunning) {
+        stopDashboardTimer();
+    } else {
+        updateDashboardTimerDisplay();
+        startDashboardTimer();
+    }
+}
+
+function resetDashboardTimer() {
+    stopDashboardTimer();
+    setDashboardTimer(25);
+}
+
+function formatStopwatchValue(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${formatFaText(hours)}:${formatFaText(minutes)}:${formatFaText(seconds)}`;
+}
+
+function updateDashboardStopwatchDisplay() {
+    const display = document.getElementById('stopwatchDisplay');
+    if (display) {
+        display.textContent = formatStopwatchValue(dashboardStopwatchSeconds);
+    }
+}
+
+function updateDashboardStopwatchUi() {
+    const toggle = document.getElementById('stopwatchToggleBtn');
+    const status = document.getElementById('stopwatchStatus');
+
+    if (toggle) {
+        toggle.textContent = dashboardStopwatchRunning ? 'توقف' : dashboardStopwatchSeconds > 0 ? 'ادامه' : 'شروع';
+    }
+
+    if (status) {
+        status.textContent = dashboardStopwatchRunning ? 'در حال شمارش' : dashboardStopwatchSeconds > 0 ? 'متوقف شده' : 'آماده';
+    }
+}
+
+function persistDashboardStopwatch() {
+    localStorage.setItem(STOPWATCH_STORAGE_KEY, JSON.stringify({
+        elapsedSeconds: dashboardStopwatchSeconds,
+        running: dashboardStopwatchRunning,
+        startedAt: dashboardStopwatchRunning ? dashboardStopwatchStartedAt : null
+    }));
+}
+
+function restoreDashboardStopwatch() {
+    const raw = localStorage.getItem(STOPWATCH_STORAGE_KEY);
+    if (!raw) {
+        updateDashboardStopwatchDisplay();
+        updateDashboardStopwatchUi();
+        return;
+    }
+
+    try {
+        const parsed = JSON.parse(raw);
+        dashboardStopwatchSeconds = Number.isFinite(Number(parsed.elapsedSeconds)) ? Number(parsed.elapsedSeconds) : 0;
+        if (parsed.running && parsed.startedAt) {
+            dashboardStopwatchStartedAt = Number(parsed.startedAt);
+            startDashboardStopwatch();
+        } else {
+            dashboardStopwatchRunning = false;
+            dashboardStopwatchStartedAt = null;
+            updateDashboardStopwatchDisplay();
+            updateDashboardStopwatchUi();
+        }
+    } catch {
+        resetDashboardStopwatch();
+    }
+}
+
+function startDashboardStopwatch() {
+    if (dashboardStopwatchInterval) return;
+    dashboardStopwatchRunning = true;
+    dashboardStopwatchStartedAt = dashboardStopwatchStartedAt || (Date.now() - (dashboardStopwatchSeconds * 1000));
+    updateDashboardStopwatchUi();
+    updateDashboardStopwatchDisplay();
+    persistDashboardStopwatch();
+
+    dashboardStopwatchInterval = setInterval(() => {
+        dashboardStopwatchSeconds = Math.floor((Date.now() - dashboardStopwatchStartedAt) / 1000);
+        updateDashboardStopwatchDisplay();
+        persistDashboardStopwatch();
+    }, 1000);
+}
+
+function stopDashboardStopwatch() {
+    if (dashboardStopwatchStartedAt) {
+        dashboardStopwatchSeconds = Math.floor((Date.now() - dashboardStopwatchStartedAt) / 1000);
+    }
+    clearInterval(dashboardStopwatchInterval);
+    dashboardStopwatchInterval = null;
+    dashboardStopwatchRunning = false;
+    dashboardStopwatchStartedAt = null;
+    updateDashboardStopwatchDisplay();
+    updateDashboardStopwatchUi();
+    persistDashboardStopwatch();
+}
+
+function toggleDashboardStopwatch() {
+    if (dashboardStopwatchRunning) {
+        stopDashboardStopwatch();
+    } else {
+        startDashboardStopwatch();
+    }
+}
+
+function resetDashboardStopwatch() {
+    clearInterval(dashboardStopwatchInterval);
+    dashboardStopwatchInterval = null;
+    dashboardStopwatchRunning = false;
+    dashboardStopwatchStartedAt = null;
+    dashboardStopwatchSeconds = 0;
+    updateDashboardStopwatchDisplay();
+    updateDashboardStopwatchUi();
+    persistDashboardStopwatch();
+}
+
+function initializeDashboardStopwatchControls() {
+    const toggle = document.getElementById('stopwatchToggleBtn');
+    if (toggle) {
+        toggle.addEventListener('click', toggleDashboardStopwatch);
+    }
+
+    const reset = document.getElementById('stopwatchResetBtn');
+    if (reset) {
+        reset.addEventListener('click', resetDashboardStopwatch);
+    }
+}
+
+function ensureMiniCalendarState() {
+    if (!miniCalendarState) {
+        const todayJ = jalaali.toJalaali(new Date());
+        miniCalendarState = { year: todayJ.jy, month: todayJ.jm };
+        window.selectedCalendarDay = todayJ.jd;
+    }
+}
+
+function renderMiniCalendar() {
+    const calendarLabel = document.getElementById('calendarMonthLabel');
+    const calendarContainer = document.getElementById('miniCalendar');
+    if (!calendarLabel || !calendarContainer) return;
+
+    ensureMiniCalendarState();
+    const { year, month } = miniCalendarState;
+    const todayJ = jalaali.toJalaali(new Date());
+    const months = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    const weekDays = ['ش','ی','د','س','چ','پ','ج'];
+
+    calendarLabel.textContent = `${months[month - 1]} ${formatFaPlain(year)}`;
+
+    const firstDay = jalaali.toGregorian(year, month, 1);
+    const firstDate = new Date(firstDay.gy, firstDay.gm - 1, firstDay.gd);
+    const firstDayIndex = (firstDate.getDay() + 1) % 7;
+    const daysInMonth = jalaali.jalaaliMonthLength(year, month);
+    const fallbackSelectedDay = year === todayJ.jy && month === todayJ.jm ? todayJ.jd : 1;
+    const selectedDay = Math.min(window.selectedCalendarDay || fallbackSelectedDay, daysInMonth);
+    window.selectedCalendarDay = selectedDay;
+    const decoratedDates = getCalendarDecoratedDates();
+
+    let html = '<div class="calendar-weekdays">';
+    weekDays.forEach(day => html += `<div>${day}</div>`);
+    html += '</div><div class="calendar-days">';
+
+    for (let index = 0; index < firstDayIndex; index += 1) {
+        html += '<div class="calendar-empty"></div>';
+    }
+
+    for (let day = 1; day <= daysInMonth; day += 1) {
+        const isToday = day === todayJ.jd && month === todayJ.jm && year === todayJ.jy;
+        const isSelected = day === selectedDay;
+        const dateKey = normalizeJalaaliDateKey(`${year}-${month}-${day}`);
+        const hasItems = decoratedDates.has(dateKey);
+        html += `<button class="calendar-day${isToday ? ' today' : ''}${isSelected ? ' selected' : ''}${hasItems ? ' has-items' : ''}" type="button" onclick="selectCalendarDay(${day})">${formatFaPlain(day)}</button>`;
+    }
+
+    html += '</div>';
+    calendarContainer.innerHTML = html;
+    renderCalendarEvents(selectedDay);
+}
+
+function shiftMiniCalendarMonth(offset) {
+    ensureMiniCalendarState();
+
+    let nextYear = miniCalendarState.year;
+    let nextMonth = miniCalendarState.month + offset;
+
+    if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear += 1;
+    } else if (nextMonth < 1) {
+        nextMonth = 12;
+        nextYear -= 1;
+    }
+
+    miniCalendarState = { year: nextYear, month: nextMonth };
+    const daysInMonth = jalaali.jalaaliMonthLength(nextYear, nextMonth);
+    window.selectedCalendarDay = Math.min(window.selectedCalendarDay || 1, daysInMonth);
+    renderMiniCalendar();
+}
+
+function selectCalendarDay(day) {
+    window.selectedCalendarDay = day;
+    renderMiniCalendar();
+}
+
+function renderCalendarEvents(day) {
+    const eventsContainer = document.querySelector('.calendar-events');
+    if (!eventsContainer) return;
+    const dayPrograms = getProgramsForDay(day);
+    eventsContainer.innerHTML = dayPrograms.length
+        ? dayPrograms.map(program => `<div class="calendar-event"><span>${program.time || 'تمام روز'}</span> ${program.title}</div>`).join('')
+        : '<div class="calendar-event"><span>بدون رویداد</span> برای این روز برنامه‌ای ثبت نشده است</div>';
+}
+
+function getProgramsForDay(day) {
+    ensureMiniCalendarState();
+    const { year, month } = miniCalendarState;
+    const now = new Date();
+    const targetKey = normalizeJalaaliDateKey(`${year}-${month}-${day}`);
+    const eventPrograms = getAllCalendarEvents(now, new Date(now.getFullYear(), now.getMonth() + 2, now.getDate()), { includeAdhan: false })
+        .filter(event => normalizeJalaaliDateKey(event.date) === targetKey)
+        .sort((a, b) => sanitizeTimingValue(a.time || `${a.hour ?? 99}:00`).localeCompare(sanitizeTimingValue(b.time || `${b.hour ?? 99}:00`)))
+        .map(event => ({
+            time: event.time ? formatFaText(event.time) : event.hour !== undefined && event.hour !== '' ? `${formatFaText(String(event.hour).padStart(2, '0'))}:۰۰` : 'تمام روز',
+            title: event.title
+        }));
+
+    return [...eventPrograms, ...getTasksForJalaaliDateKey(targetKey)].slice(0, 5);
+}
+
+function goToCalendarPage() {
+    window.location.href = 'calendar.html';
+}
+
+function scrollToTodayPlans() {
+    const target = document.getElementById('todaySection');
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function openTasks() {
+    window.location.href = 'tasks.html';
+}
+
+function loadWeeklyStats() {
+    const weeklyTasksEl = document.getElementById('weeklyTasks');
+    const weeklyHabitsEl = document.getElementById('weeklyHabits');
+    const weeklyCaloriesEl = document.getElementById('weeklyCalories');
+    const weeklyEventsEl = document.getElementById('weeklyEvents');
+    if (!weeklyTasksEl || !weeklyHabitsEl || !weeklyCaloriesEl || !weeklyEventsEl) {
+        return;
+    }
+
+    const tasks = dashboardData?.readTasks ? dashboardData.readTasks() : JSON.parse(localStorage.getItem('advancedTasks') || '[]');
+    const habits = JSON.parse(localStorage.getItem('myHabits') || '[]');
+    const dietLog = JSON.parse(localStorage.getItem('myDietLog') || '[]');
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - 6);
+    const events = getAllCalendarEvents(weekStart, today);
+
+    const weeklyTasks = tasks.filter(item => {
+        if (item.recurring !== 'none' && Array.isArray(item.completionHistory)) {
+            return item.completionHistory.some(date => weekDates.includes(normalizeGregorianDate(date)));
+        }
+        return item.completed && weekDates.includes(normalizeGregorianDate(item.completedAt || item.createdAt || item.dueDate));
+    }).length;
+    const weeklyHabits = habits.reduce((sum, item) => sum + ((item.history || []).filter(date => weekDates.includes(date)).length), 0);
+    const weeklyCalories = dietLog.filter(item => weekDates.includes(item.date)).reduce((sum, item) => sum + (item.cal || 0), 0);
+    const weeklyEvents = events.filter(item => {
+        if (!item.date) return false;
+        const [jy, jm, jd] = String(item.date).split('-').map(Number);
+        if ([jy, jm, jd].some(Number.isNaN)) return false;
+        const gregorian = jalaali.toGregorian(jy, jm, jd);
+        return weekDates.includes(normalizeGregorianDate(new Date(gregorian.gy, gregorian.gm - 1, gregorian.gd)));
+    }).length;
+
+    weeklyTasksEl.textContent = formatFa(weeklyTasks);
+    weeklyHabitsEl.textContent = formatFa(weeklyHabits);
+    weeklyCaloriesEl.textContent = `${formatFa(weeklyCalories)} کیلوکالری`;
+    weeklyEventsEl.textContent = formatFa(weeklyEvents);
+}
+
+window.addEventListener('load', () => {
+    const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
+    setTheme(savedTheme);
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', toggleTheme);
+    }
+    const headerDate = document.getElementById('headerDate');
+    if (headerDate) {
+        updateHeaderClock();
+        setInterval(updateHeaderClock, 1000);
+    }
+    const dailyQuote = document.getElementById('dailyQuote');
+    if (dailyQuote) {
+        pickDailyQuote();
+    }
+    const timerDisplay = document.getElementById('timerDisplay');
+    const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+    const miniCalendar = document.getElementById('miniCalendar');
+    if (timerDisplay || stopwatchDisplay || miniCalendar) {
+        loadDashboardSnapshot();
+        renderTodaySchedule();
+        renderGoalFocus();
+        renderTodayPrayerTimes();
+        if (timerDisplay) {
+            initializeDashboardTimerControls();
+        }
+        if (stopwatchDisplay) {
+            initializeDashboardStopwatchControls();
+            restoreDashboardStopwatch();
+        }
+        if (miniCalendar) {
+            renderMiniCalendar();
+        }
+        if (timerDisplay) {
+            restoreDashboardTimer();
+        }
+        loadWeeklyStats();
+        ensureAdhanData1405()
+            .then(() => {
+                if (miniCalendar) {
+                    renderMiniCalendar();
+                }
+                renderTodayPrayerTimes();
+                renderTodaySchedule();
+                renderGoalFocus();
+                loadWeeklyStats();
+            })
+            .catch(error => {
+                console.error('Unable to load 1405 prayer times:', error);
+                renderTodayPrayerTimes();
+            });
+    }
+});
+
+window.addEventListener('storage', event => {
+    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals', ADHAN_STORAGE_KEY].includes(event.key)) {
+        return;
+    }
+    loadDashboardSnapshot();
+    renderTodaySchedule();
+    renderGoalFocus();
+    renderTodayPrayerTimes();
+    loadWeeklyStats();
+    if (document.getElementById('miniCalendar')) {
+        renderMiniCalendar();
+    }
+});
+
+Object.assign(window, {
+    setDashboardTimer,
+    toggleDashboardTimer,
+    resetDashboardTimer,
+    toggleDashboardStopwatch,
+    resetDashboardStopwatch,
+    selectCalendarDay,
+    shiftMiniCalendarMonth,
+    goToCalendarPage,
+    scrollToTodayPlans,
+    openTasks,
+    updateGoalProgress,
+    saveMonthlyGoalProgress
+});

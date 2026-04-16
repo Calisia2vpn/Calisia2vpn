@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ردیاب عادت‌ها - داشبورد هوشمند</title>
+    <script src="https://cdn.jsdelivr.net/npm/jalaali-js/dist/jalaali.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #1fb580;
+            --secondary: #0a5f3d;
+            --accent-teal: #17a2b8;
+            --light-teal: #e0f2f1;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #3498db;
+            --light: #e0f2f1;
+            --dark: #0e3a2f;
+            --text-dark: #1a1a1a;
+            --text-gray: #5a5a5a;
+        }
+
+        [data-theme="dark"] {
+            --text-dark: #f8f9fa;
+            --text-gray: #adb5bd;
+        }
+
+        body {
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            min-height: 100vh;
+            padding: 0;
+            background-attachment: fixed;
+            color: var(--text-dark);
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a574' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin: 20px 30px 0;
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            z-index: 5000;
+            animation: slideIn 0.3s ease;
+            border-right: 5px solid var(--primary);
+            font-weight: 600;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification.error {
+            border-right-color: var(--danger);
+        }
+
+        .header-top {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 25px 40px;
+            border-radius: 0;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 40px rgba(31, 181, 128, 0.15);
+            border-bottom: 3px solid rgba(255,255,255,0.1);
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .header-top h1 { 
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin: 0;
+        }
+
+        .stats-quick { 
+            display: flex; 
+            gap: 35px; 
+            color: white; 
+            font-size: 15px;
+            font-weight: 700;
+            flex-wrap: wrap;
+        }
+
+        .stat-item { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 28px;
+        }
+
+        /* اصلی */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+        }
+
+        /* Panel */
+        .panel {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,241,0.2) 100%);
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(31, 181, 128, 0.08), 0 1px 3px rgba(0,0,0,0.04);
+            border: 2px solid rgba(31, 181, 128, 0.15);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            box-shadow: 0 20px 50px rgba(31, 181, 128, 0.12), 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .panel-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-content {
+            padding: 25px;
+        }
+
+        /* امروز */
+        .today-section {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .today-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .today-header h2 {
+            color: var(--dark);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .today-date {
+            font-size: 13px;
+            color: var(--dark);
+            font-weight: 600;
+        }
+
+        .today-progress {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 22px;
+            box-shadow: 0 8px 20px rgba(31, 181, 128, 0.2);
+        }
+
+        .today-items {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .today-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .today-item:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .today-item.completed {
+            background: #e8f5e9;
+            border-left: 4px solid var(--success);
+        }
+
+        .today-item-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .today-item-icon {
+            font-size: 24px;
+        }
+
+        .today-item-info h3 {
+            margin: 0;
+            font-size: 15px;
+            color: var(--dark);
+        }
+
+        .today-item-info p {
+            margin: 3px 0 0 0;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .tick-btn {
+            background: #ecf0f1;
+            border: 2px solid transparent;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+
+        .tick-btn:hover {
+            background: #bdc3c7;
+        }
+
+        .tick-btn.done {
+            background: var(--success);
+            color: white;
+            border-color: #27ae60;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+        }
+
+        /* فرم */
+        .habit-form {
+            display: grid;
+            grid-template-columns: 1fr 150px 150px 150px;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .input-box {
+            padding: 12px;
+            border: 2px solid var(--light);
+            border-radius: 10px;
+            font-family: Tahoma;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-add {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            font-size: 13px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        /* کارت‌ها */
+        .habits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .habit-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            position: relative;
+            transition: 0.3s;
+            border-top: 4px solid var(--primary);
+        }
+
+        .habit-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .habit-card.health { border-top-color: #2ecc71; }
+        .habit-card.learning { border-top-color: #3498db; }
+        .habit-card.fitness { border-top-color: #e67e22; }
+        .habit-card.personal { border-top-color: #9b59b6; }
+
+        .habit-delete {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: 0.3s;
+        }
+
+        .habit-delete:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+
+        .habit-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-right: 30px;
+        }
+
+        .habit-icon {
+            font-size: 32px;
+            width: 50px;
+            height: 50px;
+            background: #f1f2f6;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .habit-title {
+            flex: 1;
+        }
+
+        .habit-title h3 {
+            margin: 0;
+            color: var(--dark);
+            font-size: 16px;
+        }
+
+        .habit-category {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* آمار */
+        .habit-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        /* نمودار */
+        .habit-chart {
+            margin-bottom: 15px;
+        }
+
+        .chart-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .habit-chart-canvas {
+            position: relative;
+            height: 200px;
+            margin-bottom: 16px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            background: #f1f2f6;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+
+        .day-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .day-cell.done {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .cal-day {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            background: #eee;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cal-day:hover { transform: scale(1.15); }
+        .cal-day.done { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+
+        /* سایدبار */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .sidebar-card h3 {
+            margin: 0 0 15px 0;
+            color: var(--dark);
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .achievement-box {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .achievement-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .achievement-label {
+            font-size: 12px;
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 10px;
+            border: 2px solid var(--light);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: 0.3s;
+            color: var(--dark);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .reminders-box {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .reminder-item {
+            background: #fff5f5;
+            border: 1px solid #f5c6cb;
+            border-radius: 14px;
+            padding: 14px;
+            color: var(--danger);
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(231, 76, 60, 0.08);
+        }
+
+        .reminder-item span {
+            display: block;
+            margin-top: 6px;
+            color: #555;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .container { grid-template-columns: 1fr; }
+            .habit-form { grid-template-columns: 1fr auto auto; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+
+        .streak-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 3px;
+        }
+
+        /* شمسی - ماهانه */
+        .month-calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-top: 12px;
+        }
+
+        .month-day {
+            aspect-ratio: 1;
+            background: #f1f2f6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: bold;
+            color: #7f8c8d;
+            position: relative;
+        }
+
+        .month-day:hover {
+            transform: scale(1.08);
+        }
+
+        .month-day.done {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            box-shadow: 0 2px 6px rgba(46, 204, 113, 0.3);
+        }
+
+        .month-day.today {
+            border: 2px solid var(--primary);
+        }
+
+        .month-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+        }
+
+        .month-day-label {
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #999;
+            padding: 4px;
+        }
+
+        /* مودال */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .recurring-option {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .recurring-option label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .recurring-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .day-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--light);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 12px;
+            font-weight: bold;
+            background: white;
+        }
+
+        .day-checkbox:hover {
+            border-color: var(--primary);
+        }
+
+        .day-checkbox.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .monthly-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .monthly-days .day-checkbox {
+            width: 100%;
+            min-height: 40px;
+        }
+
+        .btn-modal {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .time-display {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .recurring-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-link">🔙 بازگشت</a>
+
+    <div class="header-top">
+        <h1>🎯 ردیاب عادت‌های من</h1>
+        <div class="stats-quick">
+            <div class="stat-item">
+                <span>🔥 Streak:</span>
+                <span id="globalStreak" style="font-weight: bold;">0</span>
+            </div>
+            <div class="stat-item">
+                <span>⭐ امتیاز:</span>
+                <span id="globalXP" style="font-weight: bold;">0</span>
+            </div>
+            <div class="stat-item">
+                <span>📊 عادت‌ها:</span>
+                <span id="globalCount" style="font-weight: bold;">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="main-content">
+            <!-- امروز -->
+            <div class="today-section">
+                <div class="today-header">
+                    <div>
+                        <h2>🌟 چک‌لیست امروز</h2>
+                        <div class="today-date" id="todayDateDisplay"></div>
+                    </div>
+                    <div class="today-progress" id="todayProgress">0/0</div>
+                </div>
+                <div class="today-items" id="todayItems"></div>
+            </div>
+
+            <!-- فرم -->
+            <div class="panel">
+                <div class="panel-content">
+                    <div class="habit-form">
+                        <input type="text" id="hTitle" class="input-box" placeholder="نام عادت جدید...">
+                        <select id="hIcon" class="input-box">
+                            <option value="📚">📚 کتاب</option>
+                            <option value="🏃">🏃 ورزش</option>
+                            <option value="💧">💧 آب</option>
+                            <option value="🧘">🧘 مدیتیشن</option>
+                            <option value="🍎">🍎 غذا</option>
+                            <option value="💪">💪 تمرین</option>
+                        </select>
+                        <select id="hCategory" class="input-box">
+                            <option value="health">🏥 سلامتی</option>
+                            <option value="learning">🎓 آموزش</option>
+                            <option value="fitness">💪 فیتنس</option>
+                            <option value="personal">👤 شخصی</option>
+                        </select>
+                        <button onclick="openAddModal()" class="btn-add">⚙️ جزئیات</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- عادت‌ها -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2 style="margin: 0; font-size: 18px;">📋 تمام عادت‌ها</h2>
+                </div>
+                <div class="panel-content">
+                    <div id="habitsGrid" class="habits-grid"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- سایدبار -->
+        <div class="sidebar">
+            <div class="sidebar-card">
+                <h3>🏆 دستاورد</h3>
+                <div class="achievement-box">
+                    <div class="achievement-value" id="bestStreak">0</div>
+                    <div class="achievement-label">بهترین Streak</div>
+                </div>
+                <div class="achievement-box" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);">
+                    <div class="achievement-value" id="totalCompleted">0</div>
+                    <div class="achievement-label">کل انجام‌شده‌ها</div>
+                </div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3>� یادآوری امروز</h3>
+                <div id="remindersBox" class="reminders-box"></div>
+            </div>
+
+            <div class="sidebar-card">
+                <h3>�🔍 فیلتر</h3>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterHabits('all', this)">همه</button>
+                    <button class="filter-btn" onclick="filterHabits('health', this)">🏥 سلامتی</button>
+                    <button class="filter-btn" onclick="filterHabits('learning', this)">🎓 آموزش</button>
+                    <button class="filter-btn" onclick="filterHabits('fitness', this)">💪 فیتنس</button>
+                    <button class="filter-btn" onclick="filterHabits('personal', this)">👤 شخصی</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Habit Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>📝 تنظیم جزئیات عادت</span>
+                <button class="close-modal" onclick="closeAddModal()">✕</button>
+            </div>
+
+            <div class="modal-form">
+                <div>
+                    <label style="display: block; margin-bottom: 8px; font-weight: bold;">ساعت انجام:</label>
+                    <input type="time" id="habitTime" class="input-box" value="08:00">
+                </div>
+
+                <div>
+                    <label style="display: block; margin-bottom: 12px; font-weight: bold;">نوع تکرار:</label>
+                    <div class="recurring-option">
+                        <input type="radio" name="recurring" value="daily" id="daily" checked>
+                        <label for="daily">روزانه ↩️</label>
+                    </div>
+                    <div class="recurring-option">
+                        <input type="radio" name="recurring" value="weekly" id="weekly">
+                        <label for="weekly">هفتگی 📅</label>
+                    </div>
+                    <div class="recurring-option">
+                        <input type="radio" name="recurring" value="monthly" id="monthly">
+                        <label for="monthly">ماهانه 📆</label>
+                    </div>
+                </div>
+
+                <div id="weeklyDaysContainer" style="display: none;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: bold;">روزهای هفته:</label>
+                    <div class="recurring-days">
+                        <div class="day-checkbox selected" data-day="0" onclick="toggleDayCheckbox(this)">ش</div>
+                        <div class="day-checkbox" data-day="1" onclick="toggleDayCheckbox(this)">ی</div>
+                        <div class="day-checkbox" data-day="2" onclick="toggleDayCheckbox(this)">د</div>
+                        <div class="day-checkbox" data-day="3" onclick="toggleDayCheckbox(this)">س</div>
+                        <div class="day-checkbox" data-day="4" onclick="toggleDayCheckbox(this)">چ</div>
+                        <div class="day-checkbox" data-day="5" onclick="toggleDayCheckbox(this)">پ</div>
+                        <div class="day-checkbox" data-day="6" onclick="toggleDayCheckbox(this)">ج</div>
+                    </div>
+                </div>
+
+                <div id="monthlyDayContainer" style="display: none;">
+                    <label style="display: block; margin-bottom: 10px; font-weight: bold;">روز ماه شمسی:</label>
+                    <div class="recurring-days" id="monthlyDaysGrid"></div>
+                </div>
+
+                <button class="btn-modal" onclick="finalAddHabit()">ذخیره و شروع ✅</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard-data.js"></script>
+    <script>
+        const jMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+        const jDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
+        let currentFilter = 'all';
+        let newHabitData = {};
+
+        function getDateStrG() { 
+            return new Date().toLocaleDateString('en-CA');
+        }
+
+        function getDateStrJ() {
+            const g = new Date();
+            const j = jalaali.toJalaali(g);
+            return `${j.jy}-${j.jm}-${j.jd}`;
+        }
+
+        function jalaaliToGregorian(jy, jm, jd) {
+            return jalaali.toGregorian(jy, jm, jd);
+        }
+
+        function shouldDoHabitToday(habit) {
+            const today = new Date();
+            const todayJ = jalaali.toJalaali(today);
+            const todayDayOfWeek = today.getDay();
+
+            if(habit.recurring === 'daily') return true;
+            if(habit.recurring === 'weekly') {
+                return habit.recurringDays.includes(todayDayOfWeek);
+            }
+            if(habit.recurring === 'monthly') {
+                return todayJ.jd === habit.dayOfMonth;
+            }
+            return false;
+        }
+
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('active');
+            newHabitData = {};
+            updateRecurrenceControls();
+            buildMonthlyDayGrid();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('active');
+            newHabitData = {};
+        }
+
+        function toggleDayCheckbox(el) {
+            const monthlyContainer = el.closest('#monthlyDayContainer');
+            if (monthlyContainer) {
+                monthlyContainer.querySelectorAll('.day-checkbox').forEach(day => day.classList.remove('selected'));
+                el.classList.add('selected');
+                return;
+            }
+            el.classList.toggle('selected');
+        }
+
+        function updateRecurrenceControls() {
+            const recurring = document.querySelector('input[name="recurring"]:checked').value;
+            const weeklyContainer = document.getElementById('weeklyDaysContainer');
+            const monthlyContainer = document.getElementById('monthlyDayContainer');
+            weeklyContainer.style.display = recurring === 'weekly' ? 'block' : 'none';
+            monthlyContainer.style.display = recurring === 'monthly' ? 'block' : 'none';
+        }
+
+        function buildMonthlyDayGrid() {
+            const monthlyDaysGrid = document.getElementById('monthlyDaysGrid');
+            if (!monthlyDaysGrid || monthlyDaysGrid.childElementCount > 0) return;
+            for (let d = 1; d <= 31; d++) {
+                const btn = document.createElement('div');
+                btn.className = 'day-checkbox';
+                btn.dataset.day = d;
+                btn.textContent = d;
+                btn.onclick = function() { toggleDayCheckbox(this); };
+                monthlyDaysGrid.appendChild(btn);
+            }
+        }
+
+        function finalAddHabit() {
+            const title = document.getElementById('hTitle').value.trim();
+            const icon = document.getElementById('hIcon').value;
+            const category = document.getElementById('hCategory').value;
+            const time = document.getElementById('habitTime').value;
+            const recurring = document.querySelector('input[name="recurring"]:checked').value;
+            
+            if(!title) return alert('نام عادت رو وارد کن!');
+
+            let recurringDays = [0];
+            let dayOfMonth = null;
+            if(recurring === 'weekly') {
+                recurringDays = Array.from(document.querySelectorAll('#weeklyDaysContainer .day-checkbox.selected')).map(el => parseInt(el.dataset.day));
+                if(recurringDays.length === 0) return alert('حداقل یک روز هفته را انتخاب کن!');
+            }
+            if(recurring === 'monthly') {
+                const selectedDay = document.querySelector('#monthlyDayContainer .day-checkbox.selected');
+                if (!selectedDay) return alert('یک روز ماه شمسی انتخاب کن!');
+                dayOfMonth = parseInt(selectedDay.dataset.day);
+            }
+
+            const todayJ = jalaali.toJalaali(new Date());
+            const newHabit = {
+                id: Date.now(),
+                title: title,
+                icon: icon,
+                category: category,
+                time: time,
+                recurring: recurring,
+                recurringDays: recurringDays,
+                dayOfMonth: dayOfMonth || todayJ.jd,
+                history: [],
+                createdAtG: getDateStrG(),
+                createdAtJ: getDateStrJ()
+            };
+
+            const habits = JSON.parse(localStorage.getItem('myHabits')) || [];
+            habits.push(newHabit);
+            localStorage.setItem('myHabits', JSON.stringify(habits));
+            
+            document.getElementById('hTitle').value = '';
+            document.getElementById('habitTime').value = '08:00';
+            document.querySelectorAll('.day-checkbox').forEach(el => {
+                if(el.dataset.day === '0') el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+            closeAddModal();
+            loadHabits();
+        }
+
+        function toggleDay(dateStrG, habitId) {
+            const habits = JSON.parse(localStorage.getItem('myHabits')) || [];
+            const habit = habits.find(h => h.id === habitId);
+            
+            if(habit.history.includes(dateStrG)) {
+                habit.history = habit.history.filter(d => d !== dateStrG);
+            } else {
+                habit.history.push(dateStrG);
+            }
+            
+            localStorage.setItem('myHabits', JSON.stringify(habits));
+            loadHabits();
+        }
+
+        function deleteHabit(id) {
+            if(confirm('این عادت حذف شود؟')) {
+                let habits = JSON.parse(localStorage.getItem('myHabits')) || [];
+                habits = habits.filter(h => h.id !== id);
+                localStorage.setItem('myHabits', JSON.stringify(habits));
+                loadHabits();
+            }
+        }
+
+        function filterHabits(category, button) {
+            currentFilter = category;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            if (button) button.classList.add('active');
+            loadHabits();
+        }
+
+        function getCurrentStreak(history) {
+            let streak = 0;
+            let today = new Date();
+            
+            for(let i = 0; i < 365; i++) {
+                const checkDate = new Date(today);
+                checkDate.setDate(checkDate.getDate() - i);
+                const dateStr = checkDate.toLocaleDateString('en-CA');
+                
+                if(history.includes(dateStr)) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            return streak;
+        }
+
+        function getCompletionRate(history, createdAtG) {
+            if(history.length === 0) return 0;
+            let createdDate = createdAtG ? new Date(createdAtG) : null;
+            if (!createdDate || isNaN(createdDate)) {
+                const fallback = history[0] ? new Date(history[0]) : new Date();
+                createdDate = fallback;
+            }
+            const days = Math.max(1, Math.floor((new Date() - createdDate) / (1000 * 60 * 60 * 24)) + 1);
+            return Math.round((history.length / days) * 100);
+        }
+
+        function formatDateFarsi(todayJ) {
+            const dayName = jDays[new Date().getDay()];
+            return `${dayName}، ${todayJ.jd} ${jMonths[todayJ.jm - 1]} ${todayJ.jy}`;
+        }
+
+        function getLast30DaysData(habit) {
+            const labels = [];
+            const data = [];
+            const today = new Date();
+
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                labels.push(date.getDate());
+                const dateStr = date.toLocaleDateString('en-CA');
+                data.push(habit.history.includes(dateStr) ? 1 : 0);
+            }
+
+            return { labels, data };
+        }
+
+        function renderHabitChart(habit) {
+            const canvas = document.getElementById(`chart-${habit.id}`);
+            if (!canvas) return;
+
+            const { labels, data } = getLast30DaysData(habit);
+            new Chart(canvas, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'انجام شده',
+                        data,
+                        backgroundColor: data.map(value => value ? 'rgba(46, 204, 113, 0.85)' : 'rgba(189, 195, 199, 0.35)'),
+                        borderRadius: 8,
+                        borderSkipped: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#7f8c8d', font: { size: 10 } }
+                        },
+                        y: {
+                            display: false,
+                            min: 0,
+                            max: 1,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => context.parsed.y === 1 ? 'انجام شده' : 'انجام نشده'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function getMissedHabits() {
+            const habits = JSON.parse(localStorage.getItem('myHabits')) || [];
+            const dateStrG = getDateStrG();
+            return habits.filter(habit => shouldDoHabitToday(habit) && !habit.history.includes(dateStrG));
+        }
+
+        function updateReminders() {
+            const missedHabits = getMissedHabits();
+            const remindersBox = document.getElementById('remindersBox');
+            if (!remindersBox) return;
+
+            if (missedHabits.length === 0) {
+                remindersBox.innerHTML = '<div class="reminder-item" style="background: #e8f5e9; border-color: #2ecc71; color: #217a4b;">🎉 تمام عادت‌های امروز کامل شدند!</div>';
+                return;
+            }
+
+            remindersBox.innerHTML = missedHabits.map(habit => `
+                <div class="reminder-item">
+                    🔔 ${habit.title}
+                    <span>⏰ ${habit.time} — ${habit.recurring === 'daily' ? 'روزانه' : habit.recurring === 'weekly' ? 'هفتگی' : 'ماهانه'}</span>
+                </div>
+            `).join('');
+
+            showReminderNotification(missedHabits.length);
+        }
+
+        function showReminderNotification(count) {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'granted') {
+                new Notification('یادآوری عادات', { body: `${count} عادت امروز هنوز انجام نشده است.` });
+                return;
+            }
+            if (Notification.permission !== 'denied') {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        new Notification('یادآوری عادات', { body: `${count} عادت امروز هنوز انجام نشده است.` });
+                    }
+                });
+            }
+        }
+
+        function renderMonthlyCalendar(habit) {
+            const today = new Date();
+            const todayJ = jalaali.toJalaali(today);
+            const monthLength = jalaali.jalaaliMonthLength(todayJ.jy, todayJ.jm);
+            const firstDay = jalaali.toGregorian(todayJ.jy, todayJ.jm, 1);
+            const firstDate = new Date(firstDay.gy, firstDay.gm - 1, firstDay.gd);
+            let padding = (firstDate.getDay() + 1) % 7;
+
+            let html = '<div class="month-header">';
+            jDays.forEach(day => {
+                html += `<div class="month-day-label">${day.substring(0, 2)}</div>`;
+            });
+            html += '</div><div class="month-calendar">';
+
+            for(let i = 0; i < padding; i++) {
+                html += '<div class="month-day" style="opacity: 0.3;"></div>';
+            }
+
+            for(let d = 1; d <= monthLength; d++) {
+                const jDate = `${todayJ.jy}-${todayJ.jm}-${d}`;
+                const gDate = jalaaliToGregorian(todayJ.jy, todayJ.jm, d);
+                const dateStr = `${gDate.gy}-${String(gDate.gm).padStart(2, '0')}-${String(gDate.gd).padStart(2, '0')}`;
+                const isDone = habit.history.includes(dateStr);
+                const isToday = d === todayJ.jd;
+                
+                html += `<div class="month-day ${isDone ? 'done' : ''} ${isToday ? 'today' : ''}" onclick="toggleDay('${dateStr}', ${habit.id})" title="${jDate}">${d}</div>`;
+            }
+
+            html += '</div>';
+            return html;
+        }
+
+        function loadHabits() {
+            const habits = JSON.parse(localStorage.getItem('myHabits')) || [];
+            const filteredHabits = currentFilter === 'all' ? habits : habits.filter(h => h.category === currentFilter);
+            const grid = document.getElementById('habitsGrid');
+            const todayDiv = document.getElementById('todayItems');
+            
+            grid.innerHTML = '';
+            todayDiv.innerHTML = '';
+            
+            const dateStrG = getDateStrG();
+            const todayJ = jalaali.toJalaali(new Date());
+            let todayCount = 0, todayDone = 0;
+
+            document.getElementById('todayDateDisplay').textContent = formatDateFarsi(todayJ);
+
+            let globalStreak = 0, globalXP = 0, bestStreak = 0, totalCompleted = 0;
+
+            if(filteredHabits.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #999;">هنوز عادتی اضافه نکردی. یکی اضافه کن! 🚀</div>';
+                todayDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">در حال حاضر عادت جدیدی وجود ندارد.</div>';
+            } else {
+                filteredHabits.forEach(habit => {
+                    const isDoneToday = habit.history.includes(dateStrG);
+                    const streak = getCurrentStreak(habit.history);
+                    const completionRate = getCompletionRate(habit.history, habit.createdAt);
+                    const shouldDo = shouldDoHabitToday(habit);
+                    
+                    if(shouldDo) {
+                        todayCount++;
+                        if(isDoneToday) todayDone++;
+                    }
+                    
+                    globalXP += habit.history.length * 10;
+                    globalStreak = Math.max(globalStreak, streak);
+                    bestStreak = Math.max(bestStreak, streak);
+                    totalCompleted += habit.history.length;
+
+                    // امروز - اگر باید انجام شود
+                    if(shouldDo) {
+                        todayDiv.innerHTML += `
+                            <div class="today-item ${isDoneToday ? 'completed' : ''}">
+                                <div class="today-item-name">
+                                    <div class="today-item-icon">${habit.icon}</div>
+                                    <div class="today-item-info">
+                                        <h3>${habit.title}</h3>
+                                        <p>
+                                            <span class="time-display">${habit.time}</span>
+                                            ${streak > 0 ? `<span class="recurring-badge">🔥 ${streak}</span>` : ''}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button onclick="toggleDay('${dateStrG}', ${habit.id})" class="tick-btn ${isDoneToday ? 'done' : ''}">
+                                    ${isDoneToday ? '✅ انجام شد' : '⭕ تیک بزن'}
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    // کارت
+                    const recurringLabel = habit.recurring === 'daily' ? '↩️ روزانه' : (habit.recurring === 'weekly' ? '📅 هفتگی' : `📆 ماهانه - روز ${habit.dayOfMonth}`);
+                    
+                    grid.innerHTML += `
+                        <div class="habit-card ${habit.category}">
+                            <button class="habit-delete" onclick="deleteHabit(${habit.id})">🗑️</button>
+                            <div class="habit-header">
+                                <div class="habit-icon">${habit.icon}</div>
+                                <div class="habit-title">
+                                    <h3>${habit.title}</h3>
+                                    <p class="habit-category">${habit.category}</p>
+                                </div>
+                            </div>
+                            <div class="habit-stats">
+                                <div class="stat">
+                                    <div class="stat-value" style="color: #f39c12; font-size: 22px;">🔥 ${streak}</div>
+                                    <div class="stat-label">Streak</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" style="color: #3498db; font-size: 22px;">${completionRate}%</div>
+                                    <div class="stat-label">درصد</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" style="color: #2ecc71; font-size: 22px;">${habit.history.length}</div>
+                                    <div class="stat-label">کل</div>
+                                </div>
+                            </div>
+                            <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+                                <span class="time-display">${habit.time}</span>
+                                <span class="recurring-badge">${recurringLabel}</span>
+                            </div>
+                            <div class="habit-chart">
+                                <div class="chart-label">📊 آخرین ۳۰ روز</div>
+                                <div class="habit-chart-canvas">
+                                    <canvas id="chart-${habit.id}"></canvas>
+                                </div>
+                            </div>
+                            <div class="habit-chart">
+                                <div class="chart-label">📊 ماه شمسی جاری (${jMonths[todayJ.jm - 1]} ${todayJ.jy})</div>
+                                ${renderMonthlyCalendar(habit)}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // رسم نمودارها
+                setTimeout(() => {
+                    filteredHabits.forEach(habit => renderHabitChart(habit));
+                }, 100);
+            }
+
+            // آپدیت آمار
+            document.getElementById('todayProgress').innerText = `${todayDone}/${todayCount}`;
+            document.getElementById('globalStreak').innerText = globalStreak;
+            document.getElementById('globalXP').innerText = globalXP;
+            document.getElementById('globalCount').innerText = filteredHabits.length;
+            document.getElementById('bestStreak').innerText = bestStreak;
+            document.getElementById('totalCompleted').innerText = totalCompleted;
+
+            updateReminders();
+
+            // آپدیت رادیو بتن‌ها
+            document.querySelectorAll('input[name="recurring"]').forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const weeklyContainer = document.getElementById('weeklyDaysContainer');
+                    if(radio.value === 'weekly') {
+                        weeklyContainer.style.display = 'block';
+                    } else {
+                        weeklyContainer.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        window.onload = loadHabits;
+    </script>
+</body>
+</html>

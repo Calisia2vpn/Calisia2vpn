@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>رژیم و کالری‌پرو + داشبورد</title>
+    <script src="https://cdn.jsdelivr.net/npm/jalaali-js/dist/jalaali.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --persian-green: #1fb580;
+            --accent-teal: #17a2b8;
+            --light-teal: #e0f2f1;
+            --text-dark: #1a1a1a;
+            --text-gray: #5a5a5a;
+        }
+
+        body { 
+            background: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+            background-attachment: fixed;
+        }
+
+        .diet-container { 
+            max-width: 1000px; 
+            margin: 20px auto; 
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,241,0.3) 100%);
+            padding: 40px; 
+            border-radius: 24px; 
+            box-shadow: 0 20px 50px rgba(31, 181, 128, 0.08), 0 1px 3px rgba(0,0,0,0.04);
+            border: 2px solid rgba(224, 242, 241, 0.6);
+            animation: slideInUp 0.6s ease;
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .summary-panel { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-around; 
+            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(224,242,241,0.3) 100%);
+            padding: 32px; 
+            border-radius: 20px; 
+            margin-bottom: 40px; 
+            flex-wrap: wrap;
+            border: 2px solid rgba(31, 181, 128, 0.2);
+            box-shadow: 0 10px 30px rgba(31, 181, 128, 0.06);
+        }
+
+        .calorie-circle { 
+            width: 180px; 
+            height: 180px; 
+            border-radius: 50%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            background: conic-gradient(var(--persian-green) 0%, rgba(255,255,255,0.3) 0%);
+            position: relative;
+            box-shadow: 0 0 30px rgba(31, 181, 128, 0.2);
+        }
+
+        .inner-circle { 
+            width: 150px; 
+            height: 150px; 
+            background: white;
+            border-radius: 50%; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            position: absolute;
+            box-shadow: inset 0 0 10px rgba(31, 181, 128, 0.1);
+        }
+
+        .cal-number { 
+            font-size: 32px; 
+            font-weight: 800; 
+            color: var(--persian-green); 
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .macros-summary { 
+            display: flex; 
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .targets-hint {
+            margin-top: 14px;
+            display: grid;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-gray);
+            text-align: center;
+        }
+
+        .targets-hint strong {
+            color: var(--persian-green);
+        }
+
+        .targets-hint .warn {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+
+        .macro-box { 
+            text-align: center; 
+            padding: 16px 24px; 
+            border-radius: 15px; 
+            background: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            border: 2px solid rgba(224, 242, 241, 0.6);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .macro-box:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(31, 181, 128, 0.08);
+        }
+
+        .m-pro { 
+            color: #e74c3c; 
+            font-weight: 800;
+            font-size: 22px;
+        }
+
+        .m-carb { 
+            color: #f39c12; 
+            font-weight: 800;
+            font-size: 22px;
+        }
+
+        .m-fat { 
+            color: #3498db; 
+            font-weight: 800;
+            font-size: 22px;
+        }
+
+        .card-box { 
+            border: 2px solid rgba(31, 181, 128, 0.15);
+            padding: 28px; 
+            border-radius: 18px; 
+            margin-bottom: 24px; 
+            position: relative;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(224,242,241,0.1) 100%);
+            transition: all 0.3s ease;
+        }
+
+        .card-box:hover {
+            border-color: var(--persian-green);
+            box-shadow: 0 12px 32px rgba(31, 181, 128, 0.06);
+        }
+
+        .form-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+            gap: 12px; 
+            margin-top: 18px; 
+        }
+
+        .input-box { 
+            padding: 12px 16px; 
+            border: 2px solid rgba(31, 181, 128, 0.2);
+            border-radius: 12px; 
+            font-family: 'Vazirmatn', Tahoma;
+            font-size: 14px;
+            width: 100%; 
+            box-sizing: border-box;
+            background: white;
+            transition: all 0.3s ease;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .input-box:focus {
+            outline: none;
+            border-color: var(--persian-green);
+            box-shadow: 0 0 0 3px rgba(31, 181, 128, 0.1);
+        }
+
+        .btn { 
+            padding: 12px 20px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-family: 'Vazirmatn', Tahoma;
+            font-weight: 700;
+            color: white; 
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .btn-green { 
+            background: linear-gradient(135deg, var(--persian-green) 0%, #15a07f 100%);
+        }
+
+        .btn-green:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(31, 181, 128, 0.3);
+        }
+
+        .btn-blue { 
+            background: linear-gradient(135deg, var(--accent-teal) 0%, #0c8599 100%);
+        }
+
+        .btn-blue:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(23, 162, 184, 0.3);
+        }
+
+        .btn-toggle { 
+            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(224,242,241,0.4) 100%);
+            color: var(--persian-green); 
+            margin-bottom: 18px; 
+            width: 100%;
+            border: 2px solid var(--persian-green);
+            font-weight: 700;
+        }
+
+        .btn-toggle:hover {
+            background: linear-gradient(135deg, rgba(224,242,241,0.6) 0%, var(--light-teal) 100%);
+        }
+
+        .meal-section { 
+            margin-bottom: 30px; 
+        }
+
+        .meal-title { 
+            font-size: 20px; 
+            color: var(--persian-green);
+            border-bottom: 3px solid var(--persian-green);
+            padding-bottom: 12px; 
+            display: flex; 
+            justify-content: space-between;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .food-list { 
+            list-style: none; 
+            padding: 0; 
+            margin: 0; 
+        }
+
+        .food-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 16px; 
+            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(255,255,255,0.6) 100%);
+            margin-top: 12px; 
+            border-radius: 14px;
+            border: 1px solid rgba(31, 181, 128, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .food-item:hover {
+            transform: translateX(-4px);
+            box-shadow: 0 6px 16px rgba(31, 181, 128, 0.08);
+        }
+
+        .food-name { 
+            font-weight: 600; 
+            color: var(--text-dark); 
+            font-size: 15px;
+        }
+
+        .macro-badges span { 
+            font-size: 11px; 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            margin-left: 8px; 
+            background: white;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .hidden { 
+            display: none; 
+        }
+
+        /* داشبورد و نمودار */
+        .dashboard-section { 
+            background: linear-gradient(135deg, var(--persian-green) 0%, #0a5f3d 100%);
+            color: white; 
+            padding: 40px; 
+            border-radius: 20px; 
+            margin-top: 50px;
+            box-shadow: 0 20px 50px rgba(31, 181, 128, 0.15);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .dashboard-title { 
+            margin-top: 0; 
+            color: white;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 16px;
+            font-weight: 700;
+            font-size: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        /* نمودار میله‌ای */
+        .chart-container { 
+            display: flex; 
+            align-items: flex-end; 
+            justify-content: space-between; 
+            height: 200px; 
+            padding-top: 24px; 
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+            margin-bottom: 32px;
+            gap: 6px;
+        }
+
+        .bar-wrapper { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            width: 12%; 
+            height: 100%; 
+            justify-content: flex-end;
+            transition: all 0.3s ease;
+        }
+
+        .bar-wrapper:hover {
+            transform: scale(1.05);
+        }
+
+        .bar { 
+            width: 100%; 
+            background: linear-gradient(180deg, #72d4aa 0%, var(--persian-green) 100%);
+            border-radius: 8px 8px 0 0;
+            transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+        }
+
+        .bar.over { 
+            background: linear-gradient(180deg, #ff6b6b 0%, #e74c3c 100%);
+        }
+
+        .bar-val { 
+            font-size: 12px; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+            color: rgba(255,255,255,0.9);
+        }
+
+        .bar-label { 
+            font-size: 11px; 
+            color: rgba(255,255,255,0.7);
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        /* آمار کلی */
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); 
+            gap: 18px; 
+        }
+
+        .stat-box { 
+            background: rgba(255,255,255,0.15);
+            padding: 20px; 
+            border-radius: 14px; 
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.25);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-box:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-4px);
+        }
+
+        .stat-box-val { 
+            font-size: 28px; 
+            font-weight: 800; 
+            color: white;
+            margin-top: 8px;
+            letter-spacing: -1px;
+        }
+
+        .stat-box-title { 
+            font-size: 12px; 
+            color: rgba(255,255,255,0.8);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🍎 تغذیه و کالری‌پرو</h1>
+    </div>
+
+    <div class="diet-container">
+        <a href="index.html" style="text-decoration: none; color: #95a5a6; display: inline-block; margin-bottom: 20px;">🔙 بازگشت به داشبورد</a>
+
+        <div class="summary-panel">
+            <div class="calorie-circle" id="calChart">
+                <div class="inner-circle">
+                    <span class="cal-number" id="calConsumed">0</span>
+                    <span style="font-size: 12px; color: #7f8c8d;">کالری خورده شده</span>
+                </div>
+            </div>
+            <div class="macros-summary">
+                <div class="macro-box">🥩 پروتئین<br><span class="m-pro" id="totPro">0g</span></div>
+                <div class="macro-box">🍞 کربوهیدرات<br><span class="m-carb" id="totCarb">0g</span></div>
+                <div class="macro-box">🥑 چربی<br><span class="m-fat" id="totFat">0g</span></div>
+            </div>
+            <div class="targets-hint">
+                <div>هدف روزانه: حداکثر <strong id="calorieGoalLabel">2000</strong> کالری</div>
+                <div>هدف پروتئین: حداقل <strong id="proteinGoalLabel">80g</strong></div>
+                <div id="nutritionStatusText">وضعیت امروز در حال محاسبه...</div>
+            </div>
+        </div>
+
+        <button class="btn btn-toggle" onclick="toggleCustomFoodForm()">+ اضافه کردن غذای جدید به دیتابیس 🍱</button>
+        
+        <div id="customFoodForm" class="card-box hidden" style="background: #eaf2f8; border-color: #3498db;">
+            <h3 style="margin-top:0; color: #2980b9;">ساخت غذای شخصی (مقادیر در 100 گرم)</h3>
+            <div class="form-grid">
+                <input type="text" id="newF_name" class="input-box" placeholder="اسم غذا...">
+                <input type="number" id="newF_cal" class="input-box" placeholder="کالری">
+                <input type="number" id="newF_pro" class="input-box" placeholder="پروتئین (گرم)">
+                <input type="number" id="newF_carb" class="input-box" placeholder="کربوهیدرات (گرم)">
+                <input type="number" id="newF_fat" class="input-box" placeholder="چربی (گرم)">
+            </div>
+            <button class="btn btn-blue" style="margin-top: 15px; width: 100%;" onclick="saveCustomFood()">ذخیره در دیتابیس 💾</button>
+        </div>
+
+        <div class="card-box" style="background: #fdfefe;">
+            <h3 style="margin-top:0;">ثبت غذای امروز</h3>
+            <div class="form-grid">
+                <select id="mealType" class="input-box">
+                    <option value="صبحانه">🍳 صبحانه</option>
+                    <option value="ناهار">🍲 ناهار</option>
+                    <option value="شام">🥗 شام</option>
+                    <option value="میان‌وعده">🍿 میان‌وعده</option>
+                </select>
+                <select id="foodSelect" class="input-box">
+                    <option value="">-- انتخاب از دیتابیس --</option>
+                </select>
+                <input type="number" id="foodAmount" class="input-box" placeholder="مقدار...">
+                <select id="foodUnit" class="input-box">
+                    <option value="g">گرم</option>
+                    <option value="spoon">قاشق</option>
+                    <option value="cup">لیوان</option>
+                    <option value="count">تعداد</option>
+                </select>
+                <select id="foodTemp" class="input-box">
+                    <option value="normal">معمولی</option>
+                    <option value="hot">گرم</option>
+                    <option value="cold">سرد</option>
+                </select>
+                <button class="btn btn-green" onclick="addDietLog()">ثبت در برنامه ✅</button>
+            </div>
+        </div>
+
+        <div id="mealsContainer"></div>
+
+        <div class="dashboard-section">
+            <h2 class="dashboard-title">📊 داشبورد و سوابق شما</h2>
+            <p style="font-size: 13px; color: #95a5a6;">نمودار کالری دریافتی در ۷ روز گذشته (هدف پیش‌فرض: 2000 کالری)</p>
+            
+            <div class="chart-container" id="weeklyChart">
+                </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-box-title">میانگین کالری (۷ روز اخیر)</div>
+                    <div class="stat-box-val" id="avg7Days">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-title">مجموع کالری این ماه</div>
+                    <div class="stat-box-val" id="totalMonth" style="color: #2ecc71;">0</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-title">بیشترین کالری یک روز</div>
+                    <div class="stat-box-val" id="maxDay" style="color: #e74c3c;">0</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="dashboard-data.js"></script>
+    <script>
+        const defaultDB = [
+            { id: 1, name: "برنج سفید (پخته)", cal: 130, pro: 3, carb: 28, fat: 0 },
+            { id: 2, name: "سینه مرغ (پخته)", cal: 165, pro: 31, carb: 0, fat: 3 },
+            { id: 3, name: "تخم مرغ (آب‌پز)", cal: 155, pro: 13, carb: 1, fat: 11 },
+            { id: 4, name: "نان سنگک", cal: 260, pro: 8, carb: 50, fat: 1 }
+        ];
+        const nutritionTargets = JSON.parse(localStorage.getItem('nutritionTargets') || '{"caloriesMax":2000,"proteinMin":80}');
+
+        function initDB() {
+            if(!localStorage.getItem('myFoodDB')) {
+                localStorage.setItem('myFoodDB', JSON.stringify(defaultDB));
+            }
+        }
+
+        function getTodayStr() { return new Date().toLocaleDateString('en-CA'); }
+        
+        function formatDateToJalaali(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const g2j = jalaali.toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
+            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
+                          'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            return `${g2j.jd} ${months[g2j.jm - 1]} ${g2j.jy}`;
+        }
+
+        window.onload = function() {
+            initDB();
+            populateDropdown();
+            loadDiet();
+            renderDashboard(); // فراخوانی تابع کشیدن داشبورد
+        };
+
+        function toggleCustomFoodForm() { document.getElementById('customFoodForm').classList.toggle('hidden'); }
+
+        function saveCustomFood() {
+            let name = document.getElementById('newF_name').value;
+            let cal = parseFloat(document.getElementById('newF_cal').value) || 0;
+            let pro = parseFloat(document.getElementById('newF_pro').value) || 0;
+            let carb = parseFloat(document.getElementById('newF_carb').value) || 0;
+            let fat = parseFloat(document.getElementById('newF_fat').value) || 0;
+
+            if(!name || cal === 0) return alert("اسم غذا و حداقل مقدار کالری الزامیه!");
+
+            let db = JSON.parse(localStorage.getItem('myFoodDB'));
+            db.push({ id: Date.now(), name, cal, pro, carb, fat });
+            localStorage.setItem('myFoodDB', JSON.stringify(db));
+
+            document.getElementById('newF_name').value = ''; document.getElementById('newF_cal').value = '';
+            document.getElementById('newF_pro').value = ''; document.getElementById('newF_carb').value = '';
+            document.getElementById('newF_fat').value = '';
+            
+            toggleCustomFoodForm(); populateDropdown(); alert("غذای جدید اضافه شد! 🎉");
+        }
+
+        function populateDropdown() {
+            let db = JSON.parse(localStorage.getItem('myFoodDB'));
+            db.sort((a, b) => a.name.localeCompare(b.name));
+            const select = document.getElementById("foodSelect");
+            select.innerHTML = '<option value="">-- انتخاب از دیتابیس --</option>';
+            db.forEach(food => {
+                let option = document.createElement("option"); option.value = food.id; option.text = `${food.name} (${food.cal} کالری در 100g)`;
+                select.appendChild(option);
+            });
+        }
+
+        function addDietLog() {
+            const mealType = document.getElementById("mealType").value;
+            const foodId = parseInt(document.getElementById("foodSelect").value);
+            const amount = parseFloat(document.getElementById("foodAmount").value);
+            const unit = document.getElementById("foodUnit").value;
+            const temp = document.getElementById("foodTemp").value;
+
+            if(!foodId || isNaN(amount) || amount <= 0) return alert("غذا و مقدارش رو وارد کن!");
+
+            let db = JSON.parse(localStorage.getItem('myFoodDB'));
+            const foodItem = db.find(f => f.id === foodId);
+            
+            const ratio = amount / 100;
+            const record = {
+                id: Date.now(), date: getTodayStr(), meal: mealType, name: foodItem.name, amount: amount, unit: unit, temp: temp,
+                cal: Math.round(foodItem.cal * ratio), pro: Math.round(foodItem.pro * ratio), carb: Math.round(foodItem.carb * ratio), fat: Math.round(foodItem.fat * ratio)
+            };
+
+            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
+            dietHistory.push(record);
+            localStorage.setItem('myDietLog', JSON.stringify(dietHistory));
+
+            document.getElementById("foodAmount").value = ''; 
+            document.getElementById("foodSelect").value = '';
+            document.getElementById("foodUnit").value = 'g';
+            document.getElementById("foodTemp").value = 'normal';
+            loadDiet(); renderDashboard();
+        }
+
+        function loadDiet() {
+            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
+            const todayStr = getTodayStr();
+            const todayFoods = dietHistory.filter(f => f.date === todayStr);
+            
+            let tCal = 0, tPro = 0, tCarb = 0, tFat = 0;
+            const meals = { "صبحانه": [], "ناهار": [], "شام": [], "میان‌وعده": [] };
+            
+            todayFoods.forEach(f => {
+                tCal += f.cal; tPro += f.pro; tCarb += f.carb; tFat += f.fat;
+                if(meals[f.meal]) meals[f.meal].push(f);
+            });
+
+            document.getElementById("calConsumed").innerText = tCal;
+            document.getElementById("totPro").innerText = tPro + "g"; document.getElementById("totCarb").innerText = tCarb + "g"; document.getElementById("totFat").innerText = tFat + "g";
+
+            let percent = Math.min((tCal / nutritionTargets.caloriesMax) * 100, 100);
+            let circleColor = tCal > nutritionTargets.caloriesMax ? '#e74c3c' : '#2ecc71';
+            document.getElementById("calChart").style.background = `conic-gradient(${circleColor} ${percent}%, #ecf0f1 0%)`;
+            document.getElementById('calorieGoalLabel').innerText = nutritionTargets.caloriesMax;
+            document.getElementById('proteinGoalLabel').innerText = `${nutritionTargets.proteinMin}g`;
+            const nutritionStatusText = document.getElementById('nutritionStatusText');
+            if (tCal > nutritionTargets.caloriesMax) {
+                nutritionStatusText.innerHTML = `<span class="warn">کالری از حد مجاز رد شده است (${tCal - nutritionTargets.caloriesMax}+)</span>`;
+            } else if (tPro < nutritionTargets.proteinMin) {
+                nutritionStatusText.innerHTML = `<span class="warn">پروتئین هنوز کم است (${nutritionTargets.proteinMin - tPro}g مانده)</span>`;
+            } else {
+                nutritionStatusText.textContent = 'عالی! هم سقف کالری رعایت شده هم پروتئین به حد هدف رسیده.';
+            }
+
+            const container = document.getElementById("mealsContainer");
+            container.innerHTML = "";
+
+            for(let m in meals) {
+                if(meals[m].length > 0) {
+                    let mealHtml = `<div class="meal-section"><h4 class="meal-title">${m}</h4><ul class="food-list">`;
+                    meals[m].forEach(food => {
+                        let tempEmoji = food.temp === 'hot' ? '🔥' : (food.temp === 'cold' ? '❄️' : '');
+                        let unitDisplay = food.unit === 'g' ? 'g' : (food.unit === 'spoon' ? 'قاشق' : (food.unit === 'cup' ? 'لیوان' : 'تعداد'));
+                        mealHtml += `
+                            <li class="food-item">
+                                <div>
+                                    <div class="food-name">${food.name} <span style="font-weight:normal; color:#7f8c8d; font-size:12px;">(${food.amount}${unitDisplay}) ${tempEmoji}</span></div>
+                                    <div class="macro-badges"><span style="color:#e74c3c">P: ${food.pro}g</span><span style="color:#f39c12">C: ${food.carb}g</span><span style="color:#3498db">F: ${food.fat}g</span></div>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <span style="font-weight:bold; color:#2c3e50;">${food.cal} kcal</span>
+                                    <button style="border:none; background:none; color:#e74c3c; cursor:pointer;" onclick="deleteLog(${food.id})">❌</button>
+                                </div>
+                            </li>`;
+                    });
+                    mealHtml += `</ul></div>`; container.innerHTML += mealHtml;
+                }
+            }
+            if(todayFoods.length === 0) container.innerHTML = "<p style='color: #7f8c8d; text-align: center;'>هنوز وعده‌ای برای امروز ثبت نکردی.</p>";
+        }
+
+        function deleteLog(id) {
+            let dietHistory = JSON.parse(localStorage.getItem('myDietLog'));
+            dietHistory = dietHistory.filter(f => f.id !== id);
+            localStorage.setItem('myDietLog', JSON.stringify(dietHistory));
+            loadDiet(); renderDashboard();
+        }
+
+        // --- مغز سیستم داشبورد و نمودارها ---
+        function renderDashboard() {
+            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
+            const chartContainer = document.getElementById('weeklyChart');
+            const goal = nutritionTargets.caloriesMax;
+            let chartHtml = '';
+            let farsiDays = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
+            
+            let total7Days = 0;
+            let maxCal = 0;
+
+            // محاسبه برای ۷ روز گذشته
+            for(let i = 6; i >= 0; i--) {
+                let d = new Date();
+                d.setDate(d.getDate() - i);
+                let dStr = d.toLocaleDateString('en-CA');
+                
+                // جمع کردن کالری‌های همون روز خاص
+                let dayFoods = dietHistory.filter(f => f.date === dStr);
+                let dayCal = dayFoods.reduce((sum, f) => sum + f.cal, 0);
+                
+                total7Days += dayCal;
+                if(dayCal > maxCal) maxCal = dayCal;
+
+                let heightPct = Math.min((dayCal / goal) * 100, 100);
+                let barClass = dayCal > goal ? 'over' : ''; // اگه از هدف رد شه قرمز میشه
+                let dayName = i === 0 ? 'امروز' : farsiDays[d.getDay()]; // روز صفر یعنی امروز
+
+                // کشیدن ستون‌ها با HTML
+                chartHtml += `
+                <div class="bar-wrapper">
+                    <span class="bar-val">${dayCal > 0 ? dayCal : ''}</span>
+                    <div class="bar ${barClass}" style="height: ${heightPct}%;"></div>
+                    <span class="bar-label">${dayName}</span>
+                </div>`;
+            }
+            chartContainer.innerHTML = chartHtml;
+
+            // محاسبه آمار این ماه (۳۰ روز گذشته)
+            let totalMonth = 0;
+            let monthAgo = new Date();
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            
+            dietHistory.forEach(f => {
+                let fDate = new Date(f.date);
+                if(fDate >= monthAgo) { totalMonth += f.cal; }
+            });
+
+            // آپدیت کردن باکس‌های آماری
+            document.getElementById('avg7Days').innerText = Math.round(total7Days / 7);
+            document.getElementById('totalMonth').innerText = totalMonth;
+            document.getElementById('maxDay').innerText = maxCal;
+        }
+    </script>
+</body>
+</html>

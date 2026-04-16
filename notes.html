@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>یادداشت‌های شخصی - پیشرفته و امن</title>
+    <script src="https://cdn.jsdelivr.net/npm/jalaali-js/dist/jalaali.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-teal: #1a9b8e;
+            --accent-teal: #17a2b8;
+            --light-teal: #e0f2f1;
+            --persian-green: #1fb580;
+            --dark-green: #0a5f3d;
+            --persian-dark: #0e3a2f;
+            --warm-cream: #faf8f3;
+            --soft-gray: #f0ebe5;
+            --text-dark: #1a1a1a;
+            --text-gray: #5a5a5a;
+            --border-light: #d4cec3;
+            --accent-gold: #d4a574;
+            --persian-red: #c0392b;
+            --persian-blue: #3498db;
+            --persian-purple: #9b59b6;
+            --persian-orange: #e67e22;
+            --shadow-light: rgba(31, 181, 128, 0.08);
+            --shadow-medium: rgba(31, 181, 128, 0.12);
+            --shadow-dark: rgba(31, 181, 128, 0.15);
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: var(--text-dark);
+            background-attachment: fixed;
+        }
+
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        /* هدر */
+        .notes-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,248,243,0.9) 100%);
+            padding: 35px 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 50px var(--shadow-light);
+            margin-bottom: 40px;
+            border: 2px solid rgba(224, 242, 241, 0.6);
+            backdrop-filter: blur(10px);
+            animation: slideInDown 0.6s ease;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 20px; }
+
+        .persian-icon { font-size: 48px; animation: pulse 2s infinite; }
+
+        .header-title {
+            font-size: 32px;
+            font-weight: 800;
+            margin: 0;
+            color: var(--persian-green);
+            letter-spacing: -0.5px;
+        }
+
+        .header-subtitle {
+            color: var(--text-gray);
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .header-right { display: flex; gap: 15px; }
+
+        .search-box {
+            padding: 12px 20px;
+            border: 2px solid rgba(31, 181, 128, 0.2);
+            border-radius: 50px;
+            background: rgba(255,255,255,0.9);
+            font-size: 14px;
+            width: 250px;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--persian-green);
+            box-shadow: 0 0 20px rgba(31, 181, 128, 0.2);
+        }
+
+        .add-note-btn {
+            background: linear-gradient(135deg, var(--persian-green), var(--accent-teal));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(31, 181, 128, 0.3);
+        }
+
+        .add-note-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(31, 181, 128, 0.4);
+        }
+
+        /* فیلترها */
+        .filters-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            background: rgba(31, 181, 128, 0.1);
+            color: var(--persian-green);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(31, 181, 128, 0.2);
+        }
+
+        .filter-tag:hover, .filter-tag.active {
+            background: var(--persian-green);
+            color: white;
+        }
+
+        /* شبکه نوت‌ها */
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .note-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,241,0.3) 100%);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: 0 12px 32px var(--shadow-light);
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid rgba(31, 181, 128, 0.15);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .note-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--persian-green), var(--accent-teal));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .note-card:hover::before {
+            opacity: 1;
+        }
+
+        .note-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 48px var(--shadow-medium);
+            border-color: rgba(31, 181, 128, 0.4);
+        }
+
+        .note-card.locked {
+            background: linear-gradient(135deg, rgba(255,235,235,0.95) 0%, rgba(255,200,200,0.3) 100%);
+            border-color: rgba(192, 57, 43, 0.3);
+        }
+
+        .note-card.locked::after {
+            content: '🔒';
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            font-size: 20px;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .note-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--persian-green);
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .note-action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .note-action-btn:hover {
+            background: rgba(31, 181, 128, 0.1);
+        }
+
+        .note-content {
+            color: var(--text-gray);
+            line-height: 1.6;
+            margin-bottom: 16px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .note-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        .note-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .note-tag {
+            background: rgba(31, 181, 128, 0.1);
+            color: var(--persian-green);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .note-recipient {
+            background: rgba(155, 89, 182, 0.1);
+            color: var(--persian-purple);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* مودال */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(250,248,243,0.9) 100%);
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.4s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--persian-green);
+            margin: 0;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-gray);
+            transition: color 0.2s ease;
+        }
+
+        .close-modal:hover { color: var(--persian-red); }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid rgba(31, 181, 128, 0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--persian-green);
+            box-shadow: 0 0 20px rgba(31, 181, 128, 0.2);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .tags-input {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 8px;
+            border: 2px solid rgba(31, 181, 128, 0.2);
+            border-radius: 12px;
+            min-height: 40px;
+        }
+
+        .tag-chip {
+            background: var(--persian-green);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .password-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .password-toggle input { margin: 0; }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--persian-green), var(--accent-teal));
+            color: white;
+            box-shadow: 0 4px 15px rgba(31, 181, 128, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(31, 181, 128, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(155, 89, 182, 0.1);
+            color: var(--persian-purple);
+        }
+
+        .btn-secondary:hover {
+            background: var(--persian-purple);
+            color: white;
+        }
+
+        /* مودال رمز */
+        .password-modal .modal-content {
+            max-width: 400px;
+        }
+
+        .password-form {
+            text-align: center;
+        }
+
+        .password-input {
+            text-align: center;
+            font-size: 18px;
+            letter-spacing: 4px;
+        }
+
+        /* انیمیشن‌ها */
+        @keyframes slideInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* ریسپانسیو */
+        @media (max-width: 768px) {
+            .notes-header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+
+            .notes-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 20px;
+                padding: 24px;
+            }
+        }
+
+        /* حالت خالی */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .empty-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-subtext {
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+
+        <a href="index.html" style="color: var(--text-gray); text-decoration: none; display: inline-block; margin-bottom: 20px; font-weight: 500;">🔙 بازگشت به داشبورد</a>
+
+        <div class="notes-header">
+            <div class="header-left">
+                <div class="persian-icon">📝</div>
+                <div>
+                    <h1 class="header-title">یادداشت‌های شخصی</h1>
+                    <p class="header-subtitle">افکار، ایده‌ها و یادداشت‌های امن شما</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <input type="text" class="search-box" placeholder="جستجو در یادداشت‌ها..." id="searchInput">
+                <button class="add-note-btn" onclick="openNoteModal()">+ یادداشت جدید</button>
+            </div>
+        </div>
+
+        <div class="filters-bar" id="filtersBar">
+            <span class="filter-tag active" data-filter="all">همه</span>
+            <!-- تگ‌های فیلتر به صورت دینامیک اضافه می‌شن -->
+        </div>
+
+        <div class="notes-grid" id="notesGrid">
+            <!-- یادداشت‌ها اینجا نمایش داده می‌شن -->
+        </div>
+
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">📝</div>
+            <div class="empty-text">هنوز یادداشتی ندارید!</div>
+            <div class="empty-subtext">روی دکمه "یادداشت جدید" کلیک کنید تا شروع کنید.</div>
+        </div>
+
+    </div>
+
+    <!-- مودال افزودن/ویرایش یادداشت -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">یادداشت جدید</h2>
+                <button class="close-modal" onclick="closeNoteModal()">&times;</button>
+            </div>
+            <form id="noteForm">
+                <div class="form-group">
+                    <label class="form-label">عنوان یادداشت</label>
+                    <input type="text" class="form-input" id="noteTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">محتوا</label>
+                    <textarea class="form-input form-textarea" id="noteContent" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تگ‌ها (با کاما جدا کنید)</label>
+                    <input type="text" class="form-input" id="noteTags" placeholder="مثال: کار، شخصی، ایده">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">مخاطب (اختیاری)</label>
+                    <input type="text" class="form-input" id="noteRecipient" placeholder="برای چه کسی؟">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رمز عبور (اختیاری - برای امنیت بیشتر)</label>
+                    <input type="password" class="form-input" id="notePassword">
+                    <div class="password-toggle">
+                        <input type="checkbox" id="showPassword">
+                        <label for="showPassword">نمایش رمز</label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeNoteModal()">لغو</button>
+                    <button type="submit" class="btn btn-primary">ذخیره یادداشت</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- مودال رمز عبور -->
+    <div class="modal password-modal" id="passwordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">رمز عبور را وارد کنید</h2>
+                <button class="close-modal" onclick="closePasswordModal()">&times;</button>
+            </div>
+            <form class="password-form" id="passwordForm">
+                <input type="password" class="form-input password-input" id="passwordInput" placeholder="رمز عبور" required>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">باز کردن</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let notes = JSON.parse(localStorage.getItem('personalNotes')) || [];
+        let currentNoteId = null;
+        let currentFilter = 'all';
+        let pendingNoteId = null;
+
+        // تاریخ‌های شمسی
+        function getCurrentJDate() {
+            const now = new Date();
+            const jDate = jalaali.toJalaali(now);
+            return `${jDate.jy}/${jDate.jm}/${jDate.jd}`;
+        }
+
+        function formatJDate(jDateStr) {
+            const [jy, jm, jd] = jDateStr.split('/');
+            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            return `${parseInt(jd)} ${months[parseInt(jm)-1]} ${jy}`;
+        }
+
+        // نمایش یادداشت‌ها
+        function renderNotes() {
+            const grid = document.getElementById('notesGrid');
+            const emptyState = document.getElementById('emptyState');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filteredNotes = notes.filter(note => {
+                const matchesFilter = currentFilter === 'all' || note.tags.includes(currentFilter);
+                const matchesSearch = !searchTerm ||
+                    note.title.toLowerCase().includes(searchTerm) ||
+                    note.content.toLowerCase().includes(searchTerm) ||
+                    note.tags.some(tag => tag.toLowerCase().includes(searchTerm));
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filteredNotes.length === 0) {
+                grid.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            grid.innerHTML = filteredNotes.map(note => `
+                <div class="note-card ${note.password ? 'locked' : ''}" onclick="openNote('${note.id}')">
+                    <div class="note-header">
+                        <h3 class="note-title">${note.title}</h3>
+                        <div class="note-actions">
+                            <button class="note-action-btn" onclick="event.stopPropagation(); editNote('${note.id}')">✏️</button>
+                            <button class="note-action-btn" onclick="event.stopPropagation(); deleteNote('${note.id}')">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="note-content">${note.content}</div>
+                    <div class="note-meta">
+                        <div>
+                            <span>ایجاد: ${formatJDate(note.createdDate)}</span>
+                            ${note.modifiedDate !== note.createdDate ? `<br><span>آخرین تغییر: ${formatJDate(note.modifiedDate)}</span>` : ''}
+                        </div>
+                        <div class="note-tags">
+                            ${note.tags.map(tag => `<span class="note-tag">${tag}</span>`).join('')}
+                            ${note.recipient ? `<span class="note-recipient">${note.recipient}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // باز کردن یادداشت
+        function openNote(id) {
+            const note = notes.find(n => n.id === id);
+            if (note.password) {
+                pendingNoteId = id;
+                document.getElementById('passwordModal').classList.add('active');
+            } else {
+                showNoteContent(note);
+            }
+        }
+
+        // نمایش محتوای یادداشت
+        function showNoteContent(note) {
+            // اینجا می‌تونیم یک مودال کامل برای نمایش یادداشت اضافه کنیم
+            alert(`عنوان: ${note.title}\n\n${note.content}\n\nتگ‌ها: ${note.tags.join(', ')}\n${note.recipient ? `\nمخاطب: ${note.recipient}` : ''}`);
+        }
+
+        // باز کردن مودال یادداشت
+        function openNoteModal(noteId = null) {
+            currentNoteId = noteId;
+            const modal = document.getElementById('noteModal');
+            const form = document.getElementById('noteForm');
+
+            if (noteId) {
+                const note = notes.find(n => n.id === noteId);
+                document.getElementById('modalTitle').textContent = 'ویرایش یادداشت';
+                document.getElementById('noteTitle').value = note.title;
+                document.getElementById('noteContent').value = note.content;
+                document.getElementById('noteTags').value = note.tags.join(', ');
+                document.getElementById('noteRecipient').value = note.recipient || '';
+                document.getElementById('notePassword').value = note.password || '';
+            } else {
+                document.getElementById('modalTitle').textContent = 'یادداشت جدید';
+                form.reset();
+            }
+
+            modal.classList.add('active');
+        }
+
+        // بستن مودال یادداشت
+        function closeNoteModal() {
+            document.getElementById('noteModal').classList.remove('active');
+            currentNoteId = null;
+        }
+
+        // ذخیره یادداشت
+        document.getElementById('noteForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+            const tags = document.getElementById('noteTags').value.split(',').map(t => t.trim()).filter(t => t);
+            const recipient = document.getElementById('noteRecipient').value.trim();
+            const password = document.getElementById('notePassword').value.trim();
+
+            const currentDate = getCurrentJDate();
+
+            if (currentNoteId) {
+                // ویرایش
+                const note = notes.find(n => n.id === currentNoteId);
+                note.title = title;
+                note.content = content;
+                note.tags = tags;
+                note.recipient = recipient;
+                note.password = password;
+                note.modifiedDate = currentDate;
+            } else {
+                // جدید
+                const newNote = {
+                    id: Date.now().toString(),
+                    title,
+                    content,
+                    tags,
+                    recipient,
+                    password,
+                    createdDate: currentDate,
+                    modifiedDate: currentDate
+                };
+                notes.push(newNote);
+            }
+
+            localStorage.setItem('personalNotes', JSON.stringify(notes));
+            closeNoteModal();
+            renderNotes();
+            updateFilters();
+        });
+
+        // ویرایش یادداشت
+        function editNote(id) {
+            openNoteModal(id);
+        }
+
+        // حذف یادداشت
+        function deleteNote(id) {
+            if (confirm('آیا مطمئن هستید که می‌خواهید این یادداشت را حذف کنید؟')) {
+                notes = notes.filter(n => n.id !== id);
+                localStorage.setItem('personalNotes', JSON.stringify(notes));
+                renderNotes();
+                updateFilters();
+            }
+        }
+
+        // آپدیت فیلترها
+        function updateFilters() {
+            const allTags = [...new Set(notes.flatMap(note => note.tags))];
+            const filtersBar = document.getElementById('filtersBar');
+
+            // پاک کردن فیلترهای قبلی به جز "همه"
+            const allFilter = filtersBar.querySelector('[data-filter="all"]');
+            filtersBar.innerHTML = '';
+            filtersBar.appendChild(allFilter);
+
+            allTags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'filter-tag';
+                tagElement.textContent = tag;
+                tagElement.dataset.filter = tag;
+                tagElement.onclick = () => filterNotes(tag);
+                filtersBar.appendChild(tagElement);
+            });
+        }
+
+        // فیلتر یادداشت‌ها
+        function filterNotes(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-tag').forEach(el => {
+                el.classList.toggle('active', el.dataset.filter === filter);
+            });
+            renderNotes();
+        }
+
+        // جستجو
+        document.getElementById('searchInput').addEventListener('input', renderNotes);
+
+        // نمایش رمز
+        document.getElementById('showPassword').addEventListener('change', function() {
+            const passwordInput = document.getElementById('notePassword');
+            passwordInput.type = this.checked ? 'text' : 'password';
+        });
+
+        // مودال رمز عبور
+        document.getElementById('passwordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('passwordInput').value;
+            const note = notes.find(n => n.id === pendingNoteId);
+
+            if (note.password === password) {
+                closePasswordModal();
+                showNoteContent(note);
+            } else {
+                alert('رمز عبور اشتباه است!');
+            }
+        });
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('passwordForm').reset();
+            pendingNoteId = null;
+        }
+
+        // مقداردهی اولیه
+        window.onload = function() {
+            renderNotes();
+            updateFilters();
+        };
+    </script>
+</body>
+</html>

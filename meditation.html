@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧘‍♀️ محفل آرامش - مدیتیشن</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --ocean: #1e3a8a;
+            --sea: #3b82f6;
+            --sky: #60a5fa;
+            --mist: #dbeafe;
+            --sage: #10b981;
+            --mint: #6ee7b7;
+            --text-light: #f8fafc;
+            --text-dark: #1e293b;
+            --accent: #f59e0b;
+            --glow: rgba(16, 185, 129, 0.3);
+        }
+
+        body {
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+            min-height: 100vh;
+            color: var(--text-light);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* اعمال فونت فارسی برای همه عناصر */
+        *, body, div, span, p, h1, h2, h3, h4, h5, h6, a, button, input, textarea, select {
+            font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* فونت مخصوص برای عناصر heading */
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+            font-weight: 600;
+        }
+
+        /* فونت مخصوص برای اعداد و تایمر */
+        .timer-display, .stat-value, .meditation-duration, input[type="number"], input[type="range"] {
+            font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+        }
+
+        /* فونت برای دکمه‌ها */
+        button {
+            font-family: 'Vazirmatn', Tahoma, sans-serif !important;
+            font-weight: 500;
+        }
+
+        /* پس‌زمینه متحرک */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
+            animation: breathe 8s ease-in-out infinite alternate;
+            z-index: -1;
+        }
+
+        @keyframes breathe {
+            0% { opacity: 0.3; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(1.05); }
+        }
+
+        /* ذرات شناور */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(16, 185, 129, 0.6);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .particle:nth-child(2n) {
+            background: rgba(59, 130, 246, 0.4);
+            animation-duration: 8s;
+            animation-delay: -2s;
+        }
+
+        .particle:nth-child(3n) {
+            background: rgba(245, 158, 11, 0.3);
+            animation-duration: 10s;
+            animation-delay: -4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        .back-link {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 100px 20px 50px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--mint) 0%, var(--sage) 50%, var(--sky) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            text-shadow: 0 0 40px rgba(16, 185, 129, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: rgba(248, 250, 252, 0.8);
+            font-weight: 400;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .meditation-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .meditation-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .meditation-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--sage), var(--sky), var(--accent));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .meditation-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .meditation-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(16, 185, 129, 0.2);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .meditation-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .meditation-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-light);
+        }
+
+        .meditation-desc {
+            color: rgba(248, 250, 252, 0.7);
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        .meditation-duration {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--sage);
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* تایمر مدیتیشن */
+        .timer-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-display {
+            font-size: 4rem;
+            font-weight: 300;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .start-section {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+            color: var(--text-dark);
+            border: none;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .timer-btn {
+            background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+            color: var(--text-dark);
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .timer-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        .timer-btn.pause {
+            background: linear-gradient(135deg, var(--accent) 0%, #fbbf24 100%);
+        }
+
+        .timer-btn.stop {
+            background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+        }
+
+        /* ویژوالایزر تنفس */
+        .breathing-guide {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .breathing-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.1) 70%);
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: breathe 8s ease-in-out infinite;
+        }
+
+        .breathing-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid rgba(16, 185, 129, 0.5);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        .breathing-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--sage);
+            z-index: 1;
+            position: relative;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+
+        .breathing-instruction {
+            color: rgba(248, 250, 252, 0.8);
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+
+        /* موسیقی آرامش‌بخش */
+        .music-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .music-title {
+            text-align: center;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--text-light);
+        }
+
+        .music-player {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .music-btn {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid rgba(16, 185, 129, 0.3);
+            color: var(--sage);
+            padding: 15px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .music-btn:hover, .music-btn.active {
+            background: var(--sage);
+            color: var(--text-dark);
+            transform: translateY(-2px);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            width: 100px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--sage);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* آمار مدیتیشن */
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--sage);
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-label {
+            color: rgba(248, 250, 252, 0.7);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* مودال مدیتیشن */
+        .meditation-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .meditation-modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.9) 0%, rgba(59, 130, 246, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 50px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 24px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-close:hover {
+            opacity: 1;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--text-light);
+        }
+
+        .modal-description {
+            color: rgba(248, 250, 252, 0.8);
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .modal-start-btn {
+            background: linear-gradient(135deg, var(--sage) 0%, var(--mint) 100%);
+            color: var(--text-dark);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .modal-start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+
+        /* ریسپانسیو */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.5rem;
+            }
+
+            .meditation-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .timer-display {
+                font-size: 3rem;
+            }
+
+            .timer-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .breathing-circle {
+                width: 150px;
+                height: 150px;
+            }
+        }
+
+        /* انیمیشن‌های ورود */
+        .fade-in {
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-up {
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ذرات شناور -->
+    <div class="particle" style="top: 10%; left: 10%;"></div>
+    <div class="particle" style="top: 20%; left: 80%;"></div>
+    <div class="particle" style="top: 60%; left: 20%;"></div>
+    <div class="particle" style="top: 70%; left: 70%;"></div>
+    <div class="particle" style="top: 40%; left: 50%;"></div>
+    <div class="particle" style="top: 80%; left: 30%;"></div>
+    <div class="particle" style="top: 30%; left: 90%;"></div>
+    <div class="particle" style="top: 90%; left: 60%;"></div>
+
+    <a href="index.html" class="back-link">← بازگشت به خانه</a>
+
+    <div class="container">
+        <div class="header fade-in">
+            <h1>🧘‍♀️ محفل آرامش</h1>
+            <p>جایی برای آرام کردن ذهن، تقویت تمرکز و یافتن صلح درونی</p>
+        </div>
+
+        <!-- تکنیک‌های مدیتیشن -->
+        <div class="meditation-grid">
+            <div class="meditation-card slide-up" onclick="startMeditation('mindfulness')">
+                <span class="meditation-icon">🧘‍♀️</span>
+                <div class="meditation-duration">10-20 دقیقه</div>
+                <h3 class="meditation-title">مراقبه ذهن‌آگاهی</h3>
+                <p class="meditation-desc">تمرکز بر لحظه حال، مشاهده افکار بدون قضاوت، و پرورش آگاهی از بدن و ذهن.</p>
+            </div>
+
+            <div class="meditation-card slide-up" onclick="startMeditation('breathing')">
+                <span class="meditation-icon">🌬️</span>
+                <div class="meditation-duration">5-15 دقیقه</div>
+                <h3 class="meditation-title">مدیتیشن تنفس</h3>
+                <p class="meditation-desc">تمرکز بر تنفس طبیعی، شمارش نفس‌ها، و آرام کردن ذهن از طریق ریتم تنفس.</p>
+            </div>
+
+            <div class="meditation-card slide-up" onclick="startMeditation('loving')">
+                <span class="meditation-icon">💚</span>
+                <div class="meditation-duration">15-30 دقیقه</div>
+                <h3 class="meditation-title">مدیتیشن عشق و شفقت</h3>
+                <p class="meditation-desc">پرورش عشق و شفقت نسبت به خود و دیگران، تقویت همدلی و پذیرش.</p>
+            </div>
+
+            <div class="meditation-card slide-up" onclick="startMeditation('body')">
+                <span class="meditation-icon">🫀</span>
+                <div class="meditation-duration">20-40 دقیقه</div>
+                <h3 class="meditation-title">اسکن بدن</h3>
+                <p class="meditation-desc">بررسی آگاهانه هر قسمت از بدن، رها کردن تنش‌ها، و پرورش آرامش عمیق.</p>
+            </div>
+
+            <div class="meditation-card slide-up" onclick="startMeditation('mantra')">
+                <span class="meditation-icon">🔮</span>
+                <div class="meditation-duration">10-25 دقیقه</div>
+                <h3 class="meditation-title">مدیتیشن مانترا</h3>
+                <p class="meditation-desc">تکرار کلمات یا عبارات معنادار برای تمرکز ذهن و دستیابی به آرامش.</p>
+            </div>
+
+            <div class="meditation-card slide-up" onclick="startMeditation('visualization')">
+                <span class="meditation-icon">🌟</span>
+                <div class="meditation-duration">15-30 دقیقه</div>
+                <h3 class="meditation-title">تصویرسازی هدایت‌شده</h3>
+                <p class="meditation-desc">ایجاد تصاویر ذهنی آرامش‌بخش برای آرام کردن ذهن و کاهش استرس.</p>
+            </div>
+        </div>
+
+        <!-- تایمر مدیتیشن -->
+        <div class="timer-section slide-up">
+            <div class="timer-display" id="timerDisplay">10:00</div>
+            <div class="timer-controls">
+                <button class="timer-btn" onclick="setTimer(5)">۵ دقیقه</button>
+                <button class="timer-btn" onclick="setTimer(10)">۱۰ دقیقه</button>
+                <button class="timer-btn" onclick="setTimer(15)">۱۵ دقیقه</button>
+                <button class="timer-btn" onclick="setTimer(20)">۲۰ دقیقه</button>
+                <button class="timer-btn pause" onclick="toggleTimer()" id="pauseBtn" style="display: none;">توقف</button>
+                <button class="timer-btn stop" onclick="stopTimer()" id="stopBtn" style="display: none;">پایان</button>
+            </div>
+            <div class="start-section">
+                <button class="start-btn" onclick="startMeditationSession()" id="startBtn">🧘‍♀️ شروع مدیتیشن</button>
+            </div>
+        </div>
+
+        <!-- راهنمای تنفس -->
+        <div class="breathing-guide slide-up">
+            <h3 style="color: var(--text-light); margin-bottom: 20px; font-size: 1.5rem;">🌬️ راهنمای تنفس ۴-۷-۸</h3>
+            <div class="breathing-circle">
+                <div class="breathing-text" id="breathingText">دم نفس بکش</div>
+            </div>
+            <p class="breathing-instruction" id="breathingInstruction">
+                ۴ ثانیه دم، ۷ ثانیه نگه داشتن، ۸ ثانیه بازدم. این تکنیک برای آرام کردن سیستم عصبی بسیار مؤثر است.
+            </p>
+        </div>
+
+        <!-- موسیقی آرامش‌بخش -->
+        <div class="music-section slide-up">
+            <h3 class="music-title">🎵 موسیقی آرامش‌بخش</h3>
+            <div class="music-player">
+                <button class="music-btn" onclick="playMusic('nature')">🌿 صدای طبیعت</button>
+                <button class="music-btn" onclick="playMusic('ocean')">🌊 صدای دریا</button>
+                <button class="music-btn" onclick="playMusic('rain')">🌧️ صدای باران</button>
+                <button class="music-btn" onclick="playMusic('bells')">🔔 صدای زنگ</button>
+                <div class="volume-control">
+                    <span style="color: var(--text-light);">🔊</span>
+                    <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+                </div>
+            </div>
+        </div>
+
+        <!-- آمار مدیتیشن -->
+        <div class="stats-section slide-up">
+            <div class="stat-card">
+                <span class="stat-value" id="totalSessions">0</span>
+                <span class="stat-label">جلسات مدیتیشن</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="totalMinutes">0</span>
+                <span class="stat-label">دقیقه مدیتیشن</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="currentStreak">0</span>
+                <span class="stat-label">روز متوالی</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value" id="averageSession">0</span>
+                <span class="stat-label">میانگین جلسه (دقیقه)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال مدیتیشن -->
+    <div class="meditation-modal" id="meditationModal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeMeditationModal()">×</button>
+            <div class="modal-title" id="modalTitle">🧘‍♀️ مدیتیشن ذهن‌آگاهی</div>
+            <div class="modal-description" id="modalDescription">
+                این مدیتیشن به شما کمک می‌کند تا در لحظه حال حضور داشته باشید و ذهن خود را آرام کنید.
+            </div>
+            <button class="modal-start-btn" onclick="beginMeditation()">شروع مدیتیشن</button>
+        </div>
+    </div>
+
+    <script>
+        // متغیرهای سراسری
+        let meditationTimer = null;
+        let timeLeft = 0;
+        let isTimerRunning = false;
+        let currentMeditation = null;
+        let breathingInterval = null;
+        let currentMusic = null;
+        let audioContext = null;
+        let audioElement = null;
+
+        // آمار مدیتیشن
+        let meditationStats = JSON.parse(localStorage.getItem('meditationStats')) || {
+            totalSessions: 0,
+            totalMinutes: 0,
+            currentStreak: 0,
+            lastSessionDate: null,
+            sessions: []
+        };
+
+        // راهنمای تنفس ۴-۷-۸
+        function startBreathingGuide() {
+            const phases = [
+                { text: 'دم نفس بکش', duration: 4000 },
+                { text: 'نگه دار', duration: 7000 },
+                { text: 'بازدم کن', duration: 8000 }
+            ];
+
+            let currentPhase = 0;
+
+            function nextPhase() {
+                const phase = phases[currentPhase];
+                document.getElementById('breathingText').textContent = phase.text;
+
+                if (phase.text === 'دم نفس بکش') {
+                    document.getElementById('breathingInstruction').textContent =
+                        '۴ ثانیه آرام نفس بکشید و ریه‌های خود را پر کنید.';
+                } else if (phase.text === 'نگه دار') {
+                    document.getElementById('breathingInstruction').textContent =
+                        '۷ ثانیه نفس خود را نگه دارید.';
+                } else {
+                    document.getElementById('breathingInstruction').textContent =
+                        '۸ ثانیه آرام نفس خود را بیرون دهید.';
+                }
+
+                setTimeout(() => {
+                    currentPhase = (currentPhase + 1) % phases.length;
+                    nextPhase();
+                }, phase.duration);
+            }
+
+            nextPhase();
+            breathingInterval = setInterval(nextPhase, 19000); // تکرار هر ۱۹ ثانیه
+        }
+
+        function stopBreathingGuide() {
+            if (breathingInterval) {
+                clearInterval(breathingInterval);
+                breathingInterval = null;
+            }
+        }
+
+        // تایمر مدیتیشن
+        function setTimer(minutes) {
+            timeLeft = minutes * 60;
+            updateTimerDisplay();
+            document.getElementById('pauseBtn').style.display = 'inline-block';
+            document.getElementById('stopBtn').style.display = 'inline-block';
+        }
+
+        function toggleTimer() {
+            if (isTimerRunning) {
+                pauseTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            isTimerRunning = true;
+            document.getElementById('pauseBtn').textContent = 'توقف';
+            meditationTimer = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+
+                if (timeLeft <= 0) {
+                    stopTimer();
+                    playCompletionSound();
+                    showCompletionMessage();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            isTimerRunning = false;
+            clearInterval(meditationTimer);
+            document.getElementById('pauseBtn').textContent = 'ادامه';
+        }
+
+        function stopTimer() {
+            isTimerRunning = false;
+            clearInterval(meditationTimer);
+            timeLeft = 0;
+            updateTimerDisplay();
+            document.getElementById('pauseBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('pauseBtn').textContent = 'توقف';
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timerDisplay').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startMeditationSession() {
+            const duration = parseInt(document.getElementById('timerDisplay').textContent.split(':')[0]) * 60 +
+                           parseInt(document.getElementById('timerDisplay').textContent.split(':')[1]);
+
+            if (duration <= 0) {
+                alert('لطفاً مدت زمان را تنظیم کنید');
+                return;
+            }
+
+            // مخفی کردن بخش شروع و نمایش تایمر
+            document.querySelector('.start-section').style.display = 'none';
+            document.querySelector('.timer-section').style.display = 'block';
+
+            // شروع تایمر
+            timeLeft = duration;
+            startTimer();
+
+            // شروع جلسه مدیتیشن
+            meditationStartTime = Date.now();
+            isMeditating = true;
+
+            // نمایش راهنما تنفس اگر انتخاب شده
+            if (selectedTechnique === 'breathing') {
+                document.getElementById('breathingGuide').style.display = 'block';
+                startBreathingGuide();
+            }
+
+            // به‌روزرسانی آمار
+            updateStatsDisplay();
+        }
+
+        // موسیقی آرامش‌بخش با صدای واقعی
+        function playMusic(type) {
+            // توقف موسیقی قبلی
+            if (currentMusic) {
+                stopMusic();
+            }
+
+            // پاک کردن کلاس active از همه دکمه‌ها
+            document.querySelectorAll('.music-btn').forEach(btn => btn.classList.remove('active'));
+
+            // اضافه کردن کلاس active به دکمه کلیک شده
+            event.target.classList.add('active');
+
+            // ایجاد صدای واقعی
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            currentMusic = createAmbientSound(type);
+
+            // کنترل حجم صدا
+            document.getElementById('volumeSlider').oninput = function() {
+                if (currentMusic && currentMusic.gainNode) {
+                    currentMusic.gainNode.gain.setValueAtTime(this.value, audioContext.currentTime);
+                }
+            };
+        }
+
+        function createAmbientSound(type) {
+            const sound = {
+                oscillators: [],
+                gainNode: null,
+                filters: [],
+                stop: function() {
+                    this.oscillators.forEach(osc => {
+                        try { osc.stop(); } catch(e) {}
+                    });
+                    this.oscillators = [];
+                    this.filters = [];
+                }
+            };
+
+            sound.gainNode = audioContext.createGain();
+            sound.gainNode.connect(audioContext.destination);
+            sound.gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+
+            switch(type) {
+                case 'ocean':
+                    // صدای دریا - ترکیبی از امواج و آب
+                    createOceanSound(sound);
+                    break;
+                case 'rain':
+                    // صدای باران - قطره‌های آب
+                    createRainSound(sound);
+                    break;
+                case 'nature':
+                    // صدای طبیعت - ترکیبی از باد و پرندگان
+                    createNatureSound(sound);
+                    break;
+                case 'bells':
+                    // صدای زنگ - نوت‌های آرام
+                    createBellSound(sound);
+                    break;
+            }
+
+            return sound;
+        }
+
+        function createOceanSound(sound) {
+            // صدای امواج دریا
+            const waveOsc = audioContext.createOscillator();
+            const waveGain = audioContext.createGain();
+            const filter = audioContext.createBiquadFilter();
+
+            waveOsc.frequency.setValueAtTime(0.1, audioContext.currentTime);
+            waveOsc.frequency.exponentialRampToValueAtTime(0.5, audioContext.currentTime + 2);
+
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(200, audioContext.currentTime);
+
+            waveOsc.connect(filter);
+            filter.connect(waveGain);
+            waveGain.connect(sound.gainNode);
+
+            waveGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+            waveGain.gain.exponentialRampToValueAtTime(0.15, audioContext.currentTime + 1);
+
+            waveOsc.start();
+            sound.oscillators.push(waveOsc);
+            sound.filters.push(filter);
+
+            // صدای آب
+            setTimeout(() => {
+                const waterOsc = audioContext.createOscillator();
+                const waterGain = audioContext.createGain();
+
+                waterOsc.frequency.setValueAtTime(800, audioContext.currentTime);
+                waterOsc.type = 'sawtooth';
+
+                waterOsc.connect(waterGain);
+                waterGain.connect(sound.gainNode);
+
+                waterGain.gain.setValueAtTime(0.02, audioContext.currentTime);
+
+                waterOsc.start();
+                sound.oscillators.push(waterOsc);
+            }, 1000);
+        }
+
+        function createRainSound(sound) {
+            // صدای باران با استفاده از noise
+            const bufferSize = audioContext.sampleRate * 2;
+            const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+            const output = buffer.getChannelData(0);
+
+            // تولید noise برای باران
+            for (let i = 0; i < bufferSize; i++) {
+                output[i] = Math.random() * 2 - 1;
+            }
+
+            const whiteNoise = audioContext.createBufferSource();
+            whiteNoise.buffer = buffer;
+            whiteNoise.loop = true;
+
+            const filter = audioContext.createBiquadFilter();
+            filter.type = 'highpass';
+            filter.frequency.setValueAtTime(1000, audioContext.currentTime);
+
+            const gainNode = audioContext.createGain();
+            gainNode.gain.setValueAtTime(0.03, audioContext.currentTime);
+
+            whiteNoise.connect(filter);
+            filter.connect(gainNode);
+            gainNode.connect(sound.gainNode);
+
+            whiteNoise.start();
+            sound.oscillators.push(whiteNoise);
+            sound.filters.push(filter);
+        }
+
+        function createNatureSound(sound) {
+            // صدای باد
+            const windOsc = audioContext.createOscillator();
+            const windGain = audioContext.createGain();
+
+            windOsc.frequency.setValueAtTime(50, audioContext.currentTime);
+            windOsc.frequency.setValueAtTime(80, audioContext.currentTime + 3);
+
+            windOsc.connect(windGain);
+            windGain.connect(sound.gainNode);
+
+            windGain.gain.setValueAtTime(0.01, audioContext.currentTime);
+            windGain.gain.exponentialRampToValueAtTime(0.05, audioContext.currentTime + 2);
+
+            windOsc.start();
+            sound.oscillators.push(windOsc);
+
+            // صدای پرندگان (نوت‌های تصادفی)
+            setInterval(() => {
+                if (Math.random() > 0.7) {
+                    const birdOsc = audioContext.createOscillator();
+                    const birdGain = audioContext.createGain();
+
+                    const freq = 1000 + Math.random() * 2000;
+                    birdOsc.frequency.setValueAtTime(freq, audioContext.currentTime);
+                    birdOsc.frequency.exponentialRampToValueAtTime(freq * 0.8, audioContext.currentTime + 0.1);
+
+                    birdOsc.connect(birdGain);
+                    birdGain.connect(sound.gainNode);
+
+                    birdGain.gain.setValueAtTime(0, audioContext.currentTime);
+                    birdGain.gain.linearRampToValueAtTime(0.02, audioContext.currentTime + 0.05);
+                    birdGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.15);
+
+                    birdOsc.start();
+                    birdOsc.stop(audioContext.currentTime + 0.2);
+                }
+            }, 3000);
+        }
+
+        function createBellSound(sound) {
+            // صدای زنگ آرام
+            const bellOsc1 = audioContext.createOscillator();
+            const bellOsc2 = audioContext.createOscillator();
+            const bellGain = audioContext.createGain();
+
+            bellOsc1.frequency.setValueAtTime(523, audioContext.currentTime); // دو
+            bellOsc2.frequency.setValueAtTime(659, audioContext.currentTime); // می
+
+            bellOsc1.connect(bellGain);
+            bellOsc2.connect(bellGain);
+            bellGain.connect(sound.gainNode);
+
+            bellGain.gain.setValueAtTime(0.05, audioContext.currentTime);
+            bellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 3);
+
+            bellOsc1.start();
+            bellOsc2.start();
+
+            bellOsc1.stop(audioContext.currentTime + 3);
+            bellOsc2.stop(audioContext.currentTime + 3);
+
+            sound.oscillators.push(bellOsc1, bellOsc2);
+
+            // تکرار زنگ هر 30 ثانیه
+            setInterval(() => {
+                const newBellOsc1 = audioContext.createOscillator();
+                const newBellOsc2 = audioContext.createOscillator();
+                const newBellGain = audioContext.createGain();
+
+                newBellOsc1.frequency.setValueAtTime(523, audioContext.currentTime);
+                newBellOsc2.frequency.setValueAtTime(659, audioContext.currentTime);
+
+                newBellOsc1.connect(newBellGain);
+                newBellOsc2.connect(newBellGain);
+                newBellGain.connect(sound.gainNode);
+
+                newBellGain.gain.setValueAtTime(0.03, audioContext.currentTime);
+                newBellGain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 2);
+
+                newBellOsc1.start();
+                newBellOsc2.start();
+
+                newBellOsc1.stop(audioContext.currentTime + 2);
+                newBellOsc2.stop(audioContext.currentTime + 2);
+            }, 30000);
+        }
+
+        function stopMusic() {
+            if (currentMusic) {
+                currentMusic.stop();
+                currentMusic = null;
+                document.querySelectorAll('.music-btn').forEach(btn => btn.classList.remove('active'));
+            }
+        }
+
+        function endMeditationSession() {
+            if (isMeditating) {
+                const sessionDuration = Math.floor((Date.now() - meditationStartTime) / 1000 / 60);
+                const stats = JSON.parse(localStorage.getItem('meditationStats') || '{}');
+
+                stats.totalSessions = (stats.totalSessions || 0) + 1;
+                stats.totalMinutes = (stats.totalMinutes || 0) + sessionDuration;
+                stats.lastSession = new Date().toISOString();
+
+                // به‌روزرسانی ریت
+                if (stats.lastSessionDate) {
+                    const lastDate = new Date(stats.lastSessionDate);
+                    const today = new Date();
+                    const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+
+                    if (diffDays === 1) {
+                        stats.currentStreak = (stats.currentStreak || 0) + 1;
+                    } else if (diffDays > 1) {
+                        stats.currentStreak = 1;
+                    }
+                } else {
+                    stats.currentStreak = 1;
+                }
+
+                stats.lastSessionDate = new Date().toISOString();
+                localStorage.setItem('meditationStats', JSON.stringify(stats));
+
+                isMeditating = false;
+            }
+
+            // توقف موسیقی
+            stopMusic();
+
+            // توقف راهنما تنفس
+            stopBreathingGuide();
+
+            // توقف تایمر
+            stopTimer();
+
+            // نمایش بخش شروع دوباره
+            document.querySelector('.start-section').style.display = 'block';
+            document.querySelector('.timer-section').style.display = 'none';
+            document.getElementById('breathingGuide').style.display = 'none';
+
+            // بازنشانی تایمر به مقدار پیش‌فرض
+            document.getElementById('timerDisplay').textContent = '10:00';
+
+            // نمایش پیام پایان
+            showNotification('جلسه مدیتیشن به پایان رسید! 🎉');
+        }
+
+        // مدیتیشن‌ها
+        function startMeditation(type) {
+            currentMeditation = type;
+
+            const meditations = {
+                mindfulness: {
+                    title: '🧘‍♀️ مدیتیشن ذهن‌آگاهی',
+                    description: 'در این مدیتیشن، تمرکز خود را بر لحظه حال قرار دهید. نفس‌های خود را احساس کنید، بدن خود را حس کنید، و افکار خود را بدون قضاوت مشاهده کنید.'
+                },
+                breathing: {
+                    title: '🌬️ مدیتیشن تنفس',
+                    description: 'تمرکز خود را بر تنفس طبیعی خود قرار دهید. هر دم و بازدم را احساس کنید. اگر ذهن شما پرت شد، دوباره به تنفس برگردید.'
+                },
+                loving: {
+                    title: '💚 مدیتیشن عشق و شفقت',
+                    description: 'عشق و شفقت را نسبت به خود و دیگران پرورش دهید. کلماتی مانند "آرام باشم" و "خوشبخت باشم" را تکرار کنید.'
+                },
+                body: {
+                    title: '🫀 اسکن بدن',
+                    description: 'توجه خود را از انگشتان پا به بالای سر حرکت دهید. هر قسمت از بدن را احساس کنید و تنش‌ها را رها کنید.'
+                },
+                mantra: {
+                    title: '🔮 مدیتیشن مانترا',
+                    description: 'مانترای "اوم" یا هر کلمه دیگری را که برای شما معنادار است را تکرار کنید. این کار ذهن را آرام می‌کند.'
+                },
+                visualization: {
+                    title: '🌟 تصویرسازی هدایت‌شده',
+                    description: 'تصویری آرامش‌بخش در ذهن خود ایجاد کنید. شاید یک جنگل آرام، دریا، یا کوهستان. در این تصویر غرق شوید.'
+                }
+            };
+
+            const meditation = meditations[type];
+            document.getElementById('modalTitle').textContent = meditation.title;
+            document.getElementById('modalDescription').textContent = meditation.description;
+            document.getElementById('meditationModal').classList.add('active');
+        }
+
+        function closeMeditationModal() {
+            document.getElementById('meditationModal').classList.remove('active');
+        }
+
+        function beginMeditation() {
+            closeMeditationModal();
+
+            // شروع تایمر ۱۰ دقیقه‌ای پیش‌فرض
+            setTimer(10);
+            startTimer();
+
+            // ذخیره جلسه مدیتیشن
+            saveMeditationSession(10);
+        }
+
+        // ذخیره آمار مدیتیشن
+        function saveMeditationSession(minutes) {
+            const today = new Date().toDateString();
+            const lastSession = meditationStats.lastSessionDate;
+
+            meditationStats.totalSessions++;
+            meditationStats.totalMinutes += minutes;
+
+            if (lastSession !== today) {
+                if (lastSession === new Date(Date.now() - 86400000).toDateString()) {
+                    meditationStats.currentStreak++;
+                } else {
+                    meditationStats.currentStreak = 1;
+                }
+                meditationStats.lastSessionDate = today;
+            }
+
+            meditationStats.sessions.push({
+                date: new Date().toISOString(),
+                duration: minutes,
+                type: currentMeditation
+            });
+
+            localStorage.setItem('meditationStats', JSON.stringify(meditationStats));
+            updateStatsDisplay();
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('totalSessions').textContent = meditationStats.totalSessions;
+            document.getElementById('totalMinutes').textContent = meditationStats.totalMinutes;
+            document.getElementById('currentStreak').textContent = meditationStats.currentStreak;
+            document.getElementById('averageSession').textContent =
+                meditationStats.totalSessions > 0 ?
+                Math.round(meditationStats.totalMinutes / meditationStats.totalSessions) : 0;
+        }
+
+        // صداهای تکمیل
+        function playCompletionSound() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.setValueAtTime(523, audioContext.currentTime); // دو
+            oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.5); // می
+            oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 1); // سل
+
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 1.5);
+
+            oscillator.start();
+            oscillator.stop(audioContext.currentTime + 1.5);
+        }
+
+        function showCompletionMessage() {
+            // نمایش نوتیفیکیشن یا پیام تکمیل
+            alert('🎉 مدیتیشن شما به پایان رسید! امیدواریم آرامش و انرژی مثبتی دریافت کرده باشید.');
+        }
+
+        function showNotification(message) {
+            // ایجاد نوتیفیکیشن سفارشی
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(76, 175, 80, 0.9);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                z-index: 1000;
+                font-family: 'Vazirmatn', sans-serif;
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            document.body.appendChild(notification);
+
+            // حذف نوتیفیکیشن بعد از ۳ ثانیه
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // راه‌اندازی اولیه
+        window.onload = function() {
+            startBreathingGuide();
+            updateStatsDisplay();
+
+            // تنظیم تایمر پیش‌فرض
+            setTimer(10);
+        };
+
+        // پاکسازی هنگام خروج
+        window.onbeforeunload = function() {
+            if (currentMusic) {
+                currentMusic.stop();
+            }
+            if (breathingInterval) {
+                clearInterval(breathingInterval);
+            }
+        };
+    </script>
+</body>
+</html>
