@@ -97,14 +97,13 @@ function loadDashboardSnapshot() {
 
 const TIMER_STORAGE_KEY = 'dashboardTimerState';
 const STOPWATCH_STORAGE_KEY = 'dashboardStopwatchState';
-const ADHAN_STORAGE_KEY = 'adhanEvents1405';
-const ADHAN_META_KEY = 'adhanEvents1405Meta';
+const ADHAN_STORAGE_KEY_PREFIX = 'adhanEvents';
+const ADHAN_META_KEY_PREFIX = 'adhanEventsMeta';
 const ADHAN_CONFIG_VERSION = 3;
 const ADHAN_DEFAULTS = {
     city: 'Tehran',
     country: 'Iran',
-    method: 7,
-    jalaaliYear: 1405
+    method: 7
 };
 const ADHAN_PRAYER_ENTRIES = [
     ['Fajr', 'اذان صبح'],
@@ -112,6 +111,17 @@ const ADHAN_PRAYER_ENTRIES = [
     ['Dhuhr', 'اذان ظهر'],
     ['Sunset', 'غروب'],
     ['Maghrib', 'اذان مغرب']
+];
+const DASHBOARD_STORAGE_SYNC_KEYS = [
+    'advancedTasks',
+    'myHabits',
+    'myDietLog',
+    'proEvents',
+    'goals',
+    'financeAssets',
+    'meditationStats',
+    'fitnessExercises',
+    'nutritionTargets'
 ];
 
 function normalizeGregorianDate(dateLike) {
@@ -143,11 +153,33 @@ function sanitizeTimingValue(value) {
     return String(value || '').split(' ')[0];
 }
 
-function getStoredAdhanEvents() {
-    const rawEvents = JSON.parse(localStorage.getItem(ADHAN_STORAGE_KEY) || '[]');
+function safeJsonParse(raw, fallback) {
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function getCurrentJalaaliYear() {
+    return jalaali.toJalaali(new Date()).jy;
+}
+
+function getAdhanStorageKey(jalaaliYear = getCurrentJalaaliYear()) {
+    return `${ADHAN_STORAGE_KEY_PREFIX}${jalaaliYear}`;
+}
+
+function getAdhanMetaKey(jalaaliYear = getCurrentJalaaliYear()) {
+    return `${ADHAN_META_KEY_PREFIX}${jalaaliYear}`;
+}
+
+function getStoredAdhanEvents(jalaaliYear = getCurrentJalaaliYear()) {
+    const storageKey = getAdhanStorageKey(jalaaliYear);
+    const rawEvents = safeJsonParse(localStorage.getItem(storageKey) || '[]', []);
     const sanitizedEvents = sanitizeStoredAdhanEvents(rawEvents);
     if (sanitizedEvents.length !== rawEvents.length) {
-        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(sanitizedEvents));
+        localStorage.setItem(storageKey, JSON.stringify(sanitizedEvents));
     }
     return sanitizedEvents;
 }
@@ -162,7 +194,7 @@ function getStoredUserEvents() {
     if (dashboardData?.readUserEvents) {
         return dashboardData.readUserEvents();
     }
-    return JSON.parse(localStorage.getItem('proEvents') || '[]');
+    return safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
 }
 
 function getAllCalendarEvents(rangeStart, rangeEnd, options) {
@@ -174,9 +206,9 @@ function getAllCalendarEvents(rangeStart, rangeEnd, options) {
         : [...getStoredUserEvents(), ...getStoredAdhanEvents()];
 }
 
-function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings) {
+function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings, targetJalaaliYear) {
     const jalaaliDate = jalaali.toJalaali(new Date(gregorianYear, gregorianMonth - 1, gregorianDay));
-    if (jalaaliDate.jy !== ADHAN_DEFAULTS.jalaaliYear) {
+    if (jalaaliDate.jy !== targetJalaaliYear) {
         return [];
     }
 
@@ -195,25 +227,41 @@ function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, tim
     }));
 }
 
-async function ensureAdhanData1405() {
-    const cachedRaw = getStoredAdhanEvents();
+function buildMonthRequestsForJalaaliYear(jalaaliYear) {
+    const startGregorian = jalaali.toGregorian(jalaaliYear, 1, 1);
+    const endGregorian = jalaali.toGregorian(jalaaliYear, 12, 29);
+    const start = new Date(startGregorian.gy, startGregorian.gm - 1, startGregorian.gd);
+    const end = new Date(endGregorian.gy, endGregorian.gm - 1, endGregorian.gd);
+    const requests = [];
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+
+    while (cursor <= end) {
+        requests.push([cursor.getFullYear(), cursor.getMonth() + 1]);
+        cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    return requests;
+}
+
+async function ensureAdhanDataForCurrentYear() {
+    const jalaaliYear = getCurrentJalaaliYear();
+    const storageKey = getAdhanStorageKey(jalaaliYear);
+    const metaKey = getAdhanMetaKey(jalaaliYear);
+    const cachedRaw = getStoredAdhanEvents(jalaaliYear);
     const existing = sanitizeStoredAdhanEvents(cachedRaw);
-    const meta = JSON.parse(localStorage.getItem(ADHAN_META_KEY) || 'null');
+    const meta = safeJsonParse(localStorage.getItem(metaKey) || 'null', null);
     const cacheMatches = meta?.city === ADHAN_DEFAULTS.city
-        && meta?.year === ADHAN_DEFAULTS.jalaaliYear
+        && meta?.year === jalaaliYear
         && meta?.version === ADHAN_CONFIG_VERSION;
 
     if (existing.length && cacheMatches) {
         if (existing.length !== cachedRaw.length) {
-            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
+            localStorage.setItem(storageKey, JSON.stringify(existing));
         }
         return existing;
     }
 
-    const monthRequests = [
-        [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], [2026, 8],
-        [2026, 9], [2026, 10], [2026, 11], [2026, 12], [2027, 1], [2027, 2], [2027, 3]
-    ];
+    const monthRequests = buildMonthRequestsForJalaaliYear(jalaaliYear);
 
     try {
         const responses = await Promise.all(monthRequests.map(async ([year, month]) => {
@@ -229,15 +277,15 @@ async function ensureAdhanData1405() {
         const adhanEvents = responses.flatMap(monthData => monthData.flatMap(item => {
             const gregorian = item?.date?.gregorian;
             if (!gregorian) return [];
-            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {});
+            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {}, jalaaliYear);
         }));
 
-        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(adhanEvents));
-        localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+        localStorage.setItem(storageKey, JSON.stringify(adhanEvents));
+        localStorage.setItem(metaKey, JSON.stringify({
             city: ADHAN_DEFAULTS.city,
             country: ADHAN_DEFAULTS.country,
             method: ADHAN_DEFAULTS.method,
-            year: ADHAN_DEFAULTS.jalaaliYear,
+            year: jalaaliYear,
             version: ADHAN_CONFIG_VERSION,
             generatedAt: new Date().toISOString()
         }));
@@ -245,12 +293,12 @@ async function ensureAdhanData1405() {
         return adhanEvents;
     } catch (error) {
         if (existing.length) {
-            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
-            localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+            localStorage.setItem(storageKey, JSON.stringify(existing));
+            localStorage.setItem(metaKey, JSON.stringify({
                 city: ADHAN_DEFAULTS.city,
                 country: ADHAN_DEFAULTS.country,
                 method: ADHAN_DEFAULTS.method,
-                year: ADHAN_DEFAULTS.jalaaliYear,
+                year: jalaaliYear,
                 version: ADHAN_CONFIG_VERSION,
                 generatedAt: meta?.generatedAt || new Date().toISOString()
             }));
@@ -282,7 +330,7 @@ function getTaskPriorityRank(priority) {
 function readDashboardTasks() {
     return dashboardData?.readTasks
         ? dashboardData.readTasks()
-        : JSON.parse(localStorage.getItem('advancedTasks') || '[]');
+        : safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
 }
 
 function formatFaJalaaliFromGregorian(dateLike) {
@@ -1056,6 +1104,91 @@ function loadWeeklyStats() {
     weeklyEventsEl.textContent = formatFa(weeklyEvents);
 }
 
+function readLifeSyncArrays() {
+    return {
+        tasks: safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []),
+        habits: safeJsonParse(localStorage.getItem('myHabits') || '[]', []),
+        dietLog: safeJsonParse(localStorage.getItem('myDietLog') || '[]', []),
+        goals: safeJsonParse(localStorage.getItem('goals') || '[]', []),
+        assets: safeJsonParse(localStorage.getItem('financeAssets') || '[]', []),
+        meditationStats: safeJsonParse(localStorage.getItem('meditationStats') || '{}', {}),
+        exercises: safeJsonParse(localStorage.getItem('fitnessExercises') || '[]', [])
+    };
+}
+
+function calculateLastDaysAverageCalories(dietLog, days) {
+    const now = new Date();
+    let total = 0;
+    for (let i = 0; i < days; i += 1) {
+        const cursor = new Date(now);
+        cursor.setDate(now.getDate() - i);
+        const key = cursor.toLocaleDateString('en-CA');
+        total += dietLog.filter(item => item.date === key).reduce((sum, item) => sum + (Number(item.cal) || 0), 0);
+    }
+    return total / days;
+}
+
+function renderLifeSyncInsights() {
+    const container = document.getElementById('lifeSyncList');
+    const meter = document.getElementById('lifeSyncMeter');
+    if (!container || !meter) return;
+    const { tasks, habits, dietLog, goals, assets, meditationStats, exercises } = readLifeSyncArrays();
+    const todayKey = normalizeGregorianDate(new Date());
+    const overdueTasks = tasks.filter(task => !task.completed && task.dueDate && normalizeGregorianDate(task.dueDate) < todayKey).length;
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active').length;
+    const avgCalories7 = calculateLastDaysAverageCalories(dietLog, 7);
+    const proteinGoal = Number(safeJsonParse(localStorage.getItem('nutritionTargets') || '{}', {}).proteinMin) || 80;
+    const todayProtein = dietLog.filter(item => item.date === todayKey).reduce((sum, item) => sum + (Number(item.pro) || 0), 0);
+    const weeklyHabitChecks = habits.reduce((sum, habit) => sum + ((habit.history || []).filter(date => {
+        const d = new Date(date);
+        const now = new Date();
+        return (now - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length), 0);
+    const assetTotal = assets.reduce((sum, asset) => sum + (Number(asset.totalValue) || 0), 0);
+    const meditationMinutes = Number(meditationStats.totalMinutes) || 0;
+    const exerciseSessionsWeek = exercises.filter(item => {
+        const d = new Date(item.date || item.createdAt || 0);
+        return (new Date() - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length;
+
+    const insights = [
+        {
+            title: '🎯 بهره‌وری و انرژی',
+            body: overdueTasks > 0
+                ? `${formatFa(overdueTasks)} تسک عقب‌مانده داری. اگر خواب/تغذیه را پایدار کنی فشار ذهنی کمتر می‌شود.`
+                : 'تسک عقب‌مانده‌ای نداری؛ زمان خوبی برای پیشبرد اهداف عمیق است.'
+        },
+        {
+            title: '🍎 تغذیه و عملکرد',
+            body: `میانگین ۷ روزه کالری: ${formatFa(Math.round(avgCalories7))}. پروتئین امروز ${formatFa(Math.round(todayProtein))}g از هدف ${formatFa(proteinGoal)}g است.`
+        },
+        {
+            title: '🌿 عادت، ورزش و ذهن',
+            body: `این هفته ${formatFa(weeklyHabitChecks)} ثبت عادت، ${formatFa(exerciseSessionsWeek)} جلسه تمرین و ${formatFa(meditationMinutes)} دقیقه مدیتیشن ثبت شده است.`
+        },
+        {
+            title: '💰 مالی و برنامه‌ریزی',
+            body: `ارزش تقریبی دارایی‌ها: ${formatFa(Math.round(assetTotal))}. بهتر است اهداف فعال (${formatFa(activeGoals)}) با بودجه‌ات هم‌راستا بماند.`
+        }
+    ];
+
+    container.innerHTML = insights.map(item => `
+        <article class="life-sync-card">
+            <strong>${item.title}</strong>
+            <p>${item.body}</p>
+        </article>
+    `).join('');
+
+    let score = 100;
+    score -= Math.min(35, overdueTasks * 5);
+    score -= Math.max(0, 20 - Math.min(20, weeklyHabitChecks));
+    score -= Math.max(0, 15 - Math.min(15, exerciseSessionsWeek * 4));
+    score -= todayProtein < proteinGoal ? Math.min(20, Math.round((proteinGoal - todayProtein) / 4)) : 0;
+    score = Math.max(25, Math.min(100, score));
+    const status = score >= 80 ? 'یکپارچگی عالی' : score >= 60 ? 'نیاز به تنظیم' : 'هشدار پیوستگی';
+    meter.textContent = `شاخص پیوستگی زندگی: ${formatFa(Math.round(score))} از ۱۰۰ — ${status}.`;
+}
+
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
     setTheme(savedTheme);
@@ -1080,6 +1213,7 @@ window.addEventListener('load', () => {
         renderTodaySchedule();
         renderGoalFocus();
         renderTodayPrayerTimes();
+        renderLifeSyncInsights();
         if (timerDisplay) {
             initializeDashboardTimerControls();
         }
@@ -1094,7 +1228,7 @@ window.addEventListener('load', () => {
             restoreDashboardTimer();
         }
         loadWeeklyStats();
-        ensureAdhanData1405()
+        ensureAdhanDataForCurrentYear()
             .then(() => {
                 if (miniCalendar) {
                     renderMiniCalendar();
@@ -1103,16 +1237,18 @@ window.addEventListener('load', () => {
                 renderTodaySchedule();
                 renderGoalFocus();
                 loadWeeklyStats();
+                renderLifeSyncInsights();
             })
             .catch(error => {
-                console.error('Unable to load 1405 prayer times:', error);
+                console.error('Unable to load prayer times:', error);
                 renderTodayPrayerTimes();
             });
     }
 });
 
 window.addEventListener('storage', event => {
-    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals', ADHAN_STORAGE_KEY].includes(event.key)) {
+    const adhanStoragePrefixMatch = String(event.key || '').startsWith(ADHAN_STORAGE_KEY_PREFIX);
+    if (!DASHBOARD_STORAGE_SYNC_KEYS.includes(event.key) && !adhanStoragePrefixMatch) {
         return;
     }
     loadDashboardSnapshot();
@@ -1120,6 +1256,7 @@ window.addEventListener('storage', event => {
     renderGoalFocus();
     renderTodayPrayerTimes();
     loadWeeklyStats();
+    renderLifeSyncInsights();
     if (document.getElementById('miniCalendar')) {
         renderMiniCalendar();
     }

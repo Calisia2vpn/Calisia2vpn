@@ -1184,6 +1184,45 @@
             font-size: 22px;
         }
 
+        .life-sync-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .life-sync-card {
+            padding: 16px;
+            border-radius: 18px;
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+
+        .life-sync-card strong {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .life-sync-card p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 12px;
+            line-height: 1.9;
+        }
+
+        .life-sync-meter {
+            margin-top: 16px;
+            border-radius: 14px;
+            padding: 14px;
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(37, 99, 235, 0.12));
+            border: 1px solid rgba(15, 118, 110, 0.2);
+            font-size: 13px;
+            color: var(--text);
+            font-weight: 700;
+        }
+
         @media (max-width: 1080px) {
             .dashboard-hero,
             .plans-grid {
@@ -1197,6 +1236,10 @@
 
             .module-hub-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .life-sync-grid {
+                grid-template-columns: 1fr;
             }
 
             .dashboard-card--wide {
@@ -1469,6 +1512,13 @@
                     <p class="section-subtitle">درصد پیشرفت را همین‌جا ثبت کن تا همیشه جلوی چشم باشد.</p>
                     <div id="goalFocusList" class="goal-focus-list"></div>
                 </div>
+            </section>
+
+            <section class="section-frame" style="margin-top: 22px;">
+                <div class="section-title">هم‌افزایی ماژول‌ها</div>
+                <p class="section-subtitle">تحولات زندگی‌ات به هم وصل هستند؛ این کارت‌ها اثر متقابل بخش‌ها را هر روز نشان می‌دهند.</p>
+                <div id="lifeSyncList" class="life-sync-grid"></div>
+                <div id="lifeSyncMeter" class="life-sync-meter">در حال محاسبه وضعیت یکپارچه...</div>
             </section>
 
             <section class="section-frame" style="margin-top: 22px;">
