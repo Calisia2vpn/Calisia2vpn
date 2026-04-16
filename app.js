@@ -1343,6 +1343,34 @@ function renderSmartModules() {
     `).join('');
 }
 
+function getGregorianDateOffset(days = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return normalizeGregorianDate(d);
+}
+
+function getJalaaliDateFromGregorianKey(gregorianKey) {
+    const date = new Date(gregorianKey);
+    const j = jalaali.toJalaali(date);
+    return `${j.jy}-${j.jm}-${j.jd}`;
+}
+
+function readTasksForOptimization() {
+    return safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
+}
+
+function saveTasksForOptimization(tasks) {
+    localStorage.setItem('advancedTasks', JSON.stringify(tasks));
+}
+
+function readEventsForOptimization() {
+    return safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
+}
+
+function saveEventsForOptimization(events) {
+    localStorage.setItem('proEvents', JSON.stringify(events));
+}
+
 function buildOptimizationAdvice() {
     const { tasks, habits, dietLog, goals, assets, exercises, socialMessages } = readLifeSyncArrays();
     const signals = collectLocalAiSignals({ tasks, habits, dietLog, exercises });
@@ -1360,6 +1388,7 @@ function buildOptimizationAdvice() {
     const lines = [
         '🔬 جمع‌بندی بهینگی (مبتنی بر اصول مدیریت انرژی، قانون پارکینسون و برنامه‌ریزی مبتنی بر شواهد):'
     ];
+    const suggestions = [];
 
     if (signals.overdueTasks.length > 0) {
         lines.push(`• ${formatFa(signals.overdueTasks.length)} تسک عقب‌مانده داری؛ برای هر روز حداکثر ۳ کار کلیدی بگذار (MIT Rule) و بقیه را زمان‌بندی مجدد کن.`);
@@ -1369,6 +1398,10 @@ function buildOptimizationAdvice() {
 
     if (signals.scheduleConflicts.length > 0) {
         lines.push(`• ${formatFa(signals.scheduleConflicts.length)} تداخل زمانی دیده شد؛ بین رویدادهای پشت‌سرهم ۱۵ دقیقه Buffer بگذار تا شکست برنامه کم شود.`);
+        suggestions.push({
+            id: 'defer_routine_tasks',
+            label: 'دو کار روزمره/جلسه را فردا منتقل کنم تا جا برای کار مهم باز شود؟'
+        });
     }
 
     if (signals.missedHabits.length > 0) {
@@ -1395,10 +1428,95 @@ function buildOptimizationAdvice() {
 
     if (exercises.length === 0) {
         lines.push('• جای خالی برنامه: فعالیت بدنی ثبت نشده. هفته‌ای ۳ جلسه ۲۰ دقیقه‌ای به تقویم اضافه کن.');
+        suggestions.push({
+            id: 'add_workout_block',
+            label: 'یک بلوک ورزش ۱۸:۰۰ تا ۱۸:۴۵ امروز به برنامه اضافه کنم؟'
+        });
+    }
+
+    const hasLanguagePriority = tasks.some(task => !task.completed && /زبان|language/i.test(String(task.title || '')));
+    if (hasLanguagePriority) {
+        lines.push('• اولویت یادگیری زبان فعال است؛ بهتر است بخشی از جلسات کم‌اهمیت به فردا منتقل شود.');
+        suggestions.push({
+            id: 'add_language_block',
+            label: 'با توجه به اولویت زبان، ساعت ۲۰:۰۰ تا ۲۱:۰۰ برای زبان رزرو کنم؟'
+        });
     }
 
     lines.push('✅ پیشنهاد اجرایی: همین امروز یک «بلوک بهینه‌سازی» ۳۰ دقیقه‌ای در تقویم ثبت کن و موارد بالا را اعمال کن.');
-    return lines.join('\n');
+    return { summary: lines.join('\n'), suggestions };
+}
+
+function applyOptimizationSuggestion(actionId) {
+    const todayG = getGregorianDateOffset(0);
+    const tomorrowG = getGregorianDateOffset(1);
+
+    if (actionId === 'add_workout_block') {
+        const events = readEventsForOptimization();
+        events.push({
+            id: `opt-workout-${Date.now()}`,
+            title: 'تمرین بهینه‌سازی',
+            date: getJalaaliDateFromGregorianKey(todayG),
+            time: '18:00 - 18:45',
+            hour: '18',
+            category: 'ورزش',
+            priority: 'medium',
+            desc: 'بلوک پیشنهادی AI برای افزایش انرژی و تمرکز'
+        });
+        saveEventsForOptimization(events);
+        return 'بلوک ورزش به تقویم اضافه شد.';
+    }
+
+    if (actionId === 'add_language_block') {
+        const events = readEventsForOptimization();
+        const tasks = readTasksForOptimization();
+        events.push({
+            id: `opt-language-${Date.now()}`,
+            title: 'بلوک تمرکز زبان',
+            date: getJalaaliDateFromGregorianKey(todayG),
+            time: '20:00 - 21:00',
+            hour: '20',
+            category: 'آموزش',
+            priority: 'high',
+            desc: 'پیشنهاد AI برای پیشروی هدف زبان'
+        });
+        tasks.push({
+            id: Date.now(),
+            title: 'تمرین زبان (بلوک AI)',
+            category: 'study',
+            priority: 'high',
+            dueDate: todayG,
+            recurring: 'none',
+            completed: false,
+            createdAt: new Date().toISOString()
+        });
+        saveEventsForOptimization(events);
+        saveTasksForOptimization(tasks);
+        return 'بلوک زبان به تقویم و لیست تسک اضافه شد.';
+    }
+
+    if (actionId === 'defer_routine_tasks') {
+        const tasks = readTasksForOptimization();
+        let moved = 0;
+        const updated = tasks.map(task => {
+            if (moved >= 2) return task;
+            if (task.completed) return task;
+            const title = String(task.title || '');
+            const isRoutine = /جلسه|روزمره|اداری|meeting/i.test(title) || task.priority === 'low';
+            const due = normalizeGregorianDate(task.dueDate || '');
+            if (isRoutine && (!due || due <= todayG)) {
+                moved += 1;
+                return { ...task, dueDate: tomorrowG };
+            }
+            return task;
+        });
+        saveTasksForOptimization(updated);
+        return moved > 0
+            ? `${formatFa(moved)} تسک کم‌اولویت به فردا منتقل شد.`
+            : 'تسک مناسب برای انتقال پیدا نشد.';
+    }
+
+    return 'اقدامی اعمال نشد.';
 }
 
 function bindOptimizationButton() {
@@ -1406,8 +1524,32 @@ function bindOptimizationButton() {
     const panel = document.getElementById('optimizationPanel');
     if (!btn || !panel || btn.dataset.bound) return;
     btn.addEventListener('click', () => {
-        panel.textContent = buildOptimizationAdvice();
+        const { summary, suggestions } = buildOptimizationAdvice();
+        panel.innerHTML = `
+            <div class="optimization-summary">${summary}</div>
+            <div class="optimization-actions">
+                ${suggestions.map(item => `
+                    <div class="optimization-suggestion">
+                        <p>${item.label}</p>
+                        <button class="optimization-apply" data-action="${item.id}" type="button">اعمال خودکار</button>
+                    </div>
+                `).join('')}
+            </div>
+            <div id="optimizationResult" class="optimization-result"></div>
+        `;
         panel.classList.add('visible');
+    });
+    panel.addEventListener('click', event => {
+        const target = event.target.closest('.optimization-apply');
+        if (!target) return;
+        const result = applyOptimizationSuggestion(target.dataset.action);
+        const resultNode = document.getElementById('optimizationResult');
+        if (resultNode) {
+            resultNode.textContent = result;
+        }
+        renderLifeSyncInsights();
+        loadWeeklyStats();
+        renderTodaySchedule();
     });
     btn.dataset.bound = 'true';
 }
