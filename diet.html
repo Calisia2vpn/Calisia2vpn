@@ -10,15 +10,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --persian-green: #1fb580;
-            --accent-teal: #17a2b8;
-            --light-teal: #e0f2f1;
-            --text-dark: #1a1a1a;
-            --text-gray: #5a5a5a;
+            --persian-green: #0f766e;
+            --accent-teal: #0ea5a4;
+            --light-teal: #e6f6f2;
+            --text-dark: #13201d;
+            --text-gray: #51635e;
+            --cream: #fff9f1;
         }
 
         body { 
-            background: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            background: linear-gradient(140deg, #fff9f1 0%, #eefaf6 42%, #e8f6f3 100%);
             font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
             background-attachment: fixed;
         }
@@ -26,7 +27,7 @@
         .diet-container { 
             max-width: 1000px; 
             margin: 20px auto; 
-            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,241,0.3) 100%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(237,250,246,0.88) 100%);
             padding: 40px; 
             border-radius: 24px; 
             box-shadow: 0 20px 50px rgba(31, 181, 128, 0.08), 0 1px 3px rgba(0,0,0,0.04);
@@ -43,7 +44,7 @@
             display: flex; 
             align-items: center; 
             justify-content: space-around; 
-            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(224,242,241,0.3) 100%);
+            background: linear-gradient(135deg, #dff7f1 0%, #f0faf7 100%);
             padding: 32px; 
             border-radius: 20px; 
             margin-bottom: 40px; 
@@ -149,7 +150,7 @@
             border-radius: 18px; 
             margin-bottom: 24px; 
             position: relative;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(224,242,241,0.1) 100%);
+            background: linear-gradient(145deg, #ffffff 0%, #f4fcf9 100%);
             transition: all 0.3s ease;
         }
 
@@ -255,10 +256,10 @@
             justify-content: space-between; 
             align-items: center; 
             padding: 16px; 
-            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(255,255,255,0.6) 100%);
+            background: linear-gradient(140deg, #ecfaf5 0%, #ffffff 100%);
             margin-top: 12px; 
             border-radius: 14px;
-            border: 1px solid rgba(31, 181, 128, 0.2);
+            border: 1px solid rgba(15, 118, 110, 0.18);
             transition: all 0.3s ease;
         }
 
@@ -427,18 +428,37 @@
             </div>
         </div>
 
-        <button class="btn btn-toggle" onclick="toggleCustomFoodForm()">+ اضافه کردن غذای جدید به دیتابیس 🍱</button>
+        <div class="card-box" style="margin-bottom: 16px;">
+            <h3 style="margin-top:0;">میانگین کالری مصرفی</h3>
+            <div class="stats-grid">
+                <div class="stat-box"><div class="stat-box-title">هفتگی</div><div class="stat-box-val" id="avgWeekTop">۰</div></div>
+                <div class="stat-box"><div class="stat-box-title">ماهانه</div><div class="stat-box-val" id="avgMonthTop">۰</div></div>
+                <div class="stat-box"><div class="stat-box-title">سه‌ماهه</div><div class="stat-box-val" id="avgQuarterTop">۰</div></div>
+                <div class="stat-box"><div class="stat-box-title">سالانه</div><div class="stat-box-val" id="avgYearTop">۰</div></div>
+            </div>
+        </div>
+
+        <button class="btn btn-toggle" onclick="toggleCustomFoodForm()">+ افزودن غذای سفارشی ✍️</button>
         
         <div id="customFoodForm" class="card-box hidden" style="background: #eaf2f8; border-color: #3498db;">
-            <h3 style="margin-top:0; color: #2980b9;">ساخت غذای شخصی (مقادیر در 100 گرم)</h3>
+            <h3 style="margin-top:0; color: #2980b9;">ساخت غذای شخصی (برای هر یک واحد)</h3>
             <div class="form-grid">
                 <input type="text" id="newF_name" class="input-box" placeholder="اسم غذا...">
+                <select id="newF_unit" class="input-box">
+                    <option value="gram">گرم</option>
+                    <option value="kilogram">کیلو</option>
+                    <option value="spoon">قاشق</option>
+                    <option value="cup">لیوان</option>
+                    <option value="count">عدد</option>
+                    <option value="matchbox">قوطی کبریت</option>
+                    <option value="palm">کف دست</option>
+                </select>
                 <input type="number" id="newF_cal" class="input-box" placeholder="کالری">
                 <input type="number" id="newF_pro" class="input-box" placeholder="پروتئین (گرم)">
                 <input type="number" id="newF_carb" class="input-box" placeholder="کربوهیدرات (گرم)">
                 <input type="number" id="newF_fat" class="input-box" placeholder="چربی (گرم)">
             </div>
-            <button class="btn btn-blue" style="margin-top: 15px; width: 100%;" onclick="saveCustomFood()">ذخیره در دیتابیس 💾</button>
+            <button class="btn btn-blue" style="margin-top: 15px; width: 100%;" onclick="saveCustomFood()">ذخیره غذا 💾</button>
         </div>
 
         <div class="card-box" style="background: #fdfefe;">
@@ -451,19 +471,17 @@
                     <option value="میان‌وعده">🍿 میان‌وعده</option>
                 </select>
                 <select id="foodSelect" class="input-box">
-                    <option value="">-- انتخاب از دیتابیس --</option>
+                    <option value="">-- انتخاب غذا --</option>
                 </select>
-                <input type="number" id="foodAmount" class="input-box" placeholder="مقدار...">
+                <input type="number" id="foodCount" class="input-box" placeholder="تعداد..." min="0.25" step="0.25">
                 <select id="foodUnit" class="input-box">
-                    <option value="g">گرم</option>
+                    <option value="gram">گرم</option>
+                    <option value="kilogram">کیلو</option>
                     <option value="spoon">قاشق</option>
                     <option value="cup">لیوان</option>
-                    <option value="count">تعداد</option>
-                </select>
-                <select id="foodTemp" class="input-box">
-                    <option value="normal">معمولی</option>
-                    <option value="hot">گرم</option>
-                    <option value="cold">سرد</option>
+                    <option value="count">عدد</option>
+                    <option value="matchbox">قوطی کبریت</option>
+                    <option value="palm">کف دست</option>
                 </select>
                 <button class="btn btn-green" onclick="addDietLog()">ثبت در برنامه ✅</button>
             </div>
@@ -498,216 +516,285 @@
 
     <script src="dashboard-data.js"></script>
     <script>
-        const defaultDB = [
-            { id: 1, name: "برنج سفید (پخته)", cal: 130, pro: 3, carb: 28, fat: 0 },
-            { id: 2, name: "سینه مرغ (پخته)", cal: 165, pro: 31, carb: 0, fat: 3 },
-            { id: 3, name: "تخم مرغ (آب‌پز)", cal: 155, pro: 13, carb: 1, fat: 11 },
-            { id: 4, name: "نان سنگک", cal: 260, pro: 8, carb: 50, fat: 1 }
-        ];
         const nutritionTargets = JSON.parse(localStorage.getItem('nutritionTargets') || '{"caloriesMax":2000,"proteinMin":80}');
+        const unitLabels = { gram: 'گرم', kilogram: 'کیلو', spoon: 'قاشق', cup: 'لیوان', count: 'عدد', matchbox: 'قوطی کبریت', palm: 'کف دست' };
+        const unitGramApprox = { gram: 1, kilogram: 1000, spoon: 15, cup: 240, count: 50, matchbox: 30, palm: 90 };
+        const DIET_DATA_VERSION = '2026-04-standard-diet-v2';
+        const defaultFoods = [
+            { id: 1, category: 'لبنیات', name: 'شیر کم‌چرب', unit: 'cup', cal: 100, pro: 8, carb: 12, fat: 2 },
+            { id: 2, category: 'لبنیات', name: 'شیر پرچرب', unit: 'cup', cal: 150, pro: 8, carb: 12, fat: 8 },
+            { id: 3, category: 'لبنیات', name: 'ماست کم‌چرب', unit: 'cup', cal: 110, pro: 10, carb: 15, fat: 1.5 },
+            { id: 4, category: 'لبنیات', name: 'پنیر سفید', unit: 'matchbox', cal: 85, pro: 4, carb: 1, fat: 6 },
+            { id: 5, category: 'لبنیات', name: 'پنیر خامه‌ای', unit: 'spoon', cal: 50, pro: 1, carb: 1, fat: 5 },
+            { id: 6, category: 'لبنیات', name: 'کره', unit: 'spoon', cal: 100, pro: 0, carb: 0, fat: 11 },
+            { id: 7, category: 'لبنیات', name: 'خامه', unit: 'spoon', cal: 50, pro: 0.5, carb: 0.5, fat: 5 },
+            { id: 8, category: 'لبنیات', name: 'دوغ', unit: 'cup', cal: 40, pro: 3, carb: 4, fat: 1 },
+            { id: 9, category: 'حبوبات', name: 'عدس پخته', unit: 'spoon', cal: 16, pro: 1.3, carb: 3, fat: 0.1 },
+            { id: 10, category: 'حبوبات', name: 'عدس پخته (لیوان)', unit: 'cup', cal: 230, pro: 18, carb: 40, fat: 1 },
+            { id: 11, category: 'حبوبات', name: 'نخود پخته', unit: 'spoon', cal: 17, pro: 1, carb: 3, fat: 0.2 },
+            { id: 12, category: 'حبوبات', name: 'لوبیا چیتی/قرمز پخته', unit: 'spoon', cal: 15, pro: 1, carb: 3, fat: 0.1 },
+            { id: 13, category: 'حبوبات', name: 'لپه پخته', unit: 'spoon', cal: 15, pro: 1, carb: 3, fat: 0.1 },
+            { id: 14, category: 'غذاهای روتین', name: 'برنج بدون روغن', unit: 'spoon', cal: 15, pro: 0.3, carb: 3, fat: 0 },
+            { id: 15, category: 'غذاهای روتین', name: 'برنج رستورانی', unit: 'spoon', cal: 25, pro: 0.3, carb: 3, fat: 1 },
+            { id: 16, category: 'غذاهای روتین', name: 'نان لواش (کف دست)', unit: 'palm', cal: 25, pro: 1, carb: 6, fat: 0.1 },
+            { id: 17, category: 'غذاهای روتین', name: 'نان لواش کامل', unit: 'count', cal: 160, pro: 5, carb: 33, fat: 1 },
+            { id: 18, category: 'غذاهای روتین', name: 'نان سنگک/بربری', unit: 'palm', cal: 80, pro: 2.5, carb: 15, fat: 0.5 },
+            { id: 19, category: 'غذاهای روتین', name: 'نان تافتون', unit: 'palm', cal: 35, pro: 1.5, carb: 8, fat: 0.2 },
+            { id: 20, category: 'پروتئین', name: 'تخم‌مرغ آب‌پز', unit: 'count', cal: 75, pro: 6, carb: 0.5, fat: 5 },
+            { id: 21, category: 'پروتئین', name: 'تخم‌مرغ نیمرو', unit: 'count', cal: 130, pro: 6, carb: 0.5, fat: 11 },
+            { id: 22, category: 'پروتئین', name: 'سینه مرغ ۱۰۰ گرمی', unit: 'gram', cal: 1.65, pro: 0.31, carb: 0, fat: 0.035 },
+            { id: 23, category: 'پروتئین', name: 'گوشت قرمز لخم ۱۰۰ گرمی', unit: 'gram', cal: 2, pro: 0.28, carb: 0, fat: 0.09 },
+            { id: 24, category: 'پروتئین', name: 'کباب کوبیده', unit: 'count', cal: 280, pro: 18, carb: 2, fat: 22 },
+            { id: 25, category: 'خورشتی', name: 'خورشت قورمه‌سبزی/قیمه', unit: 'spoon', cal: 35, pro: 1, carb: 2, fat: 2.5 },
+            { id: 26, category: 'غذاهای روتین', name: 'ماکارونی با سس', unit: 'spoon', cal: 30, pro: 1, carb: 4, fat: 1 },
+            { id: 27, category: 'فست‌فود', name: 'پیتزا', unit: 'count', cal: 280, pro: 12, carb: 25, fat: 12 },
+            { id: 28, category: 'فست‌فود', name: 'همبرگر ساده', unit: 'count', cal: 450, pro: 20, carb: 40, fat: 20 },
+            { id: 29, category: 'فست‌فود', name: 'چیزبرگر', unit: 'count', cal: 550, pro: 25, carb: 41, fat: 28 },
+            { id: 30, category: 'فست‌فود', name: 'سیب‌زمینی سرخ‌کرده (۱۰۰ گرم)', unit: 'gram', cal: 3, pro: 0.03, carb: 0.38, fat: 0.15 },
+            { id: 31, category: 'فست‌فود', name: 'هات‌داگ/سوسیس ساندویچی', unit: 'count', cal: 450, pro: 15, carb: 45, fat: 20 },
+            { id: 32, category: 'فست‌فود', name: 'فلافل', unit: 'count', cal: 75, pro: 2.5, carb: 7, fat: 4 },
+            { id: 33, category: 'فست‌فود', name: 'ساندویچ فلافل', unit: 'count', cal: 500, pro: 15, carb: 65, fat: 18 },
+            { id: 34, category: 'سبزیجات', name: 'گوجه فرنگی', unit: 'count', cal: 22, pro: 1, carb: 5, fat: 0.2 },
+            { id: 35, category: 'سبزیجات', name: 'خیار', unit: 'count', cal: 15, pro: 0.5, carb: 3, fat: 0.1 },
+            { id: 36, category: 'سبزیجات', name: 'پیاز', unit: 'count', cal: 40, pro: 1, carb: 9, fat: 0.1 },
+            { id: 37, category: 'سبزیجات', name: 'کاهو خرد شده', unit: 'cup', cal: 5, pro: 0.5, carb: 1, fat: 0 },
+            { id: 38, category: 'سبزیجات', name: 'سیب‌زمینی آب‌پز', unit: 'count', cal: 90, pro: 2, carb: 20, fat: 0.1 },
+            { id: 39, category: 'سبزیجات', name: 'هویج', unit: 'count', cal: 25, pro: 0.5, carb: 6, fat: 0.1 },
+            { id: 40, category: 'سبزیجات', name: 'قارچ خرد شده', unit: 'cup', cal: 15, pro: 2, carb: 2, fat: 0.2 },
+            { id: 41, category: 'سبزیجات', name: 'سبزی خوردن', unit: 'cup', cal: 25, pro: 2, carb: 4, fat: 0.5 },
+            { id: 42, category: 'میوه', name: 'سیب', unit: 'count', cal: 75, pro: 0.5, carb: 19, fat: 0.2 },
+            { id: 43, category: 'میوه', name: 'موز', unit: 'count', cal: 105, pro: 1.3, carb: 27, fat: 0.3 },
+            { id: 44, category: 'میوه', name: 'پرتقال', unit: 'count', cal: 65, pro: 1.2, carb: 15, fat: 0.2 },
+            { id: 45, category: 'میوه', name: 'نارنگی', unit: 'count', cal: 40, pro: 0.6, carb: 10, fat: 0.1 },
+            { id: 46, category: 'میوه', name: 'هندوانه خرد شده', unit: 'cup', cal: 45, pro: 1, carb: 11, fat: 0.2 },
+            { id: 47, category: 'میوه', name: 'خرما', unit: 'count', cal: 20, pro: 0.2, carb: 5, fat: 0 },
+            { id: 48, category: 'میوه', name: 'انگور', unit: 'cup', cal: 1000, pro: 1, carb: 27, fat: 0.2 },
+            { id: 49, category: 'میوه', name: 'توت فرنگی', unit: 'cup', cal: 50, pro: 1, carb: 11, fat: 0.4 }
+        ];
+
+        const readArray = key => { try { const p = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(p) ? p : []; } catch { return []; } };
+        const toFaNumber = value => new Intl.NumberFormat('fa-IR', { maximumFractionDigits: 1 }).format(value);
+        const toFaDigits = value => String(value).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+        const getTodayStr = () => new Date().toLocaleDateString('en-CA');
+        const normalizeDay = dateLike => new Date(new Date(dateLike).getFullYear(), new Date(dateLike).getMonth(), new Date(dateLike).getDate());
+
+        function unitLabel(unit) { return unitLabels[unit] || 'واحد'; }
+        function formatDateToJalaali(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const g2j = jalaali.toJalaali(d);
+            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            return `${toFaNumber(g2j.jd)} ${months[g2j.jm - 1]} ${toFaNumber(g2j.jy)}`;
+        }
 
         function initDB() {
-            if(!localStorage.getItem('myFoodDB')) {
-                localStorage.setItem('myFoodDB', JSON.stringify(defaultDB));
+            if (localStorage.getItem('dietDataVersion') !== DIET_DATA_VERSION) {
+                localStorage.removeItem('myFoodDB');
+                localStorage.removeItem('myDietLog');
+                localStorage.setItem('myFoodDB', JSON.stringify(defaultFoods));
+                localStorage.setItem('dietDataVersion', DIET_DATA_VERSION);
+            } else if (!localStorage.getItem('myFoodDB')) {
+                localStorage.setItem('myFoodDB', JSON.stringify(defaultFoods));
             }
         }
 
-        function getTodayStr() { return new Date().toLocaleDateString('en-CA'); }
-        
-        function formatDateToJalaali(dateStr) {
-            const d = new Date(dateStr + 'T00:00:00');
-            const g2j = jalaali.toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
-            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
-                          'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-            return `${g2j.jd} ${months[g2j.jm - 1]} ${g2j.jy}`;
+        function convertByUnit(foodItem, count, selectedUnit) {
+            const baseUnit = foodItem.unit || 'count';
+            const normalizedCount = Number(count) || 0;
+            if (normalizedCount <= 0) return { cal: 0, pro: 0, carb: 0, fat: 0 };
+            if (selectedUnit === baseUnit) {
+                return { cal: foodItem.cal * normalizedCount, pro: foodItem.pro * normalizedCount, carb: foodItem.carb * normalizedCount, fat: foodItem.fat * normalizedCount };
+            }
+            const baseGram = unitGramApprox[baseUnit];
+            const selectedGram = unitGramApprox[selectedUnit];
+            if (!baseGram || !selectedGram) {
+                return { cal: foodItem.cal * normalizedCount, pro: foodItem.pro * normalizedCount, carb: foodItem.carb * normalizedCount, fat: foodItem.fat * normalizedCount };
+            }
+            const ratio = (selectedGram * normalizedCount) / baseGram;
+            return { cal: foodItem.cal * ratio, pro: foodItem.pro * ratio, carb: foodItem.carb * ratio, fat: foodItem.fat * ratio };
+        }
+
+        function persistAndRefresh(logs) {
+            localStorage.setItem('myDietLog', JSON.stringify(logs));
+            loadDiet();
+            renderDashboard();
+        }
+
+        function toggleCustomFoodForm() { document.getElementById('customFoodForm').classList.toggle('hidden'); }
+
+        function saveCustomFood() {
+            const name = document.getElementById('newF_name').value.trim();
+            const unit = document.getElementById('newF_unit').value;
+            const cal = parseFloat(document.getElementById('newF_cal').value) || 0;
+            const pro = parseFloat(document.getElementById('newF_pro').value) || 0;
+            const carb = parseFloat(document.getElementById('newF_carb').value) || 0;
+            const fat = parseFloat(document.getElementById('newF_fat').value) || 0;
+            if (!name || cal <= 0) return alert('نام غذا و کالری لازم است.');
+
+            const db = readArray('myFoodDB');
+            db.push({ id: Date.now(), category: 'سفارشی', name, unit, cal, pro, carb, fat });
+            localStorage.setItem('myFoodDB', JSON.stringify(db));
+            ['newF_name', 'newF_cal', 'newF_pro', 'newF_carb', 'newF_fat'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('newF_unit').value = 'gram';
+            toggleCustomFoodForm();
+            populateDropdown();
+            alert('غذای سفارشی ذخیره شد ✅');
+        }
+
+        function populateDropdown() {
+            const db = readArray('myFoodDB').sort((a, b) => a.name.localeCompare(b.name, 'fa'));
+            const select = document.getElementById('foodSelect');
+            select.innerHTML = '<option value="">-- انتخاب غذا --</option>';
+            db.forEach(food => {
+                const option = document.createElement('option');
+                option.value = food.id;
+                option.text = `${food.name} | ${toFaNumber(food.cal)} کالری / هر ${unitLabel(food.unit)}`;
+                select.appendChild(option);
+            });
+
+        }
+
+        function addDietLog() {
+            const mealType = document.getElementById('mealType').value;
+            const foodId = parseInt(document.getElementById('foodSelect').value, 10);
+            const count = parseFloat(document.getElementById('foodCount').value);
+            const unit = document.getElementById('foodUnit').value;
+            if (!foodId || !count || count <= 0) return alert('غذا، واحد و تعداد را کامل وارد کن.');
+
+            const db = readArray('myFoodDB');
+            const foodItem = db.find(item => Number(item.id) === foodId);
+            if (!foodItem) return alert('غذای انتخاب‌شده پیدا نشد.');
+            const nutrition = convertByUnit(foodItem, count, unit);
+            const record = {
+                id: Date.now(),
+                date: getTodayStr(),
+                meal: mealType,
+                name: foodItem.name,
+                count,
+                unit,
+                cal: Math.round(nutrition.cal),
+                pro: Number(nutrition.pro.toFixed(1)),
+                carb: Number(nutrition.carb.toFixed(1)),
+                fat: Number(nutrition.fat.toFixed(1))
+            };
+
+            const history = readArray('myDietLog');
+            history.push(record);
+            document.getElementById('foodCount').value = '';
+            document.getElementById('foodSelect').value = '';
+            persistAndRefresh(history);
+        }
+
+        function loadDiet() {
+            const history = readArray('myDietLog');
+            const todayFoods = history.filter(item => item.date === getTodayStr());
+            const meals = { 'صبحانه': [], 'ناهار': [], 'شام': [], 'میان‌وعده': [] };
+            let tCal = 0, tPro = 0, tCarb = 0, tFat = 0;
+            todayFoods.forEach(item => {
+                tCal += item.cal; tPro += item.pro; tCarb += item.carb; tFat += item.fat;
+                if (meals[item.meal]) meals[item.meal].push(item);
+            });
+
+            document.getElementById('calConsumed').innerText = toFaNumber(tCal);
+            document.getElementById('totPro').innerText = `${toFaNumber(tPro)}g`;
+            document.getElementById('totCarb').innerText = `${toFaNumber(tCarb)}g`;
+            document.getElementById('totFat').innerText = `${toFaNumber(tFat)}g`;
+            document.getElementById('calorieGoalLabel').innerText = toFaNumber(nutritionTargets.caloriesMax);
+            document.getElementById('proteinGoalLabel').innerText = `${toFaNumber(nutritionTargets.proteinMin)}g`;
+            const percent = Math.min((tCal / nutritionTargets.caloriesMax) * 100, 100);
+            const circleColor = tCal > nutritionTargets.caloriesMax ? '#e74c3c' : '#2ecc71';
+            document.getElementById('calChart').style.background = `conic-gradient(${circleColor} ${percent}%, #ecf0f1 0%)`;
+            const status = document.getElementById('nutritionStatusText');
+            if (tCal > nutritionTargets.caloriesMax) status.innerHTML = `<span class="warn">کالری از حد مجاز رد شده (${toFaNumber(tCal - nutritionTargets.caloriesMax)}+)</span>`;
+            else if (tPro < nutritionTargets.proteinMin) status.innerHTML = `<span class="warn">پروتئین هنوز کم است (${toFaNumber(nutritionTargets.proteinMin - tPro)}g مانده)</span>`;
+            else status.textContent = 'عالی! کالری و پروتئین امروز در وضعیت مناسبی است.';
+
+            const container = document.getElementById('mealsContainer');
+            container.innerHTML = '';
+            Object.keys(meals).forEach(meal => {
+                if (!meals[meal].length) return;
+                let mealHtml = `<div class="meal-section"><h4 class="meal-title">${meal}</h4><ul class="food-list">`;
+                meals[meal].forEach(food => {
+                    mealHtml += `<li class="food-item">
+                        <div>
+                            <div class="food-name">${food.name} <span style="font-weight:normal; color:#7f8c8d; font-size:12px;">(${toFaNumber(food.count)} ${unitLabel(food.unit)})</span></div>
+                            <div class="macro-badges"><span style="color:#e74c3c">P: ${toFaNumber(food.pro)}g</span><span style="color:#f39c12">C: ${toFaNumber(food.carb)}g</span><span style="color:#3498db">F: ${toFaNumber(food.fat)}g</span></div>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-weight:bold; color:#2c3e50;">${toFaNumber(food.cal)} kcal</span>
+                            <button style="border:none; background:none; color:#e74c3c; cursor:pointer;" onclick="deleteLog(${food.id})">❌</button>
+                        </div>
+                    </li>`;
+                });
+                mealHtml += '</ul></div>';
+                container.innerHTML += mealHtml;
+            });
+            if (!todayFoods.length) container.innerHTML = "<p style='color: #7f8c8d; text-align: center;'>هنوز وعده‌ای برای امروز ثبت نشده است.</p>";
+        }
+
+        function deleteLog(id) {
+            const history = readArray('myDietLog').filter(item => item.id !== id);
+            persistAndRefresh(history);
+        }
+
+        function updateTopAverages(history) {
+            const now = normalizeDay(new Date());
+            const calcAverage = days => {
+                const from = new Date(now);
+                from.setDate(from.getDate() - (days - 1));
+                let total = 0;
+                for (let i = 0; i < days; i += 1) {
+                    const cursor = new Date(from); cursor.setDate(from.getDate() + i);
+                    const key = cursor.toLocaleDateString('en-CA');
+                    total += history.filter(item => item.date === key).reduce((sum, item) => sum + item.cal, 0);
+                }
+                return Math.round(total / days);
+            };
+            document.getElementById('avgWeekTop').innerText = toFaNumber(calcAverage(7));
+            document.getElementById('avgMonthTop').innerText = toFaNumber(calcAverage(30));
+            document.getElementById('avgQuarterTop').innerText = toFaNumber(calcAverage(90));
+            document.getElementById('avgYearTop').innerText = toFaNumber(calcAverage(365));
+        }
+
+        function renderDashboard() {
+            const history = readArray('myDietLog');
+            updateTopAverages(history);
+            const chartContainer = document.getElementById('weeklyChart');
+            const goal = nutritionTargets.caloriesMax;
+            const farsiDays = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
+            let total7Days = 0;
+            let maxCal = 0;
+            let chartHtml = '';
+
+            for (let i = 6; i >= 0; i -= 1) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dStr = d.toLocaleDateString('en-CA');
+                const dayCal = history.filter(item => item.date === dStr).reduce((sum, item) => sum + item.cal, 0);
+                total7Days += dayCal;
+                if (dayCal > maxCal) maxCal = dayCal;
+                const heightPct = Math.min((dayCal / goal) * 100, 100);
+                const barClass = dayCal > goal ? 'over' : '';
+                const dayName = i === 0 ? 'امروز' : farsiDays[d.getDay()];
+                chartHtml += `<div class="bar-wrapper"><span class="bar-val">${dayCal > 0 ? toFaNumber(dayCal) : ''}</span><div class="bar ${barClass}" style="height: ${heightPct}%;"></div><span class="bar-label">${dayName}</span></div>`;
+            }
+            chartContainer.innerHTML = chartHtml;
+
+            const monthAgo = new Date();
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            const totalMonth = history.reduce((sum, item) => (new Date(item.date) >= monthAgo ? sum + item.cal : sum), 0);
+            document.getElementById('avg7Days').innerText = toFaNumber(Math.round(total7Days / 7));
+            document.getElementById('totalMonth').innerText = toFaNumber(totalMonth);
+            document.getElementById('maxDay').innerText = toFaNumber(maxCal);
         }
 
         window.onload = function() {
             initDB();
             populateDropdown();
             loadDiet();
-            renderDashboard(); // فراخوانی تابع کشیدن داشبورد
+            renderDashboard();
+            document.getElementById('foodUnit').value = 'gram';
+            document.getElementById('newF_unit').value = 'gram';
         };
-
-        function toggleCustomFoodForm() { document.getElementById('customFoodForm').classList.toggle('hidden'); }
-
-        function saveCustomFood() {
-            let name = document.getElementById('newF_name').value;
-            let cal = parseFloat(document.getElementById('newF_cal').value) || 0;
-            let pro = parseFloat(document.getElementById('newF_pro').value) || 0;
-            let carb = parseFloat(document.getElementById('newF_carb').value) || 0;
-            let fat = parseFloat(document.getElementById('newF_fat').value) || 0;
-
-            if(!name || cal === 0) return alert("اسم غذا و حداقل مقدار کالری الزامیه!");
-
-            let db = JSON.parse(localStorage.getItem('myFoodDB'));
-            db.push({ id: Date.now(), name, cal, pro, carb, fat });
-            localStorage.setItem('myFoodDB', JSON.stringify(db));
-
-            document.getElementById('newF_name').value = ''; document.getElementById('newF_cal').value = '';
-            document.getElementById('newF_pro').value = ''; document.getElementById('newF_carb').value = '';
-            document.getElementById('newF_fat').value = '';
-            
-            toggleCustomFoodForm(); populateDropdown(); alert("غذای جدید اضافه شد! 🎉");
-        }
-
-        function populateDropdown() {
-            let db = JSON.parse(localStorage.getItem('myFoodDB'));
-            db.sort((a, b) => a.name.localeCompare(b.name));
-            const select = document.getElementById("foodSelect");
-            select.innerHTML = '<option value="">-- انتخاب از دیتابیس --</option>';
-            db.forEach(food => {
-                let option = document.createElement("option"); option.value = food.id; option.text = `${food.name} (${food.cal} کالری در 100g)`;
-                select.appendChild(option);
-            });
-        }
-
-        function addDietLog() {
-            const mealType = document.getElementById("mealType").value;
-            const foodId = parseInt(document.getElementById("foodSelect").value);
-            const amount = parseFloat(document.getElementById("foodAmount").value);
-            const unit = document.getElementById("foodUnit").value;
-            const temp = document.getElementById("foodTemp").value;
-
-            if(!foodId || isNaN(amount) || amount <= 0) return alert("غذا و مقدارش رو وارد کن!");
-
-            let db = JSON.parse(localStorage.getItem('myFoodDB'));
-            const foodItem = db.find(f => f.id === foodId);
-            
-            const ratio = amount / 100;
-            const record = {
-                id: Date.now(), date: getTodayStr(), meal: mealType, name: foodItem.name, amount: amount, unit: unit, temp: temp,
-                cal: Math.round(foodItem.cal * ratio), pro: Math.round(foodItem.pro * ratio), carb: Math.round(foodItem.carb * ratio), fat: Math.round(foodItem.fat * ratio)
-            };
-
-            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
-            dietHistory.push(record);
-            localStorage.setItem('myDietLog', JSON.stringify(dietHistory));
-
-            document.getElementById("foodAmount").value = ''; 
-            document.getElementById("foodSelect").value = '';
-            document.getElementById("foodUnit").value = 'g';
-            document.getElementById("foodTemp").value = 'normal';
-            loadDiet(); renderDashboard();
-        }
-
-        function loadDiet() {
-            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
-            const todayStr = getTodayStr();
-            const todayFoods = dietHistory.filter(f => f.date === todayStr);
-            
-            let tCal = 0, tPro = 0, tCarb = 0, tFat = 0;
-            const meals = { "صبحانه": [], "ناهار": [], "شام": [], "میان‌وعده": [] };
-            
-            todayFoods.forEach(f => {
-                tCal += f.cal; tPro += f.pro; tCarb += f.carb; tFat += f.fat;
-                if(meals[f.meal]) meals[f.meal].push(f);
-            });
-
-            document.getElementById("calConsumed").innerText = tCal;
-            document.getElementById("totPro").innerText = tPro + "g"; document.getElementById("totCarb").innerText = tCarb + "g"; document.getElementById("totFat").innerText = tFat + "g";
-
-            let percent = Math.min((tCal / nutritionTargets.caloriesMax) * 100, 100);
-            let circleColor = tCal > nutritionTargets.caloriesMax ? '#e74c3c' : '#2ecc71';
-            document.getElementById("calChart").style.background = `conic-gradient(${circleColor} ${percent}%, #ecf0f1 0%)`;
-            document.getElementById('calorieGoalLabel').innerText = nutritionTargets.caloriesMax;
-            document.getElementById('proteinGoalLabel').innerText = `${nutritionTargets.proteinMin}g`;
-            const nutritionStatusText = document.getElementById('nutritionStatusText');
-            if (tCal > nutritionTargets.caloriesMax) {
-                nutritionStatusText.innerHTML = `<span class="warn">کالری از حد مجاز رد شده است (${tCal - nutritionTargets.caloriesMax}+)</span>`;
-            } else if (tPro < nutritionTargets.proteinMin) {
-                nutritionStatusText.innerHTML = `<span class="warn">پروتئین هنوز کم است (${nutritionTargets.proteinMin - tPro}g مانده)</span>`;
-            } else {
-                nutritionStatusText.textContent = 'عالی! هم سقف کالری رعایت شده هم پروتئین به حد هدف رسیده.';
-            }
-
-            const container = document.getElementById("mealsContainer");
-            container.innerHTML = "";
-
-            for(let m in meals) {
-                if(meals[m].length > 0) {
-                    let mealHtml = `<div class="meal-section"><h4 class="meal-title">${m}</h4><ul class="food-list">`;
-                    meals[m].forEach(food => {
-                        let tempEmoji = food.temp === 'hot' ? '🔥' : (food.temp === 'cold' ? '❄️' : '');
-                        let unitDisplay = food.unit === 'g' ? 'g' : (food.unit === 'spoon' ? 'قاشق' : (food.unit === 'cup' ? 'لیوان' : 'تعداد'));
-                        mealHtml += `
-                            <li class="food-item">
-                                <div>
-                                    <div class="food-name">${food.name} <span style="font-weight:normal; color:#7f8c8d; font-size:12px;">(${food.amount}${unitDisplay}) ${tempEmoji}</span></div>
-                                    <div class="macro-badges"><span style="color:#e74c3c">P: ${food.pro}g</span><span style="color:#f39c12">C: ${food.carb}g</span><span style="color:#3498db">F: ${food.fat}g</span></div>
-                                </div>
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <span style="font-weight:bold; color:#2c3e50;">${food.cal} kcal</span>
-                                    <button style="border:none; background:none; color:#e74c3c; cursor:pointer;" onclick="deleteLog(${food.id})">❌</button>
-                                </div>
-                            </li>`;
-                    });
-                    mealHtml += `</ul></div>`; container.innerHTML += mealHtml;
-                }
-            }
-            if(todayFoods.length === 0) container.innerHTML = "<p style='color: #7f8c8d; text-align: center;'>هنوز وعده‌ای برای امروز ثبت نکردی.</p>";
-        }
-
-        function deleteLog(id) {
-            let dietHistory = JSON.parse(localStorage.getItem('myDietLog'));
-            dietHistory = dietHistory.filter(f => f.id !== id);
-            localStorage.setItem('myDietLog', JSON.stringify(dietHistory));
-            loadDiet(); renderDashboard();
-        }
-
-        // --- مغز سیستم داشبورد و نمودارها ---
-        function renderDashboard() {
-            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
-            const chartContainer = document.getElementById('weeklyChart');
-            const goal = nutritionTargets.caloriesMax;
-            let chartHtml = '';
-            let farsiDays = ['ی', 'د', 'س', 'چ', 'پ', 'ج', 'ش'];
-            
-            let total7Days = 0;
-            let maxCal = 0;
-
-            // محاسبه برای ۷ روز گذشته
-            for(let i = 6; i >= 0; i--) {
-                let d = new Date();
-                d.setDate(d.getDate() - i);
-                let dStr = d.toLocaleDateString('en-CA');
-                
-                // جمع کردن کالری‌های همون روز خاص
-                let dayFoods = dietHistory.filter(f => f.date === dStr);
-                let dayCal = dayFoods.reduce((sum, f) => sum + f.cal, 0);
-                
-                total7Days += dayCal;
-                if(dayCal > maxCal) maxCal = dayCal;
-
-                let heightPct = Math.min((dayCal / goal) * 100, 100);
-                let barClass = dayCal > goal ? 'over' : ''; // اگه از هدف رد شه قرمز میشه
-                let dayName = i === 0 ? 'امروز' : farsiDays[d.getDay()]; // روز صفر یعنی امروز
-
-                // کشیدن ستون‌ها با HTML
-                chartHtml += `
-                <div class="bar-wrapper">
-                    <span class="bar-val">${dayCal > 0 ? dayCal : ''}</span>
-                    <div class="bar ${barClass}" style="height: ${heightPct}%;"></div>
-                    <span class="bar-label">${dayName}</span>
-                </div>`;
-            }
-            chartContainer.innerHTML = chartHtml;
-
-            // محاسبه آمار این ماه (۳۰ روز گذشته)
-            let totalMonth = 0;
-            let monthAgo = new Date();
-            monthAgo.setDate(monthAgo.getDate() - 30);
-            
-            dietHistory.forEach(f => {
-                let fDate = new Date(f.date);
-                if(fDate >= monthAgo) { totalMonth += f.cal; }
-            });
-
-            // آپدیت کردن باکس‌های آماری
-            document.getElementById('avg7Days').innerText = Math.round(total7Days / 7);
-            document.getElementById('totalMonth').innerText = totalMonth;
-            document.getElementById('maxDay').innerText = maxCal;
-        }
     </script>
 </body>
 </html>

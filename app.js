@@ -97,14 +97,13 @@ function loadDashboardSnapshot() {
 
 const TIMER_STORAGE_KEY = 'dashboardTimerState';
 const STOPWATCH_STORAGE_KEY = 'dashboardStopwatchState';
-const ADHAN_STORAGE_KEY = 'adhanEvents1405';
-const ADHAN_META_KEY = 'adhanEvents1405Meta';
+const ADHAN_STORAGE_KEY_PREFIX = 'adhanEvents';
+const ADHAN_META_KEY_PREFIX = 'adhanEventsMeta';
 const ADHAN_CONFIG_VERSION = 3;
 const ADHAN_DEFAULTS = {
     city: 'Tehran',
     country: 'Iran',
-    method: 7,
-    jalaaliYear: 1405
+    method: 7
 };
 const ADHAN_PRAYER_ENTRIES = [
     ['Fajr', 'اذان صبح'],
@@ -143,11 +142,33 @@ function sanitizeTimingValue(value) {
     return String(value || '').split(' ')[0];
 }
 
-function getStoredAdhanEvents() {
-    const rawEvents = JSON.parse(localStorage.getItem(ADHAN_STORAGE_KEY) || '[]');
+function safeJsonParse(raw, fallback) {
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function getCurrentJalaaliYear() {
+    return jalaali.toJalaali(new Date()).jy;
+}
+
+function getAdhanStorageKey(jalaaliYear = getCurrentJalaaliYear()) {
+    return `${ADHAN_STORAGE_KEY_PREFIX}${jalaaliYear}`;
+}
+
+function getAdhanMetaKey(jalaaliYear = getCurrentJalaaliYear()) {
+    return `${ADHAN_META_KEY_PREFIX}${jalaaliYear}`;
+}
+
+function getStoredAdhanEvents(jalaaliYear = getCurrentJalaaliYear()) {
+    const storageKey = getAdhanStorageKey(jalaaliYear);
+    const rawEvents = safeJsonParse(localStorage.getItem(storageKey) || '[]', []);
     const sanitizedEvents = sanitizeStoredAdhanEvents(rawEvents);
     if (sanitizedEvents.length !== rawEvents.length) {
-        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(sanitizedEvents));
+        localStorage.setItem(storageKey, JSON.stringify(sanitizedEvents));
     }
     return sanitizedEvents;
 }
@@ -162,7 +183,7 @@ function getStoredUserEvents() {
     if (dashboardData?.readUserEvents) {
         return dashboardData.readUserEvents();
     }
-    return JSON.parse(localStorage.getItem('proEvents') || '[]');
+    return safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
 }
 
 function getAllCalendarEvents(rangeStart, rangeEnd, options) {
@@ -174,9 +195,9 @@ function getAllCalendarEvents(rangeStart, rangeEnd, options) {
         : [...getStoredUserEvents(), ...getStoredAdhanEvents()];
 }
 
-function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings) {
+function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings, targetJalaaliYear) {
     const jalaaliDate = jalaali.toJalaali(new Date(gregorianYear, gregorianMonth - 1, gregorianDay));
-    if (jalaaliDate.jy !== ADHAN_DEFAULTS.jalaaliYear) {
+    if (jalaaliDate.jy !== targetJalaaliYear) {
         return [];
     }
 
@@ -195,25 +216,41 @@ function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, tim
     }));
 }
 
-async function ensureAdhanData1405() {
-    const cachedRaw = getStoredAdhanEvents();
+function buildMonthRequestsForJalaaliYear(jalaaliYear) {
+    const startGregorian = jalaali.toGregorian(jalaaliYear, 1, 1);
+    const endGregorian = jalaali.toGregorian(jalaaliYear, 12, 29);
+    const start = new Date(startGregorian.gy, startGregorian.gm - 1, startGregorian.gd);
+    const end = new Date(endGregorian.gy, endGregorian.gm - 1, endGregorian.gd);
+    const requests = [];
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+
+    while (cursor <= end) {
+        requests.push([cursor.getFullYear(), cursor.getMonth() + 1]);
+        cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    return requests;
+}
+
+async function ensureAdhanDataForCurrentYear() {
+    const jalaaliYear = getCurrentJalaaliYear();
+    const storageKey = getAdhanStorageKey(jalaaliYear);
+    const metaKey = getAdhanMetaKey(jalaaliYear);
+    const cachedRaw = getStoredAdhanEvents(jalaaliYear);
     const existing = sanitizeStoredAdhanEvents(cachedRaw);
-    const meta = JSON.parse(localStorage.getItem(ADHAN_META_KEY) || 'null');
+    const meta = safeJsonParse(localStorage.getItem(metaKey) || 'null', null);
     const cacheMatches = meta?.city === ADHAN_DEFAULTS.city
-        && meta?.year === ADHAN_DEFAULTS.jalaaliYear
+        && meta?.year === jalaaliYear
         && meta?.version === ADHAN_CONFIG_VERSION;
 
     if (existing.length && cacheMatches) {
         if (existing.length !== cachedRaw.length) {
-            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
+            localStorage.setItem(storageKey, JSON.stringify(existing));
         }
         return existing;
     }
 
-    const monthRequests = [
-        [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], [2026, 8],
-        [2026, 9], [2026, 10], [2026, 11], [2026, 12], [2027, 1], [2027, 2], [2027, 3]
-    ];
+    const monthRequests = buildMonthRequestsForJalaaliYear(jalaaliYear);
 
     try {
         const responses = await Promise.all(monthRequests.map(async ([year, month]) => {
@@ -229,15 +266,15 @@ async function ensureAdhanData1405() {
         const adhanEvents = responses.flatMap(monthData => monthData.flatMap(item => {
             const gregorian = item?.date?.gregorian;
             if (!gregorian) return [];
-            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {});
+            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {}, jalaaliYear);
         }));
 
-        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(adhanEvents));
-        localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+        localStorage.setItem(storageKey, JSON.stringify(adhanEvents));
+        localStorage.setItem(metaKey, JSON.stringify({
             city: ADHAN_DEFAULTS.city,
             country: ADHAN_DEFAULTS.country,
             method: ADHAN_DEFAULTS.method,
-            year: ADHAN_DEFAULTS.jalaaliYear,
+            year: jalaaliYear,
             version: ADHAN_CONFIG_VERSION,
             generatedAt: new Date().toISOString()
         }));
@@ -245,12 +282,12 @@ async function ensureAdhanData1405() {
         return adhanEvents;
     } catch (error) {
         if (existing.length) {
-            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
-            localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+            localStorage.setItem(storageKey, JSON.stringify(existing));
+            localStorage.setItem(metaKey, JSON.stringify({
                 city: ADHAN_DEFAULTS.city,
                 country: ADHAN_DEFAULTS.country,
                 method: ADHAN_DEFAULTS.method,
-                year: ADHAN_DEFAULTS.jalaaliYear,
+                year: jalaaliYear,
                 version: ADHAN_CONFIG_VERSION,
                 generatedAt: meta?.generatedAt || new Date().toISOString()
             }));
@@ -282,7 +319,7 @@ function getTaskPriorityRank(priority) {
 function readDashboardTasks() {
     return dashboardData?.readTasks
         ? dashboardData.readTasks()
-        : JSON.parse(localStorage.getItem('advancedTasks') || '[]');
+        : safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
 }
 
 function formatFaJalaaliFromGregorian(dateLike) {
@@ -1094,7 +1131,7 @@ window.addEventListener('load', () => {
             restoreDashboardTimer();
         }
         loadWeeklyStats();
-        ensureAdhanData1405()
+        ensureAdhanDataForCurrentYear()
             .then(() => {
                 if (miniCalendar) {
                     renderMiniCalendar();
@@ -1105,14 +1142,15 @@ window.addEventListener('load', () => {
                 loadWeeklyStats();
             })
             .catch(error => {
-                console.error('Unable to load 1405 prayer times:', error);
+                console.error('Unable to load prayer times:', error);
                 renderTodayPrayerTimes();
             });
     }
 });
 
 window.addEventListener('storage', event => {
-    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals', ADHAN_STORAGE_KEY].includes(event.key)) {
+    const adhanStoragePrefixMatch = String(event.key || '').startsWith(ADHAN_STORAGE_KEY_PREFIX);
+    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals'].includes(event.key) && !adhanStoragePrefixMatch) {
         return;
     }
     loadDashboardSnapshot();
