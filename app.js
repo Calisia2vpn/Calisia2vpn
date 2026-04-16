@@ -112,6 +112,17 @@ const ADHAN_PRAYER_ENTRIES = [
     ['Sunset', 'غروب'],
     ['Maghrib', 'اذان مغرب']
 ];
+const DASHBOARD_STORAGE_SYNC_KEYS = [
+    'advancedTasks',
+    'myHabits',
+    'myDietLog',
+    'proEvents',
+    'goals',
+    'financeAssets',
+    'meditationStats',
+    'fitnessExercises',
+    'nutritionTargets'
+];
 
 function normalizeGregorianDate(dateLike) {
     if (dashboardData?.normalizeGregorianDate) {
@@ -1093,6 +1104,91 @@ function loadWeeklyStats() {
     weeklyEventsEl.textContent = formatFa(weeklyEvents);
 }
 
+function readLifeSyncArrays() {
+    return {
+        tasks: safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []),
+        habits: safeJsonParse(localStorage.getItem('myHabits') || '[]', []),
+        dietLog: safeJsonParse(localStorage.getItem('myDietLog') || '[]', []),
+        goals: safeJsonParse(localStorage.getItem('goals') || '[]', []),
+        assets: safeJsonParse(localStorage.getItem('financeAssets') || '[]', []),
+        meditationStats: safeJsonParse(localStorage.getItem('meditationStats') || '{}', {}),
+        exercises: safeJsonParse(localStorage.getItem('fitnessExercises') || '[]', [])
+    };
+}
+
+function calculateLastDaysAverageCalories(dietLog, days) {
+    const now = new Date();
+    let total = 0;
+    for (let i = 0; i < days; i += 1) {
+        const cursor = new Date(now);
+        cursor.setDate(now.getDate() - i);
+        const key = cursor.toLocaleDateString('en-CA');
+        total += dietLog.filter(item => item.date === key).reduce((sum, item) => sum + (Number(item.cal) || 0), 0);
+    }
+    return total / days;
+}
+
+function renderLifeSyncInsights() {
+    const container = document.getElementById('lifeSyncList');
+    const meter = document.getElementById('lifeSyncMeter');
+    if (!container || !meter) return;
+    const { tasks, habits, dietLog, goals, assets, meditationStats, exercises } = readLifeSyncArrays();
+    const todayKey = normalizeGregorianDate(new Date());
+    const overdueTasks = tasks.filter(task => !task.completed && task.dueDate && normalizeGregorianDate(task.dueDate) < todayKey).length;
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active').length;
+    const avgCalories7 = calculateLastDaysAverageCalories(dietLog, 7);
+    const proteinGoal = Number(safeJsonParse(localStorage.getItem('nutritionTargets') || '{}', {}).proteinMin) || 80;
+    const todayProtein = dietLog.filter(item => item.date === todayKey).reduce((sum, item) => sum + (Number(item.pro) || 0), 0);
+    const weeklyHabitChecks = habits.reduce((sum, habit) => sum + ((habit.history || []).filter(date => {
+        const d = new Date(date);
+        const now = new Date();
+        return (now - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length), 0);
+    const assetTotal = assets.reduce((sum, asset) => sum + (Number(asset.totalValue) || 0), 0);
+    const meditationMinutes = Number(meditationStats.totalMinutes) || 0;
+    const exerciseSessionsWeek = exercises.filter(item => {
+        const d = new Date(item.date || item.createdAt || 0);
+        return (new Date() - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length;
+
+    const insights = [
+        {
+            title: '🎯 بهره‌وری و انرژی',
+            body: overdueTasks > 0
+                ? `${formatFa(overdueTasks)} تسک عقب‌مانده داری. اگر خواب/تغذیه را پایدار کنی فشار ذهنی کمتر می‌شود.`
+                : 'تسک عقب‌مانده‌ای نداری؛ زمان خوبی برای پیشبرد اهداف عمیق است.'
+        },
+        {
+            title: '🍎 تغذیه و عملکرد',
+            body: `میانگین ۷ روزه کالری: ${formatFa(Math.round(avgCalories7))}. پروتئین امروز ${formatFa(Math.round(todayProtein))}g از هدف ${formatFa(proteinGoal)}g است.`
+        },
+        {
+            title: '🌿 عادت، ورزش و ذهن',
+            body: `این هفته ${formatFa(weeklyHabitChecks)} ثبت عادت، ${formatFa(exerciseSessionsWeek)} جلسه تمرین و ${formatFa(meditationMinutes)} دقیقه مدیتیشن ثبت شده است.`
+        },
+        {
+            title: '💰 مالی و برنامه‌ریزی',
+            body: `ارزش تقریبی دارایی‌ها: ${formatFa(Math.round(assetTotal))}. بهتر است اهداف فعال (${formatFa(activeGoals)}) با بودجه‌ات هم‌راستا بماند.`
+        }
+    ];
+
+    container.innerHTML = insights.map(item => `
+        <article class="life-sync-card">
+            <strong>${item.title}</strong>
+            <p>${item.body}</p>
+        </article>
+    `).join('');
+
+    let score = 100;
+    score -= Math.min(35, overdueTasks * 5);
+    score -= Math.max(0, 20 - Math.min(20, weeklyHabitChecks));
+    score -= Math.max(0, 15 - Math.min(15, exerciseSessionsWeek * 4));
+    score -= todayProtein < proteinGoal ? Math.min(20, Math.round((proteinGoal - todayProtein) / 4)) : 0;
+    score = Math.max(25, Math.min(100, score));
+    const status = score >= 80 ? 'یکپارچگی عالی' : score >= 60 ? 'نیاز به تنظیم' : 'هشدار پیوستگی';
+    meter.textContent = `شاخص پیوستگی زندگی: ${formatFa(Math.round(score))} از ۱۰۰ — ${status}.`;
+}
+
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
     setTheme(savedTheme);
@@ -1117,6 +1213,7 @@ window.addEventListener('load', () => {
         renderTodaySchedule();
         renderGoalFocus();
         renderTodayPrayerTimes();
+        renderLifeSyncInsights();
         if (timerDisplay) {
             initializeDashboardTimerControls();
         }
@@ -1140,6 +1237,7 @@ window.addEventListener('load', () => {
                 renderTodaySchedule();
                 renderGoalFocus();
                 loadWeeklyStats();
+                renderLifeSyncInsights();
             })
             .catch(error => {
                 console.error('Unable to load prayer times:', error);
@@ -1150,7 +1248,7 @@ window.addEventListener('load', () => {
 
 window.addEventListener('storage', event => {
     const adhanStoragePrefixMatch = String(event.key || '').startsWith(ADHAN_STORAGE_KEY_PREFIX);
-    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals'].includes(event.key) && !adhanStoragePrefixMatch) {
+    if (!DASHBOARD_STORAGE_SYNC_KEYS.includes(event.key) && !adhanStoragePrefixMatch) {
         return;
     }
     loadDashboardSnapshot();
@@ -1158,6 +1256,7 @@ window.addEventListener('storage', event => {
     renderGoalFocus();
     renderTodayPrayerTimes();
     loadWeeklyStats();
+    renderLifeSyncInsights();
     if (document.getElementById('miniCalendar')) {
         renderMiniCalendar();
     }

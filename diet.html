@@ -10,15 +10,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --persian-green: #1fb580;
-            --accent-teal: #17a2b8;
-            --light-teal: #e0f2f1;
-            --text-dark: #1a1a1a;
-            --text-gray: #5a5a5a;
+            --persian-green: #0f766e;
+            --accent-teal: #0ea5a4;
+            --light-teal: #e6f6f2;
+            --text-dark: #13201d;
+            --text-gray: #51635e;
+            --cream: #fff9f1;
         }
 
         body { 
-            background: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            background: linear-gradient(140deg, #fff9f1 0%, #eefaf6 42%, #e8f6f3 100%);
             font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
             background-attachment: fixed;
         }
@@ -26,7 +27,7 @@
         .diet-container { 
             max-width: 1000px; 
             margin: 20px auto; 
-            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,241,0.3) 100%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.97) 0%, rgba(237,250,246,0.88) 100%);
             padding: 40px; 
             border-radius: 24px; 
             box-shadow: 0 20px 50px rgba(31, 181, 128, 0.08), 0 1px 3px rgba(0,0,0,0.04);
@@ -43,7 +44,7 @@
             display: flex; 
             align-items: center; 
             justify-content: space-around; 
-            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(224,242,241,0.3) 100%);
+            background: linear-gradient(135deg, #dff7f1 0%, #f0faf7 100%);
             padding: 32px; 
             border-radius: 20px; 
             margin-bottom: 40px; 
@@ -149,7 +150,7 @@
             border-radius: 18px; 
             margin-bottom: 24px; 
             position: relative;
-            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(224,242,241,0.1) 100%);
+            background: linear-gradient(145deg, #ffffff 0%, #f4fcf9 100%);
             transition: all 0.3s ease;
         }
 
@@ -255,10 +256,10 @@
             justify-content: space-between; 
             align-items: center; 
             padding: 16px; 
-            background: linear-gradient(135deg, var(--light-teal) 0%, rgba(255,255,255,0.6) 100%);
+            background: linear-gradient(140deg, #ecfaf5 0%, #ffffff 100%);
             margin-top: 12px; 
             border-radius: 14px;
-            border: 1px solid rgba(31, 181, 128, 0.2);
+            border: 1px solid rgba(15, 118, 110, 0.18);
             transition: all 0.3s ease;
         }
 
@@ -525,30 +526,57 @@
         const nutritionTargets = JSON.parse(localStorage.getItem('nutritionTargets') || '{"caloriesMax":2000,"proteinMin":80}');
         const unitLabels = { gram: 'گرم', kilogram: 'کیلو', spoon: 'قاشق', cup: 'لیوان', count: 'عدد', matchbox: 'قوطی کبریت', palm: 'کف دست' };
         const unitGramApprox = { gram: 1, kilogram: 1000, spoon: 15, cup: 240, count: 50, matchbox: 30, palm: 90 };
+        const DIET_DATA_VERSION = '2026-04-standard-diet-v2';
         const defaultFoods = [
-            { id: 1, category: 'غلات', name: 'برنج پخته', unit: 'spoon', cal: 32, pro: 0.7, carb: 7, fat: 0.1 },
-            { id: 2, category: 'غلات', name: 'نان سنگک', unit: 'palm', cal: 75, pro: 2.5, carb: 15, fat: 0.4 },
-            { id: 3, category: 'پروتئین', name: 'سینه مرغ پخته', unit: 'palm', cal: 140, pro: 26, carb: 0, fat: 3 },
-            { id: 4, category: 'پروتئین', name: 'تخم‌مرغ آب‌پز', unit: 'count', cal: 78, pro: 6.5, carb: 0.6, fat: 5.3 },
-            { id: 5, category: 'لبنیات', name: 'ماست کم‌چرب', unit: 'cup', cal: 150, pro: 9, carb: 12, fat: 5 },
-            { id: 6, category: 'لبنیات', name: 'شیر کم‌چرب', unit: 'cup', cal: 120, pro: 8, carb: 12, fat: 4 },
-            { id: 7, category: 'میوه', name: 'سیب', unit: 'count', cal: 95, pro: 0.5, carb: 25, fat: 0.3 },
-            { id: 8, category: 'میوه', name: 'موز', unit: 'count', cal: 105, pro: 1.3, carb: 27, fat: 0.4 },
-            { id: 9, category: 'سبزیجات', name: 'سالاد سبزیجات', unit: 'cup', cal: 40, pro: 2, carb: 8, fat: 0.3 },
-            { id: 10, category: 'سبزیجات', name: 'خیار', unit: 'count', cal: 16, pro: 0.7, carb: 3.8, fat: 0.1 },
-            { id: 11, category: 'حبوبات', name: 'عدس پخته', unit: 'spoon', cal: 25, pro: 2, carb: 4.5, fat: 0.1 },
-            { id: 12, category: 'حبوبات', name: 'لوبیا پخته', unit: 'spoon', cal: 27, pro: 1.8, carb: 5, fat: 0.1 },
-            { id: 13, category: 'قندها', name: 'شکر', unit: 'spoon', cal: 48, pro: 0, carb: 12, fat: 0 },
-            { id: 14, category: 'قندها', name: 'عسل', unit: 'spoon', cal: 64, pro: 0.1, carb: 17, fat: 0 },
-            { id: 15, category: 'مغزها', name: 'بادام', unit: 'spoon', cal: 52, pro: 1.9, carb: 2, fat: 4.5 },
-            { id: 16, category: 'روغن‌ها', name: 'روغن زیتون', unit: 'spoon', cal: 119, pro: 0, carb: 0, fat: 13.5 },
-            { id: 17, category: 'خورشتی', name: 'خورشت قورمه‌سبزی', unit: 'spoon', cal: 45, pro: 2.2, carb: 2.5, fat: 3 },
-            { id: 18, category: 'خورشتی', name: 'خورشت قیمه', unit: 'spoon', cal: 42, pro: 2.1, carb: 2.6, fat: 2.7 }
-        ];
-        const defaultPackages = [
-            { id: 1, name: 'پکیج قورمه‌سبزی', components: [{ foodName: 'برنج پخته', unit: 'spoon', count: 12 }, { foodName: 'خورشت قورمه‌سبزی', unit: 'spoon', count: 6 }] },
-            { id: 2, name: 'پکیج صبحانه کامل', components: [{ foodName: 'نان سنگک', unit: 'palm', count: 2 }, { foodName: 'تخم‌مرغ آب‌پز', unit: 'count', count: 2 }, { foodName: 'شیر کم‌چرب', unit: 'cup', count: 1 }] },
-            { id: 3, name: 'پکیج میان‌وعده سالم', components: [{ foodName: 'ماست کم‌چرب', unit: 'cup', count: 1 }, { foodName: 'موز', unit: 'count', count: 1 }, { foodName: 'بادام', unit: 'spoon', count: 1 }] }
+            { id: 1, category: 'لبنیات', name: 'شیر کم‌چرب', unit: 'cup', cal: 100, pro: 8, carb: 12, fat: 2 },
+            { id: 2, category: 'لبنیات', name: 'شیر پرچرب', unit: 'cup', cal: 150, pro: 8, carb: 12, fat: 8 },
+            { id: 3, category: 'لبنیات', name: 'ماست کم‌چرب', unit: 'cup', cal: 110, pro: 10, carb: 15, fat: 1.5 },
+            { id: 4, category: 'لبنیات', name: 'پنیر سفید', unit: 'matchbox', cal: 85, pro: 4, carb: 1, fat: 6 },
+            { id: 5, category: 'لبنیات', name: 'پنیر خامه‌ای', unit: 'spoon', cal: 50, pro: 1, carb: 1, fat: 5 },
+            { id: 6, category: 'لبنیات', name: 'کره', unit: 'spoon', cal: 100, pro: 0, carb: 0, fat: 11 },
+            { id: 7, category: 'لبنیات', name: 'خامه', unit: 'spoon', cal: 50, pro: 0.5, carb: 0.5, fat: 5 },
+            { id: 8, category: 'لبنیات', name: 'دوغ', unit: 'cup', cal: 40, pro: 3, carb: 4, fat: 1 },
+            { id: 9, category: 'حبوبات', name: 'عدس پخته', unit: 'spoon', cal: 16, pro: 1.3, carb: 3, fat: 0.1 },
+            { id: 10, category: 'حبوبات', name: 'عدس پخته (لیوان)', unit: 'cup', cal: 230, pro: 18, carb: 40, fat: 1 },
+            { id: 11, category: 'حبوبات', name: 'نخود پخته', unit: 'spoon', cal: 17, pro: 1, carb: 3, fat: 0.2 },
+            { id: 12, category: 'حبوبات', name: 'لوبیا چیتی/قرمز پخته', unit: 'spoon', cal: 15, pro: 1, carb: 3, fat: 0.1 },
+            { id: 13, category: 'حبوبات', name: 'لپه پخته', unit: 'spoon', cal: 15, pro: 1, carb: 3, fat: 0.1 },
+            { id: 14, category: 'غذاهای روتین', name: 'برنج بدون روغن', unit: 'spoon', cal: 15, pro: 0.3, carb: 3, fat: 0 },
+            { id: 15, category: 'غذاهای روتین', name: 'برنج رستورانی', unit: 'spoon', cal: 25, pro: 0.3, carb: 3, fat: 1 },
+            { id: 16, category: 'غذاهای روتین', name: 'نان لواش (کف دست)', unit: 'palm', cal: 25, pro: 1, carb: 6, fat: 0.1 },
+            { id: 17, category: 'غذاهای روتین', name: 'نان لواش کامل', unit: 'count', cal: 160, pro: 5, carb: 33, fat: 1 },
+            { id: 18, category: 'غذاهای روتین', name: 'نان سنگک/بربری', unit: 'palm', cal: 80, pro: 2.5, carb: 15, fat: 0.5 },
+            { id: 19, category: 'غذاهای روتین', name: 'نان تافتون', unit: 'palm', cal: 35, pro: 1.5, carb: 8, fat: 0.2 },
+            { id: 20, category: 'پروتئین', name: 'تخم‌مرغ آب‌پز', unit: 'count', cal: 75, pro: 6, carb: 0.5, fat: 5 },
+            { id: 21, category: 'پروتئین', name: 'تخم‌مرغ نیمرو', unit: 'count', cal: 130, pro: 6, carb: 0.5, fat: 11 },
+            { id: 22, category: 'پروتئین', name: 'سینه مرغ ۱۰۰ گرمی', unit: 'gram', cal: 1.65, pro: 0.31, carb: 0, fat: 0.035 },
+            { id: 23, category: 'پروتئین', name: 'گوشت قرمز لخم ۱۰۰ گرمی', unit: 'gram', cal: 2, pro: 0.28, carb: 0, fat: 0.09 },
+            { id: 24, category: 'پروتئین', name: 'کباب کوبیده', unit: 'count', cal: 280, pro: 18, carb: 2, fat: 22 },
+            { id: 25, category: 'خورشتی', name: 'خورشت قورمه‌سبزی/قیمه', unit: 'spoon', cal: 35, pro: 1, carb: 2, fat: 2.5 },
+            { id: 26, category: 'غذاهای روتین', name: 'ماکارونی با سس', unit: 'spoon', cal: 30, pro: 1, carb: 4, fat: 1 },
+            { id: 27, category: 'فست‌فود', name: 'پیتزا', unit: 'count', cal: 280, pro: 12, carb: 25, fat: 12 },
+            { id: 28, category: 'فست‌فود', name: 'همبرگر ساده', unit: 'count', cal: 450, pro: 20, carb: 40, fat: 20 },
+            { id: 29, category: 'فست‌فود', name: 'چیزبرگر', unit: 'count', cal: 550, pro: 25, carb: 41, fat: 28 },
+            { id: 30, category: 'فست‌فود', name: 'سیب‌زمینی سرخ‌کرده (۱۰۰ گرم)', unit: 'gram', cal: 3, pro: 0.03, carb: 0.38, fat: 0.15 },
+            { id: 31, category: 'فست‌فود', name: 'هات‌داگ/سوسیس ساندویچی', unit: 'count', cal: 450, pro: 15, carb: 45, fat: 20 },
+            { id: 32, category: 'فست‌فود', name: 'فلافل', unit: 'count', cal: 75, pro: 2.5, carb: 7, fat: 4 },
+            { id: 33, category: 'فست‌فود', name: 'ساندویچ فلافل', unit: 'count', cal: 500, pro: 15, carb: 65, fat: 18 },
+            { id: 34, category: 'سبزیجات', name: 'گوجه فرنگی', unit: 'count', cal: 22, pro: 1, carb: 5, fat: 0.2 },
+            { id: 35, category: 'سبزیجات', name: 'خیار', unit: 'count', cal: 15, pro: 0.5, carb: 3, fat: 0.1 },
+            { id: 36, category: 'سبزیجات', name: 'پیاز', unit: 'count', cal: 40, pro: 1, carb: 9, fat: 0.1 },
+            { id: 37, category: 'سبزیجات', name: 'کاهو خرد شده', unit: 'cup', cal: 5, pro: 0.5, carb: 1, fat: 0 },
+            { id: 38, category: 'سبزیجات', name: 'سیب‌زمینی آب‌پز', unit: 'count', cal: 90, pro: 2, carb: 20, fat: 0.1 },
+            { id: 39, category: 'سبزیجات', name: 'هویج', unit: 'count', cal: 25, pro: 0.5, carb: 6, fat: 0.1 },
+            { id: 40, category: 'سبزیجات', name: 'قارچ خرد شده', unit: 'cup', cal: 15, pro: 2, carb: 2, fat: 0.2 },
+            { id: 41, category: 'سبزیجات', name: 'سبزی خوردن', unit: 'cup', cal: 25, pro: 2, carb: 4, fat: 0.5 },
+            { id: 42, category: 'میوه', name: 'سیب', unit: 'count', cal: 75, pro: 0.5, carb: 19, fat: 0.2 },
+            { id: 43, category: 'میوه', name: 'موز', unit: 'count', cal: 105, pro: 1.3, carb: 27, fat: 0.3 },
+            { id: 44, category: 'میوه', name: 'پرتقال', unit: 'count', cal: 65, pro: 1.2, carb: 15, fat: 0.2 },
+            { id: 45, category: 'میوه', name: 'نارنگی', unit: 'count', cal: 40, pro: 0.6, carb: 10, fat: 0.1 },
+            { id: 46, category: 'میوه', name: 'هندوانه خرد شده', unit: 'cup', cal: 45, pro: 1, carb: 11, fat: 0.2 },
+            { id: 47, category: 'میوه', name: 'خرما', unit: 'count', cal: 20, pro: 0.2, carb: 5, fat: 0 },
+            { id: 48, category: 'میوه', name: 'انگور', unit: 'cup', cal: 1000, pro: 1, carb: 27, fat: 0.2 },
+            { id: 49, category: 'میوه', name: 'توت فرنگی', unit: 'cup', cal: 50, pro: 1, carb: 11, fat: 0.4 }
         ];
 
         const readArray = key => { try { const p = JSON.parse(localStorage.getItem(key) || '[]'); return Array.isArray(p) ? p : []; } catch { return []; } };
@@ -566,8 +594,14 @@
         }
 
         function initDB() {
-            if (!localStorage.getItem('myFoodDB')) localStorage.setItem('myFoodDB', JSON.stringify(defaultFoods));
-            if (!localStorage.getItem('foodPackagesDB')) localStorage.setItem('foodPackagesDB', JSON.stringify(defaultPackages));
+            if (localStorage.getItem('dietDataVersion') !== DIET_DATA_VERSION) {
+                localStorage.removeItem('myFoodDB');
+                localStorage.removeItem('myDietLog');
+                localStorage.setItem('myFoodDB', JSON.stringify(defaultFoods));
+                localStorage.setItem('dietDataVersion', DIET_DATA_VERSION);
+            } else if (!localStorage.getItem('myFoodDB')) {
+                localStorage.setItem('myFoodDB', JSON.stringify(defaultFoods));
+            }
         }
 
         function convertByUnit(foodItem, count, selectedUnit) {
@@ -624,14 +658,13 @@
                 select.appendChild(option);
             });
 
-            const packageSelect = document.getElementById('packageSelect');
-            packageSelect.innerHTML = '<option value="">-- انتخاب غذای پکیجی --</option>';
-            readArray('foodPackagesDB').forEach(pkg => {
-                const option = document.createElement('option');
-                option.value = pkg.id;
-                option.text = pkg.name;
-                packageSelect.appendChild(option);
-            });
+            // اگر از نسخه‌های قدیمی المان پکیج باقی مانده باشد، خنثی می‌کنیم تا خطا رخ ندهد.
+            const legacyPackageSelect = document.getElementById('packageSelect');
+            if (legacyPackageSelect) {
+                legacyPackageSelect.innerHTML = '<option value="">پکیج‌ها در این نسخه غیرفعال هستند</option>';
+                legacyPackageSelect.disabled = true;
+            }
+
         }
 
         function addDietLog() {
@@ -662,42 +695,6 @@
             history.push(record);
             document.getElementById('foodCount').value = '';
             document.getElementById('foodSelect').value = '';
-            persistAndRefresh(history);
-        }
-
-        function addPackageLog() {
-            const packageId = parseInt(document.getElementById('packageSelect').value, 10);
-            const packageCount = parseFloat(document.getElementById('packageCount').value);
-            const mealType = document.getElementById('mealType').value;
-            if (!packageId || !packageCount || packageCount <= 0) return alert('پکیج و تعداد پکیج را مشخص کن.');
-            const pkg = readArray('foodPackagesDB').find(item => Number(item.id) === packageId);
-            if (!pkg) return alert('پکیج انتخابی پیدا نشد.');
-            const foods = readArray('myFoodDB');
-
-            const totals = pkg.components.reduce((acc, component) => {
-                const food = foods.find(item => item.name === component.foodName);
-                if (!food) return acc;
-                const nutrition = convertByUnit(food, component.count * packageCount, component.unit);
-                acc.cal += nutrition.cal; acc.pro += nutrition.pro; acc.carb += nutrition.carb; acc.fat += nutrition.fat;
-                return acc;
-            }, { cal: 0, pro: 0, carb: 0, fat: 0 });
-
-            const history = readArray('myDietLog');
-            history.push({
-                id: Date.now(),
-                date: getTodayStr(),
-                meal: mealType,
-                name: `🍱 ${pkg.name}`,
-                count: packageCount,
-                unit: 'count',
-                package: true,
-                cal: Math.round(totals.cal),
-                pro: Number(totals.pro.toFixed(1)),
-                carb: Number(totals.carb.toFixed(1)),
-                fat: Number(totals.fat.toFixed(1))
-            });
-            document.getElementById('packageCount').value = '';
-            document.getElementById('packageSelect').value = '';
             persistAndRefresh(history);
         }
 
