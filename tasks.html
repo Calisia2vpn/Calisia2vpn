@@ -21,19 +21,32 @@
             --danger: #e74c3c;
             --info: #3498db;
             --purple: #9b59b6;
+            --bg-main: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            --surface: #ffffff;
         }
 
         body {
-            background: linear-gradient(135deg, #f5f3f0 0%, #e8f4f2 50%, #f0f8f6 100%);
+            background: var(--bg-main);
             font-family: 'Vazirmatn', Tahoma, Arial, sans-serif;
             background-attachment: fixed;
             min-height: 100vh;
+            color: var(--text-dark);
+        }
+
+        body[data-theme="dark"] {
+            --text-dark: #eaf5f2;
+            --text-gray: #b9c8c2;
+            --light-teal: #163b33;
+            --bg-main: linear-gradient(135deg, #0b1a16 0%, #102520 55%, #0f201c 100%);
+            --surface: #132823;
+            background: var(--bg-main);
         }
 
         .header {
             text-align: center;
             margin-bottom: 40px;
             margin-top: 30px;
+            position: relative;
         }
 
         .header h1 {
@@ -55,11 +68,24 @@
         .task-container {
             max-width: 1200px;
             margin: 20px auto;
-            background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(224,242,241,0.3) 100%);
+            background: linear-gradient(135deg, color-mix(in srgb, var(--surface) 94%, #ffffff 6%) 0%, rgba(224,242,241,0.3) 100%);
             padding: 40px;
             border-radius: 24px;
             box-shadow: 0 20px 50px rgba(31, 181, 128, 0.08), 0 1px 3px rgba(0,0,0,0.04);
             border: 2px solid rgba(224, 242, 241, 0.6);
+        }
+
+        .theme-toggle {
+            position: absolute;
+            left: 16px;
+            top: 0;
+            border: none;
+            background: rgba(255,255,255,0.85);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            font-weight: 700;
+            cursor: pointer;
         }
 
         /* نوار ابزار پیشرفته */
@@ -186,6 +212,57 @@
             grid-template-columns: 2fr 1fr 1fr 1fr;
             gap: 16px;
             margin-bottom: 20px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-field label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-gray);
+        }
+
+        .date-picker-panel {
+            display: none;
+            margin-top: 8px;
+            background: var(--surface);
+            border: 1px solid rgba(31, 181, 128, 0.25);
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .date-picker-panel.active {
+            display: block;
+        }
+
+        .date-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(0, 1fr));
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .date-day {
+            border: 1px solid rgba(31, 181, 128, 0.2);
+            border-radius: 8px;
+            padding: 6px 0;
+            background: white;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .date-day.today {
+            border-color: var(--persian-green);
+        }
+
+        .date-day.selected {
+            background: var(--persian-green);
+            color: white;
+            border-color: var(--persian-green);
         }
 
         .form-row {
@@ -503,6 +580,30 @@
             gap: 8px;
         }
 
+        .subtask-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .subtask-column-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-gray);
+            margin-bottom: 6px;
+        }
+
+        .other-category-row {
+            display: none;
+            margin-top: 10px;
+            gap: 8px;
+        }
+
+        .other-category-row.visible {
+            display: flex;
+        }
+
         .subtask-item {
             display: flex;
             align-items: center;
@@ -810,6 +911,7 @@
 <body>
 
     <div class="header">
+        <button type="button" class="theme-toggle" id="themeToggleBtn" onclick="toggleTheme()">🌙 حالت شب</button>
         <h1>✅ تسک‌مستر پیشرفته</h1>
         <p>مدیریت هوشمند و حرفه‌ای وظایف شما</p>
     </div>
@@ -867,36 +969,61 @@
                 <button type="button" class="btn-secondary" onclick="clearForm()">لغو ویرایش</button>
             </div>
             <div class="form-grid">
-                <input type="text" id="taskTitle" class="input-box" placeholder="عنوان تسک...">
-                <select id="taskCategory" class="input-box">
-                    <option value="personal">👤 شخصی</option>
-                    <option value="work">💼 کاری</option>
-                    <option value="study">📚 تحصیلی</option>
-                    <option value="health">🏥 سلامتی</option>
-                    <option value="shopping">🛒 خرید</option>
-                    <option value="other">📌 سایر</option>
-                </select>
-                <select id="taskPriority" class="input-box">
-                    <option value="low">عادی 🟢</option>
-                    <option value="medium">متوسط 🟠</option>
-                    <option value="high">فوری 🔴</option>
-                </select>
-                <input type="date" id="taskDate" class="input-box" title="تاریخ شروع">
+                <div class="form-field">
+                    <label for="taskTitle">عنوان تسک</label>
+                    <input type="text" id="taskTitle" class="input-box" placeholder="مثلاً پیگیری پروژه فروش">
+                </div>
+                <div class="form-field">
+                    <label for="taskCategory">دسته‌بندی</label>
+                    <select id="taskCategory" class="input-box" onchange="handleCategoryChange()"></select>
+                    <div class="other-category-row" id="otherCategoryRow">
+                        <input type="text" id="customCategoryInput" class="input-box" placeholder="نام دسته‌بندی جدید">
+                        <button type="button" class="btn-secondary" onclick="addCustomCategory()">افزودن</button>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label for="taskPriority">اولویت</label>
+                    <select id="taskPriority" class="input-box">
+                        <option value="low">عادی 🟢</option>
+                        <option value="medium">متوسط 🟠</option>
+                        <option value="high">فوری 🔴</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="taskDate">تاریخ شروع (شمسی)</label>
+                    <input type="text" id="taskDate" class="input-box" readonly onclick="openDatePicker('taskDate')">
+                    <input type="hidden" id="taskDateG">
+                    <div class="date-picker-panel" id="taskDatePicker"></div>
+                </div>
             </div>
 
             <div class="form-row">
-                <input type="time" id="taskTime" class="input-box" title="ساعت شروع">
-                <input type="time" id="taskEndTime" class="input-box" title="ساعت پایان">
+                <div class="form-field">
+                    <label for="taskTime">ساعت شروع</label>
+                    <input type="time" id="taskTime" class="input-box" title="ساعت شروع">
+                </div>
+                <div class="form-field">
+                    <label for="taskEndTime">ساعت پایان</label>
+                    <input type="time" id="taskEndTime" class="input-box" title="ساعت پایان">
+                </div>
             </div>
 
             <div class="form-row" style="margin-top: 16px;">
-                <select id="taskRecurring" class="input-box">
-                    <option value="none">بدون تکرار</option>
-                    <option value="daily">روزانه</option>
-                    <option value="weekly">هفتگی</option>
-                    <option value="monthly">ماهانه</option>
-                </select>
-                <input type="date" id="taskRecurringUntil" class="input-box" title="پایان تکرار (اختیاری)">
+                <div class="form-field">
+                    <label for="taskRecurring">نوع تکرار</label>
+                    <select id="taskRecurring" class="input-box">
+                        <option value="none">بدون تکرار</option>
+                        <option value="daily">روزانه</option>
+                        <option value="weekly">هفتگی</option>
+                        <option value="monthly">ماهانه</option>
+                    </select>
+                </div>
+                <div class="form-field">
+                    <label for="taskRecurringUntil">تاریخ پایان تکرار (شمسی)</label>
+                    <input type="text" id="taskRecurringUntil" class="input-box" readonly onclick="openDatePicker('taskRecurringUntil')">
+                    <input type="hidden" id="taskRecurringUntilG">
+                    <div class="date-picker-panel" id="taskRecurringUntilPicker"></div>
+                </div>
             </div>
 
             <div id="taskRecurrencePanel" class="recurrence-panel hidden">
@@ -920,7 +1047,16 @@
 
             <textarea id="taskDesc" class="input-box" placeholder="توضیحات تسک..."></textarea>
 
-            <textarea id="taskSubtasks" class="input-box" placeholder="زیرتسک‌ها (هر خط یک زیرتسک)&#10;مثال:&#10;تحقیق اولیه&#10;طراحی اولیه&#10;پیاده‌سازی"></textarea>
+            <div class="form-row" style="margin-top: 16px;">
+                <div class="form-field">
+                    <label for="taskSubtasks">لیست زیرتسک‌های در انتظار (هر خط یک مورد)</label>
+                    <textarea id="taskSubtasks" class="input-box" placeholder="تحقیق اولیه&#10;طراحی اولیه&#10;پیاده‌سازی"></textarea>
+                </div>
+                <div class="form-field">
+                    <label for="taskDoneSubtasks">لیست زیرتسک‌های انجام‌شده (اختیاری)</label>
+                    <textarea id="taskDoneSubtasks" class="input-box" placeholder="جمع‌آوری نیازمندی‌ها&#10;هماهنگی با تیم"></textarea>
+                </div>
+            </div>
 
             <div style="display: flex; gap: 12px; justify-content: center;">
                 <button id="taskSubmitBtn" onclick="addTask()" class="btn-primary">
@@ -962,6 +1098,85 @@
         let currentFilter = 'all';
         let currentPriorityFilter = 'all';
         let searchQuery = '';
+        const THEME_KEY = 'taskMasterTheme';
+        const CATEGORY_KEY = 'taskMasterCategories';
+        const baseCategories = [
+            { value: 'personal', label: '👤 شخصی' },
+            { value: 'work', label: '💼 کاری' },
+            { value: 'study', label: '📚 تحصیلی' },
+            { value: 'health', label: '🏥 سلامتی' },
+            { value: 'shopping', label: '🛒 خرید' },
+            { value: 'other', label: '📌 سایر' }
+        ];
+        const datePickerState = {};
+
+        function toFaDigits(value) {
+            return String(value).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+        }
+
+        function toFaNumber(value) {
+            return new Intl.NumberFormat('fa-IR').format(value);
+        }
+
+        function safeReadArray(key) {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function readCategories() {
+            return [...baseCategories, ...safeReadArray(CATEGORY_KEY).map(item => ({ value: item.value, label: `🏷️ ${item.label}` }))];
+        }
+
+        function renderCategoryOptions(selectedValue = '') {
+            const select = document.getElementById('taskCategory');
+            if (!select) return;
+            const categories = readCategories();
+            select.innerHTML = categories.map(cat => `<option value="${cat.value}">${cat.label}</option>`).join('');
+            if (selectedValue && categories.some(cat => cat.value === selectedValue)) {
+                select.value = selectedValue;
+            }
+            handleCategoryChange();
+        }
+
+        function handleCategoryChange() {
+            const select = document.getElementById('taskCategory');
+            const row = document.getElementById('otherCategoryRow');
+            if (!select || !row) return;
+            row.classList.toggle('visible', select.value === 'other');
+        }
+
+        function addCustomCategory() {
+            const input = document.getElementById('customCategoryInput');
+            const label = String(input?.value || '').trim();
+            if (!label) {
+                showNotification('نام دسته‌بندی جدید را وارد کن.', 'error');
+                return;
+            }
+            const customCategories = safeReadArray(CATEGORY_KEY);
+            const value = `custom_${Date.now()}`;
+            customCategories.push({ value, label });
+            localStorage.setItem(CATEGORY_KEY, JSON.stringify(customCategories));
+            renderCategoryOptions(value);
+            if (input) input.value = '';
+            showNotification('دسته‌بندی جدید اضافه شد.');
+        }
+
+        function toggleRecurrencePanel() {
+            const recurringValue = document.getElementById('taskRecurring').value;
+            const panel = document.getElementById('taskRecurrencePanel');
+            if (!panel) return;
+            panel.classList.toggle('hidden', recurringValue !== 'weekly');
+        }
+
+        function getSelectedRecurringDays() {
+            return Array.from(document.querySelectorAll('#taskWeeklyDays .day-chip.selected'))
+                .map(button => Number(button.dataset.day))
+                .filter(Number.isInteger);
+        }
 
         // تبدیل تاریخ میلادی به شمسی
         function getShamsiDate(dateString) {
@@ -970,10 +1185,95 @@
                 const date = new Date(dateString);
                 const j = jalaali.toJalaali(date);
                 const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-                return `${j.jd} ${months[j.jm - 1]} ${j.jy}`;
+                return `${toFaNumber(j.jd)} ${months[j.jm - 1]} ${toFaNumber(j.jy)}`;
             } catch (e) {
                 return 'تاریخ نامعتبر';
             }
+        }
+
+        function formatJalaaliLabel(jy, jm, jd) {
+            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            return `${toFaNumber(jd)} ${months[jm - 1]} ${toFaNumber(jy)}`;
+        }
+
+        function setTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem(THEME_KEY, theme);
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.textContent = theme === 'dark' ? '☀️ حالت روز' : '🌙 حالت شب';
+        }
+
+        function toggleTheme() {
+            const current = document.body.getAttribute('data-theme') || 'light';
+            setTheme(current === 'dark' ? 'light' : 'dark');
+        }
+
+        function openDatePicker(targetId) {
+            const panelId = targetId === 'taskDate' ? 'taskDatePicker' : 'taskRecurringUntilPicker';
+            const panel = document.getElementById(panelId);
+            if (!panel) return;
+            const hiddenInput = document.getElementById(targetId === 'taskDate' ? 'taskDateG' : 'taskRecurringUntilG');
+            const baseDate = hiddenInput?.value ? new Date(hiddenInput.value) : new Date();
+            const jDate = jalaali.toJalaali(baseDate);
+            datePickerState[targetId] = { jy: jDate.jy, jm: jDate.jm };
+            document.querySelectorAll('.date-picker-panel').forEach(item => item.classList.remove('active'));
+            panel.classList.add('active');
+            renderDatePicker(targetId);
+        }
+
+        function closeDatePickers() {
+            document.querySelectorAll('.date-picker-panel').forEach(item => item.classList.remove('active'));
+        }
+
+        function shiftPickerMonth(targetId, step) {
+            if (!datePickerState[targetId]) return;
+            datePickerState[targetId].jm += step;
+            if (datePickerState[targetId].jm > 12) {
+                datePickerState[targetId].jm = 1;
+                datePickerState[targetId].jy += 1;
+            } else if (datePickerState[targetId].jm < 1) {
+                datePickerState[targetId].jm = 12;
+                datePickerState[targetId].jy -= 1;
+            }
+            renderDatePicker(targetId);
+        }
+
+        function setDateField(targetId, jy, jm, jd) {
+            const visibleInput = document.getElementById(targetId);
+            const hiddenInput = document.getElementById(targetId === 'taskDate' ? 'taskDateG' : 'taskRecurringUntilG');
+            const gregorian = jalaali.toGregorian(jy, jm, jd);
+            const gDate = `${gregorian.gy}-${String(gregorian.gm).padStart(2, '0')}-${String(gregorian.gd).padStart(2, '0')}`;
+            if (visibleInput) visibleInput.value = formatJalaaliLabel(jy, jm, jd);
+            if (hiddenInput) hiddenInput.value = gDate;
+            closeDatePickers();
+        }
+
+        function renderDatePicker(targetId) {
+            const panelId = targetId === 'taskDate' ? 'taskDatePicker' : 'taskRecurringUntilPicker';
+            const panel = document.getElementById(panelId);
+            if (!panel || !datePickerState[targetId]) return;
+            const { jy, jm } = datePickerState[targetId];
+            const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+            const weekNames = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'];
+            const selectedG = document.getElementById(targetId === 'taskDate' ? 'taskDateG' : 'taskRecurringUntilG')?.value;
+            const selectedJ = selectedG ? jalaali.toJalaali(new Date(selectedG)) : null;
+            const todayJ = jalaali.toJalaali(new Date());
+            const firstG = jalaali.toGregorian(jy, jm, 1);
+            const firstDate = new Date(firstG.gy, firstG.gm - 1, firstG.gd);
+            const padding = (firstDate.getDay() + 1) % 7;
+            const monthLength = jalaali.jalaaliMonthLength(jy, jm);
+
+            let html = `<div style="display:flex;justify-content:space-between;align-items:center;"><button type="button" class="btn-secondary" onclick="shiftPickerMonth('${targetId}', -1)">ماه قبل</button><strong>${monthNames[jm - 1]} ${toFaNumber(jy)}</strong><button type="button" class="btn-secondary" onclick="shiftPickerMonth('${targetId}', 1)">ماه بعد</button></div>`;
+            html += '<div class="date-picker-grid">';
+            weekNames.forEach(name => { html += `<div style="text-align:center;font-size:12px;color:var(--text-gray);">${name}</div>`; });
+            for (let i = 0; i < padding; i += 1) html += '<div></div>';
+            for (let day = 1; day <= monthLength; day += 1) {
+                const isToday = todayJ.jy === jy && todayJ.jm === jm && todayJ.jd === day;
+                const isSelected = selectedJ && selectedJ.jy === jy && selectedJ.jm === jm && selectedJ.jd === day;
+                html += `<button type="button" class="date-day ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" onclick="setDateField('${targetId}', ${jy}, ${jm}, ${day})">${toFaNumber(day)}</button>`;
+            }
+            html += '</div>';
+            panel.innerHTML = html;
         }
 
         // بررسی وضعیت تاریخ
@@ -1005,11 +1305,17 @@
             document.getElementById('taskTitle').value = '';
             document.getElementById('taskDesc').value = '';
             document.getElementById('taskSubtasks').value = '';
+            document.getElementById('taskDoneSubtasks').value = '';
             document.getElementById('taskDate').value = '';
+            document.getElementById('taskDateG').value = '';
+            document.getElementById('taskRecurringUntil').value = '';
+            document.getElementById('taskRecurringUntilG').value = '';
             document.getElementById('taskTime').value = '';
+            document.getElementById('taskEndTime').value = '';
             document.getElementById('taskPriority').selectedIndex = 0;
             document.getElementById('taskCategory').selectedIndex = 0;
             document.getElementById('taskRecurring').selectedIndex = 0;
+            handleCategoryChange();
         }
 
         // ایجاد تسک جدید
@@ -1021,23 +1327,45 @@
             }
 
             const subtasksText = document.getElementById('taskSubtasks').value;
-            const subtasks = subtasksText.split('\n')
+            const doneSubtasksText = document.getElementById('taskDoneSubtasks').value;
+            const pendingSubtasks = subtasksText.split('\n')
                 .filter(line => line.trim() !== '')
                 .map((line, index) => ({
                     id: index,
                     text: line.trim(),
                     completed: false
                 }));
+            const doneSubtasks = doneSubtasksText.split('\n')
+                .filter(line => line.trim() !== '')
+                .map((line, index) => ({
+                    id: pendingSubtasks.length + index,
+                    text: line.trim(),
+                    completed: true
+                }));
+            const subtasks = [...pendingSubtasks, ...doneSubtasks];
+
+            const categoryValue = document.getElementById('taskCategory').value;
+            const categoryLabel = readCategories().find(cat => cat.value === categoryValue)?.label?.replace(/^.\s/, '') || 'سایر';
+            const startTime = document.getElementById('taskTime').value;
+            const endTime = document.getElementById('taskEndTime').value;
+            if (startTime && endTime && endTime <= startTime) {
+                showNotification('ساعت پایان باید بعد از ساعت شروع باشد.', 'error');
+                return;
+            }
 
             const task = {
                 id: Date.now(),
                 title: title,
                 description: document.getElementById('taskDesc').value.trim(),
-                category: document.getElementById('taskCategory').value,
+                category: categoryValue,
+                categoryLabel,
                 priority: document.getElementById('taskPriority').value,
-                dueDate: document.getElementById('taskDate').value,
-                dueTime: document.getElementById('taskTime').value,
+                dueDate: document.getElementById('taskDateG').value,
+                dueTime: startTime,
+                endTime: endTime,
                 recurring: document.getElementById('taskRecurring').value,
+                recurringUntil: document.getElementById('taskRecurringUntilG').value,
+                recurringDays: getSelectedRecurringDays(),
                 subtasks: subtasks,
                 completed: false,
                 createdAt: new Date().toISOString(),
@@ -1045,7 +1373,7 @@
                 tags: []
             };
 
-            const tasks = JSON.parse(localStorage.getItem('advancedTasks')) || [];
+            const tasks = safeReadArray('advancedTasks');
             tasks.push(task);
             localStorage.setItem('advancedTasks', JSON.stringify(tasks));
 
@@ -1057,19 +1385,15 @@
         // تنظیم فیلتر
         function setFilter(filter, button) {
             currentFilter = filter;
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('[data-status-filter]').forEach(btn => btn.classList.remove('active'));
             if (button) button.classList.add('active');
             loadTasks();
         }
 
         function setPriorityFilter(priority) {
             currentPriorityFilter = priority;
-            document.querySelectorAll('.filter-group:nth-child(2) .filter-btn').forEach(btn => btn.classList.remove('active'));
-            const buttons = document.querySelectorAll('.filter-group:nth-child(2) .filter-btn');
-            buttons.forEach(btn => {
-                if (btn.textContent.trim() === (priority === 'all' ? 'همه' : priority === 'high' ? 'فوری' : priority === 'medium' ? 'متوسط' : 'عادی')) {
-                    btn.classList.add('active');
-                }
+            document.querySelectorAll('[data-priority-filter]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.priorityFilter === priority);
             });
             loadTasks();
         }
@@ -1082,7 +1406,7 @@
 
         // بارگذاری تسک‌ها
         function loadTasks() {
-            let tasks = JSON.parse(localStorage.getItem('advancedTasks')) || [];
+            let tasks = safeReadArray('advancedTasks');
 
             // اعمال فیلترها
             let filteredTasks = tasks.filter(task => {
@@ -1122,8 +1446,8 @@
             const completedTasks = filteredTasks.filter(task => task.completed);
 
             // بروزرسانی شمارنده‌ها
-            document.getElementById('activeCount').textContent = activeTasks.length;
-            document.getElementById('completedCount').textContent = completedTasks.length;
+            document.getElementById('activeCount').textContent = toFaNumber(activeTasks.length);
+            document.getElementById('completedCount').textContent = toFaNumber(completedTasks.length);
 
             // نمایش تسک‌ها
             renderTasks(activeTasks, 'activeTasks');
@@ -1149,6 +1473,7 @@
             }
 
             tasks.forEach(task => {
+                task.subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
                 const dateStatus = getDateStatus(task.dueDate, task.dueTime);
                 const card = document.createElement('div');
                 card.className = `task-card priority-${task.priority} ${task.completed ? 'completed' : ''}`;
@@ -1157,6 +1482,9 @@
                 const totalSubtasks = task.subtasks.length;
                 const completedSubtasks = task.subtasks.filter(st => st.completed).length;
                 const progressPercent = totalSubtasks > 0 ? Math.round((completedSubtasks / totalSubtasks) * 100) : 0;
+                const pendingSubtasks = task.subtasks.filter(st => !st.completed);
+                const doneSubtasks = task.subtasks.filter(st => st.completed);
+                const dueTimeLabel = task.dueTime ? toFaDigits(task.dueTime) : '';
 
                 card.innerHTML = `
                     <div class="task-header">
@@ -1166,9 +1494,9 @@
                                 ${task.recurring !== 'none' ? '🔄' : ''}
                             </div>
                             <div class="task-meta">
-                                <span class="badge category">${getCategoryIcon(task.category)} ${getCategoryName(task.category)}</span>
+                                <span class="badge category">${getCategoryIcon(task.category)} ${getCategoryName(task.category, task.categoryLabel)}</span>
                                 <span class="badge priority-${task.priority}">${getPriorityText(task.priority)}</span>
-                                ${task.dueDate ? `<span class="badge date-${dateStatus}">${getDateIcon(dateStatus)} ${getShamsiDate(task.dueDate)}${task.dueTime ? ' ' + task.dueTime : ''}</span>` : ''}
+                                ${task.dueDate ? `<span class="badge date-${dateStatus}">${getDateIcon(dateStatus)} ${getShamsiDate(task.dueDate)}${dueTimeLabel ? ` ${dueTimeLabel}` : ''}</span>` : ''}
                             </div>
                             ${task.description ? `<div class="task-desc">${task.description}</div>` : ''}
                         </div>
@@ -1184,20 +1512,36 @@
                     ${task.subtasks.length > 0 ? `
                         <div class="subtasks-section">
                             <div class="subtasks-header">
-                                <span style="font-weight: 600; color: var(--text-gray);">زیرتسک‌ها (${completedSubtasks}/${totalSubtasks})</span>
-                                <div class="subtasks-progress">${progressPercent}%</div>
+                                <span style="font-weight: 600; color: var(--text-gray);">زیرتسک‌ها (${toFaNumber(completedSubtasks)}/${toFaNumber(totalSubtasks)})</span>
+                                <div class="subtasks-progress">${toFaNumber(progressPercent)}%</div>
                             </div>
                             <div class="progress-bar">
                                 <div class="progress-fill" style="width: ${progressPercent}%"></div>
                             </div>
-                            <ul class="subtasks-list">
-                                ${task.subtasks.map(st => `
+                            <div class="subtask-columns">
+                                <div>
+                                    <div class="subtask-column-title">در انتظار انجام (${toFaNumber(pendingSubtasks.length)})</div>
+                                    <ul class="subtasks-list">
+                                        ${pendingSubtasks.map(st => `
+                                            <li class="subtask-item" onclick="toggleSubtask(${task.id}, ${st.id})">
+                                                <div class="subtask-checkbox"></div>
+                                                <span class="subtask-text">${st.text}</span>
+                                            </li>
+                                        `).join('') || '<li class="subtask-item completed"><span class="subtask-text">موردی ندارد</span></li>'}
+                                    </ul>
+                                </div>
+                                <div>
+                                    <div class="subtask-column-title">انجام‌شده (${toFaNumber(doneSubtasks.length)})</div>
+                                    <ul class="subtasks-list">
+                                        ${doneSubtasks.map(st => `
                                     <li class="subtask-item ${st.completed ? 'completed' : ''}" onclick="toggleSubtask(${task.id}, ${st.id})">
                                         <div class="subtask-checkbox"></div>
                                         <span class="subtask-text">${st.text}</span>
                                     </li>
-                                `).join('')}
-                            </ul>
+                                        `).join('') || '<li class="subtask-item"><span class="subtask-text">هنوز موردی انجام نشده</span></li>'}
+                                    </ul>
+                                </div>
+                            </div>
                         </div>
                     ` : ''}
                 `;
@@ -1216,10 +1560,10 @@
                 shopping: '🛒',
                 other: '📌'
             };
-            return icons[category] || '📌';
+            return icons[category] || '🏷️';
         }
 
-        function getCategoryName(category) {
+        function getCategoryName(category, fallbackLabel = '') {
             const names = {
                 personal: 'شخصی',
                 work: 'کاری',
@@ -1228,7 +1572,7 @@
                 shopping: 'خرید',
                 other: 'سایر'
             };
-            return names[category] || 'سایر';
+            return names[category] || fallbackLabel || 'سایر';
         }
 
         function getPriorityText(priority) {
@@ -1252,7 +1596,7 @@
 
         // تابع‌های عملیات
         function toggleTask(id) {
-            const tasks = JSON.parse(localStorage.getItem('advancedTasks')) || [];
+            const tasks = safeReadArray('advancedTasks');
             const task = tasks.find(t => t.id === id);
             if (task) {
                 task.completed = !task.completed;
@@ -1264,7 +1608,7 @@
         }
 
         function toggleSubtask(taskId, subtaskId) {
-            const tasks = JSON.parse(localStorage.getItem('advancedTasks')) || [];
+            const tasks = safeReadArray('advancedTasks');
             const task = tasks.find(t => t.id === taskId);
             if (task) {
                 const subtask = task.subtasks.find(st => st.id === subtaskId);
@@ -1278,7 +1622,7 @@
 
         function deleteTask(id) {
             if (confirm('آیا مطمئن هستید که می‌خواهید این تسک را حذف کنید؟')) {
-                const tasks = JSON.parse(localStorage.getItem('advancedTasks')) || [];
+                const tasks = safeReadArray('advancedTasks');
                 const filteredTasks = tasks.filter(t => t.id !== id);
                 localStorage.setItem('advancedTasks', JSON.stringify(filteredTasks));
                 showNotification('تسک حذف شد!');
@@ -1301,22 +1645,22 @@
             const statsHtml = `
                 <div class="stat-card">
                     <div class="stat-icon">📊</div>
-                    <div class="stat-value">${total}</div>
+                    <div class="stat-value">${toFaNumber(total)}</div>
                     <div class="stat-label">کل تسک‌ها</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">🎯</div>
-                    <div class="stat-value">${pending}</div>
+                    <div class="stat-value">${toFaNumber(pending)}</div>
                     <div class="stat-label">تسک‌های فعال</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">✅</div>
-                    <div class="stat-value">${completed}</div>
+                    <div class="stat-value">${toFaNumber(completed)}</div>
                     <div class="stat-label">تسک‌های تکمیل شده</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon">⏰</div>
-                    <div class="stat-value">${overdue}</div>
+                    <div class="stat-value">${toFaNumber(overdue)}</div>
                     <div class="stat-label">تسک‌های گذشته</div>
                 </div>
             `;
@@ -1328,23 +1672,35 @@
             document.getElementById('quickStats').innerHTML = `
                 <div class="stat-item">
                     <span>🎯 فعال:</span>
-                    <span style="font-weight: bold; color: var(--persian-green);">${active}</span>
+                    <span style="font-weight: bold; color: var(--persian-green);">${toFaNumber(active)}</span>
                 </div>
                 <div class="stat-item">
                     <span>✅ انجام شده:</span>
-                    <span style="font-weight: bold; color: var(--success);">${completed}</span>
+                    <span style="font-weight: bold; color: var(--success);">${toFaNumber(completed)}</span>
                 </div>
             `;
         }
 
         // راه‌اندازی اولیه
         window.onload = function() {
-            // تنظیم تاریخ پیش‌فرض برای امروز
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('taskDate').value = today;
-
+            setTheme(localStorage.getItem(THEME_KEY) || 'light');
+            renderCategoryOptions();
+            const today = new Date();
+            const todayJ = jalaali.toJalaali(today);
+            setDateField('taskDate', todayJ.jy, todayJ.jm, todayJ.jd);
+            document.getElementById('taskRecurring').addEventListener('change', toggleRecurrencePanel);
+            document.querySelectorAll('#taskWeeklyDays .day-chip').forEach(button => {
+                button.addEventListener('click', () => button.classList.toggle('selected'));
+            });
+            toggleRecurrencePanel();
             loadTasks();
         };
+
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.date-picker-panel') && !event.target.closest('#taskDate') && !event.target.closest('#taskRecurringUntil')) {
+                closeDatePickers();
+            }
+        });
 
         // میانبرهای صفحه کلید
         document.addEventListener('keydown', function(e) {

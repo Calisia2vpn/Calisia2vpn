@@ -87,6 +87,16 @@
         return new Date(gregorian.gy, gregorian.gm - 1, gregorian.gd);
     }
 
+    function getCurrentJalaaliYear() {
+        if (typeof jalaali === 'undefined') return null;
+        return jalaali.toJalaali(new Date()).jy;
+    }
+
+    function getAdhanStorageKey(year = getCurrentJalaaliYear()) {
+        if (!year) return 'adhanEvents1405';
+        return `adhanEvents${year}`;
+    }
+
     function getPersianWeekdayIndex(dateLike) {
         const date = stripTime(dateLike);
         if (!date) return 0;
@@ -836,7 +846,9 @@
             events.push(...buildHabitEvents(start, end));
         }
         if (settings.includeAdhan) {
-            events.push(...filterEventsInRange(safeReadArray('adhanEvents1405'), start, end));
+            const adhanEvents = safeReadArray(getAdhanStorageKey());
+            const legacyEvents = safeReadArray('adhanEvents1405');
+            events.push(...filterEventsInRange(adhanEvents.length ? adhanEvents : legacyEvents, start, end));
         }
 
         return sortEvents(events);
