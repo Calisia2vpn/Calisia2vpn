@@ -939,6 +939,82 @@
             .day-cell {
                 min-height: 110px;
             }
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                margin: 12px auto;
+                padding: 0 12px;
+            }
+
+            .sidebar {
+                gap: 14px;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .month-nav {
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .month-title {
+                min-width: 0;
+                font-size: 18px;
+            }
+
+            .installment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .top-bar {
+                padding: 14px;
+            }
+
+            .top-bar h1 {
+                font-size: 22px;
+            }
+
+            .view-btn,
+            .nav-btn,
+            .input-box,
+            .mini-btn,
+            .date-picker-day {
+                min-height: 44px;
+            }
+
+            .panel-header,
+            .sidebar-section {
+                padding: 16px;
+            }
+
+            .day-cell {
+                min-height: 88px;
+                padding: 6px;
+            }
+
+            .event-item {
+                font-size: 11px;
+                padding: 2px 6px;
+            }
+
+            .modal-content {
+                width: calc(100vw - 18px);
+                max-height: 92vh;
+                padding: 16px;
+            }
+
+            .add-btn {
+                width: 54px;
+                height: 54px;
+                font-size: 24px;
+            }
         }
     </style>
 

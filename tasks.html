@@ -2,6 +2,7 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>تسک‌مستر حرفه‌ای - پیشرفته</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -847,6 +848,38 @@
 
         /* ریسپانسیو */
         @media (max-width: 768px) {
+            .task-container {
+                padding: 18px;
+                border-radius: 16px;
+                margin: 10px;
+            }
+
+            .header {
+                margin-top: 16px;
+                margin-bottom: 20px;
+            }
+
+            .header h1 {
+                font-size: 30px;
+            }
+
+            .header p {
+                font-size: 13px;
+            }
+
+            .theme-toggle {
+                position: static;
+                margin-bottom: 12px;
+            }
+
+            .toolbar-section {
+                width: 100%;
+            }
+
+            .search-box {
+                min-width: 100%;
+            }
+
             .form-grid {
                 grid-template-columns: 1fr;
             }
@@ -868,6 +901,80 @@
             .task-actions {
                 justify-content: center;
                 margin-top: 12px;
+            }
+
+            .subtask-columns {
+                grid-template-columns: 1fr;
+            }
+
+            .btn-primary,
+            .btn-secondary,
+            .input-box,
+            .filter-btn,
+            .day-chip,
+            .date-day {
+                min-height: 44px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 26px;
+            }
+
+            .task-container {
+                padding: 14px;
+                border-radius: 14px;
+            }
+
+            .toolbar {
+                padding: 14px;
+                gap: 10px;
+            }
+
+            .task-form {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .task-card {
+                padding: 16px;
+                border-radius: 14px;
+            }
+
+            .task-title {
+                font-size: 16px;
+                line-height: 1.8;
+            }
+
+            .task-meta {
+                gap: 6px;
+            }
+
+            .badge {
+                font-size: 11px;
+                padding: 5px 9px;
+            }
+
+            .stats-overview {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 14px;
+            }
+
+            .stat-value {
+                font-size: 22px;
+            }
+
+            .notification {
+                right: 10px;
+                left: 10px;
+                top: 10px;
+                padding: 12px 14px;
+                font-size: 13px;
             }
         }
 
