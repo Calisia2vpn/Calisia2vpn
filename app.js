@@ -97,14 +97,13 @@ function loadDashboardSnapshot() {
 
 const TIMER_STORAGE_KEY = 'dashboardTimerState';
 const STOPWATCH_STORAGE_KEY = 'dashboardStopwatchState';
-const ADHAN_STORAGE_KEY = 'adhanEvents1405';
-const ADHAN_META_KEY = 'adhanEvents1405Meta';
+const ADHAN_STORAGE_KEY_PREFIX = 'adhanEvents';
+const ADHAN_META_KEY_PREFIX = 'adhanEventsMeta';
 const ADHAN_CONFIG_VERSION = 3;
 const ADHAN_DEFAULTS = {
     city: 'Tehran',
     country: 'Iran',
-    method: 7,
-    jalaaliYear: 1405
+    method: 7
 };
 const ADHAN_PRAYER_ENTRIES = [
     ['Fajr', 'اذان صبح'],
@@ -112,6 +111,19 @@ const ADHAN_PRAYER_ENTRIES = [
     ['Dhuhr', 'اذان ظهر'],
     ['Sunset', 'غروب'],
     ['Maghrib', 'اذان مغرب']
+];
+const DASHBOARD_STORAGE_SYNC_KEYS = [
+    'advancedTasks',
+    'myHabits',
+    'myDietLog',
+    'proEvents',
+    'goals',
+    'financeAssets',
+    'meditationStats',
+    'fitnessExercises',
+    'nutritionTargets',
+    'socialUsers',
+    'socialMessages'
 ];
 
 function normalizeGregorianDate(dateLike) {
@@ -143,11 +155,33 @@ function sanitizeTimingValue(value) {
     return String(value || '').split(' ')[0];
 }
 
-function getStoredAdhanEvents() {
-    const rawEvents = JSON.parse(localStorage.getItem(ADHAN_STORAGE_KEY) || '[]');
+function safeJsonParse(raw, fallback) {
+    try {
+        const parsed = JSON.parse(raw);
+        return parsed ?? fallback;
+    } catch {
+        return fallback;
+    }
+}
+
+function getCurrentJalaaliYear() {
+    return jalaali.toJalaali(new Date()).jy;
+}
+
+function getAdhanStorageKey(jalaaliYear = getCurrentJalaaliYear()) {
+    return `${ADHAN_STORAGE_KEY_PREFIX}${jalaaliYear}`;
+}
+
+function getAdhanMetaKey(jalaaliYear = getCurrentJalaaliYear()) {
+    return `${ADHAN_META_KEY_PREFIX}${jalaaliYear}`;
+}
+
+function getStoredAdhanEvents(jalaaliYear = getCurrentJalaaliYear()) {
+    const storageKey = getAdhanStorageKey(jalaaliYear);
+    const rawEvents = safeJsonParse(localStorage.getItem(storageKey) || '[]', []);
     const sanitizedEvents = sanitizeStoredAdhanEvents(rawEvents);
     if (sanitizedEvents.length !== rawEvents.length) {
-        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(sanitizedEvents));
+        localStorage.setItem(storageKey, JSON.stringify(sanitizedEvents));
     }
     return sanitizedEvents;
 }
@@ -162,7 +196,7 @@ function getStoredUserEvents() {
     if (dashboardData?.readUserEvents) {
         return dashboardData.readUserEvents();
     }
-    return JSON.parse(localStorage.getItem('proEvents') || '[]');
+    return safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
 }
 
 function getAllCalendarEvents(rangeStart, rangeEnd, options) {
@@ -174,9 +208,9 @@ function getAllCalendarEvents(rangeStart, rangeEnd, options) {
         : [...getStoredUserEvents(), ...getStoredAdhanEvents()];
 }
 
-function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings) {
+function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings, targetJalaaliYear) {
     const jalaaliDate = jalaali.toJalaali(new Date(gregorianYear, gregorianMonth - 1, gregorianDay));
-    if (jalaaliDate.jy !== ADHAN_DEFAULTS.jalaaliYear) {
+    if (jalaaliDate.jy !== targetJalaaliYear) {
         return [];
     }
 
@@ -195,25 +229,41 @@ function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, tim
     }));
 }
 
-async function ensureAdhanData1405() {
-    const cachedRaw = getStoredAdhanEvents();
+function buildMonthRequestsForJalaaliYear(jalaaliYear) {
+    const startGregorian = jalaali.toGregorian(jalaaliYear, 1, 1);
+    const endGregorian = jalaali.toGregorian(jalaaliYear, 12, 29);
+    const start = new Date(startGregorian.gy, startGregorian.gm - 1, startGregorian.gd);
+    const end = new Date(endGregorian.gy, endGregorian.gm - 1, endGregorian.gd);
+    const requests = [];
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+
+    while (cursor <= end) {
+        requests.push([cursor.getFullYear(), cursor.getMonth() + 1]);
+        cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    return requests;
+}
+
+async function ensureAdhanDataForCurrentYear() {
+    const jalaaliYear = getCurrentJalaaliYear();
+    const storageKey = getAdhanStorageKey(jalaaliYear);
+    const metaKey = getAdhanMetaKey(jalaaliYear);
+    const cachedRaw = getStoredAdhanEvents(jalaaliYear);
     const existing = sanitizeStoredAdhanEvents(cachedRaw);
-    const meta = JSON.parse(localStorage.getItem(ADHAN_META_KEY) || 'null');
+    const meta = safeJsonParse(localStorage.getItem(metaKey) || 'null', null);
     const cacheMatches = meta?.city === ADHAN_DEFAULTS.city
-        && meta?.year === ADHAN_DEFAULTS.jalaaliYear
+        && meta?.year === jalaaliYear
         && meta?.version === ADHAN_CONFIG_VERSION;
 
     if (existing.length && cacheMatches) {
         if (existing.length !== cachedRaw.length) {
-            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
+            localStorage.setItem(storageKey, JSON.stringify(existing));
         }
         return existing;
     }
 
-    const monthRequests = [
-        [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], [2026, 8],
-        [2026, 9], [2026, 10], [2026, 11], [2026, 12], [2027, 1], [2027, 2], [2027, 3]
-    ];
+    const monthRequests = buildMonthRequestsForJalaaliYear(jalaaliYear);
 
     try {
         const responses = await Promise.all(monthRequests.map(async ([year, month]) => {
@@ -229,15 +279,15 @@ async function ensureAdhanData1405() {
         const adhanEvents = responses.flatMap(monthData => monthData.flatMap(item => {
             const gregorian = item?.date?.gregorian;
             if (!gregorian) return [];
-            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {});
+            return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {}, jalaaliYear);
         }));
 
-        localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(adhanEvents));
-        localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+        localStorage.setItem(storageKey, JSON.stringify(adhanEvents));
+        localStorage.setItem(metaKey, JSON.stringify({
             city: ADHAN_DEFAULTS.city,
             country: ADHAN_DEFAULTS.country,
             method: ADHAN_DEFAULTS.method,
-            year: ADHAN_DEFAULTS.jalaaliYear,
+            year: jalaaliYear,
             version: ADHAN_CONFIG_VERSION,
             generatedAt: new Date().toISOString()
         }));
@@ -245,12 +295,12 @@ async function ensureAdhanData1405() {
         return adhanEvents;
     } catch (error) {
         if (existing.length) {
-            localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
-            localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+            localStorage.setItem(storageKey, JSON.stringify(existing));
+            localStorage.setItem(metaKey, JSON.stringify({
                 city: ADHAN_DEFAULTS.city,
                 country: ADHAN_DEFAULTS.country,
                 method: ADHAN_DEFAULTS.method,
-                year: ADHAN_DEFAULTS.jalaaliYear,
+                year: jalaaliYear,
                 version: ADHAN_CONFIG_VERSION,
                 generatedAt: meta?.generatedAt || new Date().toISOString()
             }));
@@ -282,7 +332,7 @@ function getTaskPriorityRank(priority) {
 function readDashboardTasks() {
     return dashboardData?.readTasks
         ? dashboardData.readTasks()
-        : JSON.parse(localStorage.getItem('advancedTasks') || '[]');
+        : safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
 }
 
 function formatFaJalaaliFromGregorian(dateLike) {
@@ -1056,6 +1106,519 @@ function loadWeeklyStats() {
     weeklyEventsEl.textContent = formatFa(weeklyEvents);
 }
 
+function readLifeSyncArrays() {
+    return {
+        tasks: safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []),
+        habits: safeJsonParse(localStorage.getItem('myHabits') || '[]', []),
+        dietLog: safeJsonParse(localStorage.getItem('myDietLog') || '[]', []),
+        goals: safeJsonParse(localStorage.getItem('goals') || '[]', []),
+        assets: safeJsonParse(localStorage.getItem('financeAssets') || '[]', []),
+        meditationStats: safeJsonParse(localStorage.getItem('meditationStats') || '{}', {}),
+        exercises: safeJsonParse(localStorage.getItem('fitnessExercises') || '[]', []),
+        socialUsers: safeJsonParse(localStorage.getItem('socialUsers') || '[]', []),
+        socialMessages: safeJsonParse(localStorage.getItem('socialMessages') || '[]', [])
+    };
+}
+
+function calculateLastDaysAverageCalories(dietLog, days) {
+    const now = new Date();
+    let total = 0;
+    for (let i = 0; i < days; i += 1) {
+        const cursor = new Date(now);
+        cursor.setDate(now.getDate() - i);
+        const key = cursor.toLocaleDateString('en-CA');
+        total += dietLog.filter(item => item.date === key).reduce((sum, item) => sum + (Number(item.cal) || 0), 0);
+    }
+    return total / days;
+}
+
+function isHabitDueToday(habit, todayDate = new Date()) {
+    const recurring = habit?.recurring || 'daily';
+    if (recurring === 'daily') return true;
+    if (recurring === 'weekly') {
+        const recurringDays = Array.isArray(habit?.recurringDays) ? habit.recurringDays.map(Number) : [];
+        return recurringDays.includes(todayDate.getDay());
+    }
+    if (recurring === 'monthly') {
+        const jToday = jalaali.toJalaali(todayDate);
+        return Number(habit?.dayOfMonth) === jToday.jd;
+    }
+    return false;
+}
+
+function getTodayMissedHabits(habits, todayKey) {
+    const todayDate = new Date();
+    return habits.filter(habit => {
+        if (!isHabitDueToday(habit, todayDate)) return false;
+        const history = Array.isArray(habit?.history) ? habit.history.map(normalizeGregorianDate) : [];
+        return !history.includes(todayKey);
+    });
+}
+
+function collectLocalAiSignals({ tasks, habits, dietLog, exercises }) {
+    const today = new Date();
+    const todayKey = normalizeGregorianDate(today);
+    const overdueTasks = tasks.filter(task => !task.completed && task.dueDate && normalizeGregorianDate(task.dueDate) < todayKey);
+    const missedHabits = getTodayMissedHabits(habits, todayKey);
+    const proteinGoal = Number(safeJsonParse(localStorage.getItem('nutritionTargets') || '{}', {}).proteinMin) || 80;
+    const todayProtein = dietLog.filter(item => item.date === todayKey).reduce((sum, item) => sum + (Number(item.pro) || 0), 0);
+    const exerciseSessionsWeek = exercises.filter(item => {
+        const d = new Date(item.date || item.createdAt || 0);
+        return (new Date() - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length;
+
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - 1);
+    const events = getAllCalendarEvents(weekStart, today);
+    const todayJ = jalaali.toJalaali(today);
+    const todayJKey = `${todayJ.jy}-${todayJ.jm}-${todayJ.jd}`;
+    const timeBuckets = new Map();
+    events
+        .filter(event => String(event?.date) === todayJKey)
+        .forEach(event => {
+            const slot = sanitizeTimingValue(event.time || `${event.hour || '99'}:00`) || 'نامشخص';
+            const group = timeBuckets.get(slot) || [];
+            group.push(event);
+            timeBuckets.set(slot, group);
+        });
+    const scheduleConflicts = Array.from(timeBuckets.entries())
+        .filter(([, group]) => group.length >= 2)
+        .map(([slot, group]) => ({ slot, count: group.length, titles: group.map(item => item.title).slice(0, 3) }));
+
+    return {
+        overdueTasks,
+        missedHabits,
+        todayProtein,
+        proteinGoal,
+        exerciseSessionsWeek,
+        scheduleConflicts
+    };
+}
+
+function renderLocalAiPhone(signals) {
+    const widget = document.getElementById('aiPhoneWidget');
+    const body = document.getElementById('aiPhoneBody');
+    const status = document.getElementById('aiPhoneStatus');
+    const closeBtn = document.getElementById('aiPhoneClose');
+    if (!widget || !body || !status) return;
+
+    if (closeBtn && !closeBtn.dataset.bound) {
+        closeBtn.addEventListener('click', () => widget.classList.remove('visible'));
+        closeBtn.dataset.bound = 'true';
+    }
+
+    const alerts = [];
+    if (signals.overdueTasks.length > 0) {
+        alerts.push({
+            title: 'تسک از دست‌رفته',
+            body: `${formatFa(signals.overdueTasks.length)} تسک عقب‌مانده است. اولین اقدام: یک تسک را همین حالا به «انجام امروز» منتقل کن.`
+        });
+    }
+    if (signals.missedHabits.length > 0) {
+        alerts.push({
+            title: 'عادتِ جامانده',
+            body: `${formatFa(signals.missedHabits.length)} عادت امروز هنوز ثبت نشده. اگر کمتر از ۲ دقیقه زمان می‌برد، همین الان انجامش بده.`
+        });
+    }
+    if (signals.scheduleConflicts.length > 0) {
+        const topConflict = signals.scheduleConflicts[0];
+        alerts.push({
+            title: 'تداخل برنامه',
+            body: `در ساعت ${formatFaText(topConflict.slot)} حداقل ${formatFa(topConflict.count)} رویداد داری. یکی را جابه‌جا کن تا فشار زمانی کم شود.`
+        });
+    }
+    if (signals.todayProtein < signals.proteinGoal * 0.65) {
+        alerts.push({
+            title: 'افت تغذیه',
+            body: `پروتئین امروز ${formatFa(Math.round(signals.todayProtein))} از هدف ${formatFa(signals.proteinGoal)} است. یک وعده پروتئینی سبک اضافه کن.`
+        });
+    }
+    if (signals.exerciseSessionsWeek === 0) {
+        alerts.push({
+            title: 'عقب‌ماندگی فعالیت بدنی',
+            body: 'این هفته هنوز تمرینی ثبت نشده؛ حتی ۱۰ دقیقه پیاده‌روی هم شاخص را بهتر می‌کند.'
+        });
+    }
+
+    if (alerts.length === 0) {
+        widget.classList.remove('visible');
+        return;
+    }
+
+    body.innerHTML = alerts.map(item => `
+        <article class="ai-phone-alert">
+            <strong>${item.title}</strong>
+            <span>${item.body}</span>
+        </article>
+    `).join('');
+    status.textContent = `آخرین پایش: ${new Date().toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })} • ${formatFa(alerts.length)} هشدار فعال.`;
+    widget.classList.add('visible');
+}
+
+function renderSmartModules() {
+    const host = document.getElementById('smartModulesGrid');
+    if (!host) return;
+    const { tasks, habits, dietLog, goals, assets, exercises, socialMessages } = readLifeSyncArrays();
+    const signals = collectLocalAiSignals({ tasks, habits, dietLog, exercises });
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active');
+    const avgGoalProgress = activeGoals.length
+        ? activeGoals.reduce((sum, goal) => sum + Math.max(0, Math.min(100, Number(goal.progress) || 0)), 0) / activeGoals.length
+        : 0;
+    const openTasks = tasks.filter(task => !task.completed).length;
+    const weeklyExerciseMinutes = exercises
+        .filter(item => (new Date() - new Date(item.date || item.createdAt || 0)) <= (7 * 24 * 60 * 60 * 1000))
+        .reduce((sum, item) => sum + (Number(item.duration) || 0), 0);
+    const avgCalories7 = calculateLastDaysAverageCalories(dietLog, 7);
+    const financeTotal = assets.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0);
+    const lastMessage = socialMessages
+        .slice()
+        .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))[0];
+    const daysSinceSocialTouch = lastMessage?.timestamp
+        ? Math.floor((new Date() - new Date(lastMessage.timestamp)) / (24 * 60 * 60 * 1000))
+        : 99;
+
+    const modules = [
+        {
+            title: 'AI Weekly CEO',
+            score: Math.max(0, 100 - (openTasks * 2) - (signals.overdueTasks.length * 4)),
+            text: signals.overdueTasks.length > 0
+                ? `این هفته ${formatFa(signals.overdueTasks.length)} عقب‌ماندگی داری؛ ۳ کار کم‌اثر را حذف و روی ۱ خروجی اصلی تمرکز کن.`
+                : 'حجم کار کنترل شده است؛ هفته بعد یک هدف درآمدی/یادگیریِ سطح بالا تعریف کن.'
+        },
+        {
+            title: 'Conflict Auto-Resolver',
+            score: signals.scheduleConflicts.length === 0 ? 92 : Math.max(20, 80 - signals.scheduleConflicts.length * 18),
+            text: signals.scheduleConflicts.length
+                ? `امروز ${formatFa(signals.scheduleConflicts.length)} تداخل زمانی تشخیص داده شد؛ پیشنهاد: جابه‌جایی اولین تداخل به +۳۰ دقیقه.`
+                : 'تداخل زمانی بحرانی دیده نشد؛ برنامه روزانه هماهنگ است.'
+        },
+        {
+            title: 'Energy & Focus Forecast',
+            score: Math.max(10, Math.min(100, 55 + Math.round((weeklyExerciseMinutes / 30) * 5) - (signals.overdueTasks.length * 3))),
+            text: `برآورد انرژی فردا: ${weeklyExerciseMinutes >= 90 ? 'بالا' : 'متوسط'}. بلوک تمرکز عمیق را صبح ۹ تا ۱۱ بگذار.`
+        },
+        {
+            title: 'Habit Protocol Generator',
+            score: Math.max(0, 100 - (signals.missedHabits.length * 9)),
+            text: signals.missedHabits.length
+                ? `${formatFa(signals.missedHabits.length)} عادت جا مانده؛ نسخه ۲ دقیقه‌ای همان عادت را امروز انجام بده تا زنجیره حفظ شود.`
+                : 'پایداری عادت خوب است؛ از فردا شدت یکی از عادت‌ها را ۱۰٪ بالا ببر.'
+        },
+        {
+            title: 'Financial Drift Detector',
+            score: financeTotal > 0 ? 78 : 35,
+            text: financeTotal > 0
+                ? `دارایی تجمیعی: ${formatFa(Math.round(financeTotal))}. نسبت هدف فعال به بودجه را هفتگی بازبینی کن.`
+                : 'داده مالی کافی نیست؛ حداقل یک دارایی یا برنامه اقساط ثبت کن تا تحلیل دقیق شود.'
+        },
+        {
+            title: 'Goal Probability Engine',
+            score: Math.round(avgGoalProgress),
+            text: activeGoals.length
+                ? `میانگین احتمال تحقق اهداف فعال: ${formatFa(Math.round(avgGoalProgress))}٪. اهداف زیر ۴۰٪ را بازطراحی کن.`
+                : 'هدف فعالی ثبت نشده؛ یک هدف ۳۰ روزه با KPI واضح تعریف کن.'
+        },
+        {
+            title: 'Social Relationship Intelligence',
+            score: Math.max(5, 100 - (daysSinceSocialTouch * 8)),
+            text: daysSinceSocialTouch > 3
+                ? `${formatFa(daysSinceSocialTouch)} روز از آخرین تعامل گذشته؛ یک پیام پیگیری کوتاه ارسال کن.`
+                : 'ریتم ارتباط اجتماعی مناسب است؛ روی کیفیت مکالمه بعدی تمرکز کن.'
+        },
+        {
+            title: 'Recovery Guard',
+            score: Math.max(15, 100 - (signals.overdueTasks.length * 6) - (signals.todayProtein < signals.proteinGoal ? 18 : 0)),
+            text: signals.overdueTasks.length >= 3 || signals.todayProtein < signals.proteinGoal
+                ? 'ریسک فرسودگی بالا رفته؛ برنامه ۴۸ ساعته سبک با خواب، پیاده‌روی و کاهش بار تسک اجرا شود.'
+                : 'نشانه فرسودگی حاد دیده نشد؛ تعادل فعلی را حفظ کن.'
+        }
+    ];
+
+    host.innerHTML = modules.map(item => `
+        <article class="smart-module-card">
+            <h4>${item.title}</h4>
+            <div class="smart-score">Smart Score: ${formatFa(Math.round(item.score))} / ۱۰۰</div>
+            <p>${item.text}</p>
+        </article>
+    `).join('');
+}
+
+function getGregorianDateOffset(days = 0) {
+    const d = new Date();
+    d.setDate(d.getDate() + days);
+    return normalizeGregorianDate(d);
+}
+
+function getJalaaliDateFromGregorianKey(gregorianKey) {
+    const date = new Date(gregorianKey);
+    const j = jalaali.toJalaali(date);
+    return `${j.jy}-${j.jm}-${j.jd}`;
+}
+
+function readTasksForOptimization() {
+    return safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
+}
+
+function saveTasksForOptimization(tasks) {
+    localStorage.setItem('advancedTasks', JSON.stringify(tasks));
+}
+
+function readEventsForOptimization() {
+    return safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
+}
+
+function saveEventsForOptimization(events) {
+    localStorage.setItem('proEvents', JSON.stringify(events));
+}
+
+function buildOptimizationAdvice() {
+    const { tasks, habits, dietLog, goals, assets, exercises, socialMessages } = readLifeSyncArrays();
+    const signals = collectLocalAiSignals({ tasks, habits, dietLog, exercises });
+    const todayKey = normalizeGregorianDate(new Date());
+    const todayCalories = dietLog.filter(item => item.date === todayKey).reduce((sum, item) => sum + (Number(item.cal) || 0), 0);
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active');
+    const financeTotal = assets.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0);
+    const lastMessage = socialMessages
+        .slice()
+        .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))[0];
+    const daysSinceSocialTouch = lastMessage?.timestamp
+        ? Math.floor((new Date() - new Date(lastMessage.timestamp)) / (24 * 60 * 60 * 1000))
+        : 99;
+
+    const lines = [
+        '🔬 جمع‌بندی بهینگی (مبتنی بر اصول مدیریت انرژی، قانون پارکینسون و برنامه‌ریزی مبتنی بر شواهد):'
+    ];
+    const suggestions = [];
+
+    if (signals.overdueTasks.length > 0) {
+        lines.push(`• ${formatFa(signals.overdueTasks.length)} تسک عقب‌مانده داری؛ برای هر روز حداکثر ۳ کار کلیدی بگذار (MIT Rule) و بقیه را زمان‌بندی مجدد کن.`);
+    } else {
+        lines.push('• وضعیت تسک‌ها خوب است؛ یک بلوک Deep Work ثابت ۹۰ دقیقه‌ای به برنامه روزانه اضافه کن.');
+    }
+
+    if (signals.scheduleConflicts.length > 0) {
+        lines.push(`• ${formatFa(signals.scheduleConflicts.length)} تداخل زمانی دیده شد؛ بین رویدادهای پشت‌سرهم ۱۵ دقیقه Buffer بگذار تا شکست برنامه کم شود.`);
+        suggestions.push({
+            id: 'defer_routine_tasks',
+            label: 'دو کار روزمره/جلسه را فردا منتقل کنم تا جا برای کار مهم باز شود؟'
+        });
+    }
+
+    if (signals.missedHabits.length > 0) {
+        lines.push(`• ${formatFa(signals.missedHabits.length)} عادت جامانده؛ از الگوی «نسخه ۲ دقیقه‌ای» استفاده کن تا پیوستگی حفظ شود.`);
+    }
+
+    if (todayCalories < 1200) {
+        lines.push('• کالری امروز پایین است؛ برای پایداری شناختی یک وعده سبک پروتئین+کربوهیدرات پیچیده اضافه کن.');
+    }
+
+    if (activeGoals.length === 0) {
+        lines.push('• جای خالی برنامه: هیچ هدف فعالی ثبت نشده. یک هدف ۳۰ روزه قابل اندازه‌گیری اضافه کن.');
+    } else {
+        lines.push(`• ${formatFa(activeGoals.length)} هدف فعال داری؛ هر هدف را به شاخص هفتگی تبدیل کن تا قابل پیگیری شود.`);
+    }
+
+    if (financeTotal <= 0) {
+        lines.push('• جای خالی برنامه: داده مالی کافی نداری. حداقل یک دارایی/قسط اضافه کن تا تحلیل ریسک واقعی شود.');
+    }
+
+    if (daysSinceSocialTouch > 4) {
+        lines.push(`• ${formatFa(daysSinceSocialTouch)} روز از آخرین تعامل اجتماعی گذشته؛ یک پیام پیگیری کوتاه برای حفظ کیفیت رابطه بفرست.`);
+    }
+
+    if (exercises.length === 0) {
+        lines.push('• جای خالی برنامه: فعالیت بدنی ثبت نشده. هفته‌ای ۳ جلسه ۲۰ دقیقه‌ای به تقویم اضافه کن.');
+        suggestions.push({
+            id: 'add_workout_block',
+            label: 'یک بلوک ورزش ۱۸:۰۰ تا ۱۸:۴۵ امروز به برنامه اضافه کنم؟'
+        });
+    }
+
+    const hasLanguagePriority = tasks.some(task => !task.completed && /زبان|language/i.test(String(task.title || '')));
+    if (hasLanguagePriority) {
+        lines.push('• اولویت یادگیری زبان فعال است؛ بهتر است بخشی از جلسات کم‌اهمیت به فردا منتقل شود.');
+        suggestions.push({
+            id: 'add_language_block',
+            label: 'با توجه به اولویت زبان، ساعت ۲۰:۰۰ تا ۲۱:۰۰ برای زبان رزرو کنم؟'
+        });
+    }
+
+    lines.push('✅ پیشنهاد اجرایی: همین امروز یک «بلوک بهینه‌سازی» ۳۰ دقیقه‌ای در تقویم ثبت کن و موارد بالا را اعمال کن.');
+    return { summary: lines.join('\n'), suggestions };
+}
+
+function applyOptimizationSuggestion(actionId) {
+    const todayG = getGregorianDateOffset(0);
+    const tomorrowG = getGregorianDateOffset(1);
+
+    if (actionId === 'add_workout_block') {
+        const events = readEventsForOptimization();
+        events.push({
+            id: `opt-workout-${Date.now()}`,
+            title: 'تمرین بهینه‌سازی',
+            date: getJalaaliDateFromGregorianKey(todayG),
+            time: '18:00 - 18:45',
+            hour: '18',
+            category: 'ورزش',
+            priority: 'medium',
+            desc: 'بلوک پیشنهادی AI برای افزایش انرژی و تمرکز'
+        });
+        saveEventsForOptimization(events);
+        return 'بلوک ورزش به تقویم اضافه شد.';
+    }
+
+    if (actionId === 'add_language_block') {
+        const events = readEventsForOptimization();
+        const tasks = readTasksForOptimization();
+        events.push({
+            id: `opt-language-${Date.now()}`,
+            title: 'بلوک تمرکز زبان',
+            date: getJalaaliDateFromGregorianKey(todayG),
+            time: '20:00 - 21:00',
+            hour: '20',
+            category: 'آموزش',
+            priority: 'high',
+            desc: 'پیشنهاد AI برای پیشروی هدف زبان'
+        });
+        tasks.push({
+            id: Date.now(),
+            title: 'تمرین زبان (بلوک AI)',
+            category: 'study',
+            priority: 'high',
+            dueDate: todayG,
+            recurring: 'none',
+            completed: false,
+            createdAt: new Date().toISOString()
+        });
+        saveEventsForOptimization(events);
+        saveTasksForOptimization(tasks);
+        return 'بلوک زبان به تقویم و لیست تسک اضافه شد.';
+    }
+
+    if (actionId === 'defer_routine_tasks') {
+        const tasks = readTasksForOptimization();
+        let moved = 0;
+        const updated = tasks.map(task => {
+            if (moved >= 2) return task;
+            if (task.completed) return task;
+            const title = String(task.title || '');
+            const isRoutine = /جلسه|روزمره|اداری|meeting/i.test(title) || task.priority === 'low';
+            const due = normalizeGregorianDate(task.dueDate || '');
+            if (isRoutine && (!due || due <= todayG)) {
+                moved += 1;
+                return { ...task, dueDate: tomorrowG };
+            }
+            return task;
+        });
+        saveTasksForOptimization(updated);
+        return moved > 0
+            ? `${formatFa(moved)} تسک کم‌اولویت به فردا منتقل شد.`
+            : 'تسک مناسب برای انتقال پیدا نشد.';
+    }
+
+    return 'اقدامی اعمال نشد.';
+}
+
+function bindOptimizationButton() {
+    const btn = document.getElementById('optimizationBtn');
+    const panel = document.getElementById('optimizationPanel');
+    if (!btn || !panel || btn.dataset.bound) return;
+    btn.addEventListener('click', () => {
+        const { summary, suggestions } = buildOptimizationAdvice();
+        panel.innerHTML = `
+            <div class="optimization-summary">${summary}</div>
+            <div class="optimization-actions">
+                ${suggestions.map(item => `
+                    <div class="optimization-suggestion">
+                        <p>${item.label}</p>
+                        <button class="optimization-apply" data-action="${item.id}" type="button">اعمال خودکار</button>
+                    </div>
+                `).join('')}
+            </div>
+            <div id="optimizationResult" class="optimization-result"></div>
+        `;
+        panel.classList.add('visible');
+    });
+    panel.addEventListener('click', event => {
+        const target = event.target.closest('.optimization-apply');
+        if (!target) return;
+        const result = applyOptimizationSuggestion(target.dataset.action);
+        const resultNode = document.getElementById('optimizationResult');
+        if (resultNode) {
+            resultNode.textContent = result;
+        }
+        renderLifeSyncInsights();
+        loadWeeklyStats();
+        renderTodaySchedule();
+    });
+    btn.dataset.bound = 'true';
+}
+
+function renderLifeSyncInsights() {
+    const container = document.getElementById('lifeSyncList');
+    const meter = document.getElementById('lifeSyncMeter');
+    if (!container || !meter) return;
+    const { tasks, habits, dietLog, goals, assets, meditationStats, exercises } = readLifeSyncArrays();
+    const todayKey = normalizeGregorianDate(new Date());
+    const overdueTasks = tasks.filter(task => !task.completed && task.dueDate && normalizeGregorianDate(task.dueDate) < todayKey).length;
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active').length;
+    const avgCalories7 = calculateLastDaysAverageCalories(dietLog, 7);
+    const proteinGoal = Number(safeJsonParse(localStorage.getItem('nutritionTargets') || '{}', {}).proteinMin) || 80;
+    const todayProtein = dietLog.filter(item => item.date === todayKey).reduce((sum, item) => sum + (Number(item.pro) || 0), 0);
+    const weeklyHabitChecks = habits.reduce((sum, habit) => sum + ((habit.history || []).filter(date => {
+        const d = new Date(date);
+        const now = new Date();
+        return (now - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length), 0);
+    const assetTotal = assets.reduce((sum, asset) => sum + (Number(asset.totalValue) || 0), 0);
+    const meditationMinutes = Number(meditationStats.totalMinutes) || 0;
+    const exerciseSessionsWeek = exercises.filter(item => {
+        const d = new Date(item.date || item.createdAt || 0);
+        return (new Date() - d) <= (7 * 24 * 60 * 60 * 1000);
+    }).length;
+
+    const insights = [
+        {
+            title: '🎯 بهره‌وری و انرژی',
+            body: overdueTasks > 0
+                ? `${formatFa(overdueTasks)} تسک عقب‌مانده داری. اگر خواب/تغذیه را پایدار کنی فشار ذهنی کمتر می‌شود.`
+                : 'تسک عقب‌مانده‌ای نداری؛ زمان خوبی برای پیشبرد اهداف عمیق است.'
+        },
+        {
+            title: '🍎 تغذیه و عملکرد',
+            body: `میانگین ۷ روزه کالری: ${formatFa(Math.round(avgCalories7))}. پروتئین امروز ${formatFa(Math.round(todayProtein))}g از هدف ${formatFa(proteinGoal)}g است.`
+        },
+        {
+            title: '🌿 عادت، ورزش و ذهن',
+            body: `این هفته ${formatFa(weeklyHabitChecks)} ثبت عادت، ${formatFa(exerciseSessionsWeek)} جلسه تمرین و ${formatFa(meditationMinutes)} دقیقه مدیتیشن ثبت شده است.`
+        },
+        {
+            title: '💰 مالی و برنامه‌ریزی',
+            body: `ارزش تقریبی دارایی‌ها: ${formatFa(Math.round(assetTotal))}. بهتر است اهداف فعال (${formatFa(activeGoals)}) با بودجه‌ات هم‌راستا بماند.`
+        }
+    ];
+
+    container.innerHTML = insights.map(item => `
+        <article class="life-sync-card">
+            <strong>${item.title}</strong>
+            <p>${item.body}</p>
+        </article>
+    `).join('');
+
+    let score = 100;
+    score -= Math.min(35, overdueTasks * 5);
+    score -= Math.max(0, 20 - Math.min(20, weeklyHabitChecks));
+    score -= Math.max(0, 15 - Math.min(15, exerciseSessionsWeek * 4));
+    score -= todayProtein < proteinGoal ? Math.min(20, Math.round((proteinGoal - todayProtein) / 4)) : 0;
+    score = Math.max(25, Math.min(100, score));
+    const status = score >= 80 ? 'یکپارچگی عالی' : score >= 60 ? 'نیاز به تنظیم' : 'هشدار پیوستگی';
+    meter.textContent = `شاخص پیوستگی زندگی: ${formatFa(Math.round(score))} از ۱۰۰ — ${status}.`;
+
+    renderLocalAiPhone(collectLocalAiSignals({ tasks, habits, dietLog, exercises }));
+    renderSmartModules();
+    bindOptimizationButton();
+}
+
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
     setTheme(savedTheme);
@@ -1080,6 +1643,7 @@ window.addEventListener('load', () => {
         renderTodaySchedule();
         renderGoalFocus();
         renderTodayPrayerTimes();
+        renderLifeSyncInsights();
         if (timerDisplay) {
             initializeDashboardTimerControls();
         }
@@ -1094,7 +1658,7 @@ window.addEventListener('load', () => {
             restoreDashboardTimer();
         }
         loadWeeklyStats();
-        ensureAdhanData1405()
+        ensureAdhanDataForCurrentYear()
             .then(() => {
                 if (miniCalendar) {
                     renderMiniCalendar();
@@ -1103,16 +1667,18 @@ window.addEventListener('load', () => {
                 renderTodaySchedule();
                 renderGoalFocus();
                 loadWeeklyStats();
+                renderLifeSyncInsights();
             })
             .catch(error => {
-                console.error('Unable to load 1405 prayer times:', error);
+                console.error('Unable to load prayer times:', error);
                 renderTodayPrayerTimes();
             });
     }
 });
 
 window.addEventListener('storage', event => {
-    if (!['advancedTasks', 'myHabits', 'myDietLog', 'proEvents', 'goals', ADHAN_STORAGE_KEY].includes(event.key)) {
+    const adhanStoragePrefixMatch = String(event.key || '').startsWith(ADHAN_STORAGE_KEY_PREFIX);
+    if (!DASHBOARD_STORAGE_SYNC_KEYS.includes(event.key) && !adhanStoragePrefixMatch) {
         return;
     }
     loadDashboardSnapshot();
@@ -1120,6 +1686,7 @@ window.addEventListener('storage', event => {
     renderGoalFocus();
     renderTodayPrayerTimes();
     loadWeeklyStats();
+    renderLifeSyncInsights();
     if (document.getElementById('miniCalendar')) {
         renderMiniCalendar();
     }

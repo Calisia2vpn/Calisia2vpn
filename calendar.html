@@ -177,6 +177,57 @@
             letter-spacing: 1px;
         }
 
+        .installment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .installment-grid .full {
+            grid-column: 1 / -1;
+        }
+
+        .installment-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .mini-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .mini-btn.primary {
+            background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+            color: #fff;
+        }
+
+        .mini-btn.ghost {
+            background: #e6f6f3;
+            color: #0f766e;
+        }
+
+        .installment-list {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .installment-item {
+            border: 1px solid rgba(15, 118, 110, 0.22);
+            border-radius: 10px;
+            padding: 10px 12px;
+            background: rgba(20, 184, 166, 0.06);
+            font-size: 12px;
+            line-height: 1.9;
+        }
+
         .category-filter {
             display: flex;
             flex-direction: column;
@@ -888,6 +939,82 @@
             .day-cell {
                 min-height: 110px;
             }
+
+            .container {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                margin: 12px auto;
+                padding: 0 12px;
+            }
+
+            .sidebar {
+                gap: 14px;
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                gap: 10px;
+                align-items: stretch;
+            }
+
+            .month-nav {
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .month-title {
+                min-width: 0;
+                font-size: 18px;
+            }
+
+            .installment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 540px) {
+            .top-bar {
+                padding: 14px;
+            }
+
+            .top-bar h1 {
+                font-size: 22px;
+            }
+
+            .view-btn,
+            .nav-btn,
+            .input-box,
+            .mini-btn,
+            .date-picker-day {
+                min-height: 44px;
+            }
+
+            .panel-header,
+            .sidebar-section {
+                padding: 16px;
+            }
+
+            .day-cell {
+                min-height: 88px;
+                padding: 6px;
+            }
+
+            .event-item {
+                font-size: 11px;
+                padding: 2px 6px;
+            }
+
+            .modal-content {
+                width: calc(100vw - 18px);
+                max-height: 92vh;
+                padding: 16px;
+            }
+
+            .add-btn {
+                width: 54px;
+                height: 54px;
+                font-size: 24px;
+            }
         }
     </style>
 
@@ -944,6 +1071,31 @@
             <div class="sidebar-section">
                 <h3>🗓️ برنامه‌های امروز</h3>
                 <div id="todayAgendaList" class="today-agenda"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>💳 مدیریت اقساط و وام</h3>
+                <div class="installment-grid">
+                    <input type="text" id="loanTitle" class="input-box full" placeholder="نام وام (مثلاً وام خودرو)">
+                    <input type="text" id="loanProvider" class="input-box full" placeholder="بانک / شخص وام‌دهنده">
+                    <input type="number" id="loanTotalAmount" class="input-box" min="0" step="100000" placeholder="مبلغ کل وام">
+                    <input type="number" id="loanInstallmentAmount" class="input-box" min="0" step="100000" placeholder="مبلغ هر قسط">
+                    <input type="number" id="loanInstallmentCount" class="input-box" min="1" step="1" placeholder="تعداد اقساط">
+                    <select id="loanFrequencyUnit" class="input-box">
+                        <option value="monthly" selected>ماهانه</option>
+                        <option value="weekly">هفتگی</option>
+                        <option value="daily">روزانه</option>
+                    </select>
+                    <input type="number" id="loanFrequencyEvery" class="input-box" min="1" step="1" value="1" placeholder="هر چند واحد">
+                    <input type="number" id="loanReminderDays" class="input-box" min="0" step="1" value="1" placeholder="چند روز قبل یادآوری شود">
+                    <input type="date" id="loanStartDate" class="input-box full">
+                    <textarea id="loanNotes" class="input-box full" rows="2" placeholder="توضیحات (اختیاری)"></textarea>
+                </div>
+                <div class="installment-actions">
+                    <button type="button" class="mini-btn primary" onclick="saveInstallmentPlan()">افزودن اقساط</button>
+                    <button type="button" class="mini-btn ghost" onclick="clearInstallmentForm()">پاکسازی فرم</button>
+                </div>
+                <div id="installmentList" class="installment-list"></div>
             </div>
 
             <div class="sidebar-section">
@@ -1048,6 +1200,7 @@
         const jMonths = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
         const jDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
         const CATEGORY_STORAGE_KEY = 'calendarCategories';
+        const INSTALLMENT_STORAGE_KEY = 'installmentPlans';
         const CATEGORY_COLOR_POOL = ['#0f766e', '#14b8a6', '#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
         const DEFAULT_CATEGORIES = [
             { name: 'کاری', color: '#0f766e' },
@@ -1057,13 +1210,14 @@
             { name: 'سلامتی', color: '#14b8a6' },
             { name: 'سرگرمی', color: '#f59e0b' },
             { name: 'مالی', color: '#ef4444' },
+            { name: 'اقساط', color: '#dc2626' },
             { name: 'خانوادگی', color: '#ec4899' },
             { name: 'خرید', color: '#84cc16' }
         ];
-        const ADHAN_STORAGE_KEY = 'adhanEvents1405';
-        const ADHAN_META_KEY = 'adhanEvents1405Meta';
+        const ADHAN_STORAGE_KEY_PREFIX = 'adhanEvents';
+        const ADHAN_META_KEY_PREFIX = 'adhanEventsMeta';
         const ADHAN_CONFIG_VERSION = 2;
-        const ADHAN_DEFAULTS = { city: 'Tehran', country: 'Iran', method: 7, jalaaliYear: 1405 };
+        const ADHAN_DEFAULTS = { city: 'Tehran', country: 'Iran', method: 7 };
         const ADHAN_PRAYER_ENTRIES = [
             ['Fajr', 'اذان صبح'],
             ['Sunrise', 'طلوع آفتاب'],
@@ -1094,10 +1248,42 @@
             renderCalendar();
             updateTodayEventCount();
             renderTodayAgenda();
+            initializeInstallmentForm();
+            renderInstallmentList();
             setupRecurringToggle();
             
             setInterval(updateLiveTime, 1000);
             document.getElementById('isRecurring').addEventListener('change', toggleRecurringOptions);
+            ensureAdhanDataForCurrentYear()
+                .then(() => {
+                    renderCalendar();
+                    updateTodayEventCount();
+                    renderTodayAgenda();
+                })
+                .catch(error => {
+                    console.error('Unable to load prayer times:', error);
+                });
+        }
+
+        function safeJsonParse(raw, fallback) {
+            try {
+                const parsed = JSON.parse(raw);
+                return parsed ?? fallback;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function getCurrentJalaaliYear() {
+            return jalaali.toJalaali(new Date()).jy;
+        }
+
+        function getAdhanStorageKey(jalaaliYear = getCurrentJalaaliYear()) {
+            return `${ADHAN_STORAGE_KEY_PREFIX}${jalaaliYear}`;
+        }
+
+        function getAdhanMetaKey(jalaaliYear = getCurrentJalaaliYear()) {
+            return `${ADHAN_META_KEY_PREFIX}${jalaaliYear}`;
         }
 
         function readCategories() {
@@ -1117,7 +1303,7 @@
         }
 
         function mergeCategoriesFromEvents() {
-            const events = JSON.parse(localStorage.getItem('proEvents') || '[]');
+            const events = safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
             if (!Array.isArray(events)) return;
             events.forEach(event => {
                 const name = String(event?.category || '').trim();
@@ -1158,6 +1344,172 @@
             updateTodayEventCount();
             renderTodayAgenda();
             input.value = '';
+        }
+
+        function initializeInstallmentForm() {
+            const startDateInput = document.getElementById('loanStartDate');
+            if (startDateInput && !startDateInput.value) {
+                startDateInput.value = new Date().toISOString().slice(0, 10);
+            }
+        }
+
+        function readInstallmentPlans() {
+            return safeJsonParse(localStorage.getItem(INSTALLMENT_STORAGE_KEY) || '[]', []);
+        }
+
+        function writeInstallmentPlans(plans) {
+            localStorage.setItem(INSTALLMENT_STORAGE_KEY, JSON.stringify(plans));
+        }
+
+        function clearInstallmentForm() {
+            ['loanTitle', 'loanProvider', 'loanTotalAmount', 'loanInstallmentAmount', 'loanInstallmentCount', 'loanNotes'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) element.value = '';
+            });
+            const frequencyUnit = document.getElementById('loanFrequencyUnit');
+            if (frequencyUnit) frequencyUnit.value = 'monthly';
+            const frequencyEvery = document.getElementById('loanFrequencyEvery');
+            if (frequencyEvery) frequencyEvery.value = '1';
+            const reminder = document.getElementById('loanReminderDays');
+            if (reminder) reminder.value = '1';
+            const startDateInput = document.getElementById('loanStartDate');
+            if (startDateInput) startDateInput.value = new Date().toISOString().slice(0, 10);
+        }
+
+        function incrementDate(baseDate, unit, every) {
+            const next = new Date(baseDate);
+            const step = Math.max(1, Number(every) || 1);
+            if (unit === 'daily') next.setDate(next.getDate() + step);
+            else if (unit === 'weekly') next.setDate(next.getDate() + (step * 7));
+            else next.setMonth(next.getMonth() + step);
+            return next;
+        }
+
+        function dateToJalaaliKey(dateObj) {
+            const jDate = jalaali.toJalaali(dateObj);
+            return normalizeJalaaliDateKey(`${jDate.jy}-${jDate.jm}-${jDate.jd}`);
+        }
+
+        function saveInstallmentPlan() {
+            const title = String(document.getElementById('loanTitle')?.value || '').trim();
+            const provider = String(document.getElementById('loanProvider')?.value || '').trim();
+            const totalAmount = Number(document.getElementById('loanTotalAmount')?.value || 0);
+            const installmentAmount = Number(document.getElementById('loanInstallmentAmount')?.value || 0);
+            const installmentCount = Math.max(1, Number(document.getElementById('loanInstallmentCount')?.value || 0));
+            const frequencyUnit = document.getElementById('loanFrequencyUnit')?.value || 'monthly';
+            const frequencyEvery = Math.max(1, Number(document.getElementById('loanFrequencyEvery')?.value || 1));
+            const reminderDays = Math.max(0, Number(document.getElementById('loanReminderDays')?.value || 0));
+            const startDateValue = document.getElementById('loanStartDate')?.value;
+            const notes = String(document.getElementById('loanNotes')?.value || '').trim();
+
+            if (!title || !provider || !startDateValue || installmentCount < 1 || installmentAmount <= 0) {
+                alert('لطفا نام وام، وام‌دهنده، تاریخ شروع، مبلغ قسط و تعداد اقساط را کامل وارد کنید.');
+                return;
+            }
+
+            const startDate = new Date(startDateValue);
+            if (Number.isNaN(startDate.getTime())) {
+                alert('تاریخ شروع معتبر نیست.');
+                return;
+            }
+
+            const planId = `loan-${Date.now()}`;
+            const plans = readInstallmentPlans();
+            plans.push({
+                id: planId,
+                title,
+                provider,
+                totalAmount,
+                installmentAmount,
+                installmentCount,
+                frequencyUnit,
+                frequencyEvery,
+                reminderDays,
+                startDate: startDateValue,
+                notes,
+                createdAt: new Date().toISOString()
+            });
+            writeInstallmentPlans(plans);
+
+            const events = safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
+            const tasks = safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
+            let dueDate = new Date(startDate);
+            for (let index = 0; index < installmentCount; index += 1) {
+                const dueDateKey = dueDate.toISOString().slice(0, 10);
+                const jDateKey = dateToJalaaliKey(dueDate);
+                const eventId = `${planId}-event-${index + 1}`;
+                const reminderDate = new Date(dueDate);
+                reminderDate.setDate(reminderDate.getDate() - reminderDays);
+                events.push({
+                    id: eventId,
+                    source: 'user',
+                    date: jDateKey,
+                    title: `💳 قسط ${index + 1} ${title}`,
+                    hour: '09',
+                    time: '09:00',
+                    color: '#dc2626',
+                    category: 'اقساط',
+                    priority: 'high',
+                    desc: `وام: ${title} • وام‌دهنده: ${provider} • مبلغ قسط: ${installmentAmount.toLocaleString('fa-IR')} تومان${notes ? ` • ${notes}` : ''}`,
+                    reminder: true,
+                    reminderDate: reminderDate.toISOString().slice(0, 10),
+                    recurring: false,
+                    recurringType: 'monthly',
+                    loanPlanId: planId,
+                    installmentIndex: index + 1,
+                    link: 'finance.html'
+                });
+                tasks.push({
+                    id: Number(`${Date.now()}${index}`),
+                    title: `پرداخت قسط ${index + 1} - ${title}`,
+                    description: `سررسید قسط ${index + 1} از ${installmentCount} • ${provider}${notes ? ` • ${notes}` : ''}`,
+                    category: 'other',
+                    priority: 'high',
+                    dueDate: dueDateKey,
+                    dueTime: '09:00',
+                    recurring: 'none',
+                    completed: false,
+                    createdAt: new Date().toISOString(),
+                    tags: ['loan', 'installment', title],
+                    syncToCalendar: true,
+                    installmentPlanId: planId,
+                    installmentIndex: index + 1
+                });
+                dueDate = incrementDate(dueDate, frequencyUnit, frequencyEvery);
+            }
+
+            localStorage.setItem('proEvents', JSON.stringify(events));
+            localStorage.setItem('advancedTasks', JSON.stringify(tasks));
+            setupCategories('اقساط');
+            renderInstallmentList();
+            renderCalendar();
+            updateTodayEventCount();
+            renderTodayAgenda();
+            clearInstallmentForm();
+            alert('اقساط با موفقیت به تقویم و تسک‌ها اضافه شد ✅');
+        }
+
+        function renderInstallmentList() {
+            const container = document.getElementById('installmentList');
+            if (!container) return;
+            const plans = readInstallmentPlans();
+            const tasks = safeJsonParse(localStorage.getItem('advancedTasks') || '[]', []);
+            if (!plans.length) {
+                container.innerHTML = '<div class="installment-item">هنوز وامی ثبت نشده است.</div>';
+                return;
+            }
+
+            container.innerHTML = plans.slice().reverse().map(plan => {
+                const paid = tasks.filter(task => task.installmentPlanId === plan.id && task.completed).length;
+                const remaining = Math.max(0, Number(plan.installmentCount || 0) - paid);
+                return `<div class="installment-item">
+                    <strong>${plan.title}</strong><br>
+                    وام‌دهنده: ${plan.provider}<br>
+                    مبلغ هر قسط: ${Number(plan.installmentAmount || 0).toLocaleString('fa-IR')} تومان<br>
+                    برنامه پرداخت: هر ${toFaNumber(plan.frequencyEvery || 1)} ${plan.frequencyUnit === 'monthly' ? 'ماه' : plan.frequencyUnit === 'weekly' ? 'هفته' : 'روز'}<br>
+                    وضعیت: ${toFaNumber(paid)} پرداخت شده / ${toFaNumber(remaining)} مانده
+                </div>`;
+            }).join('');
         }
 
         function setSelectedEventDate(jy, jm, jd) {
@@ -1261,16 +1613,16 @@
         }
 
         function getStoredEvents() {
-            const userEvents = JSON.parse(localStorage.getItem('proEvents')) || [];
+            const userEvents = safeJsonParse(localStorage.getItem('proEvents') || '[]', []);
             return userEvents.map(event => ({
                 ...event,
                 color: event?.color || getCategoryColor(event?.category)
             }));
         }
 
-        function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings) {
+        function buildAdhanEventsForDay(gregorianYear, gregorianMonth, gregorianDay, timings, targetJalaaliYear) {
             const jalaaliDate = jalaali.toJalaali(new Date(gregorianYear, gregorianMonth - 1, gregorianDay));
-            if (jalaaliDate.jy !== ADHAN_DEFAULTS.jalaaliYear) return [];
+            if (jalaaliDate.jy !== targetJalaaliYear) return [];
 
             const dateKey = normalizeJalaaliDateKey(`${jalaaliDate.jy}-${jalaaliDate.jm}-${jalaaliDate.jd}`);
             return ADHAN_PRAYER_ENTRIES.map(([apiKey, title], index) => ({
@@ -1287,25 +1639,39 @@
             }));
         }
 
-        async function ensureAdhanData1405() {
-            const rawExisting = JSON.parse(localStorage.getItem(ADHAN_STORAGE_KEY) || '[]');
+        function buildMonthRequestsForJalaaliYear(jalaaliYear) {
+            const startGregorian = jalaali.toGregorian(jalaaliYear, 1, 1);
+            const endGregorian = jalaali.toGregorian(jalaaliYear, 12, 29);
+            const start = new Date(startGregorian.gy, startGregorian.gm - 1, startGregorian.gd);
+            const end = new Date(endGregorian.gy, endGregorian.gm - 1, endGregorian.gd);
+            const requests = [];
+            const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+            while (cursor <= end) {
+                requests.push([cursor.getFullYear(), cursor.getMonth() + 1]);
+                cursor.setMonth(cursor.getMonth() + 1);
+            }
+            return requests;
+        }
+
+        async function ensureAdhanDataForCurrentYear() {
+            const jalaaliYear = getCurrentJalaaliYear();
+            const storageKey = getAdhanStorageKey(jalaaliYear);
+            const metaKey = getAdhanMetaKey(jalaaliYear);
+            const rawExisting = safeJsonParse(localStorage.getItem(storageKey) || '[]', []);
             const existing = sanitizeStoredAdhanEvents(rawExisting);
-            const meta = JSON.parse(localStorage.getItem(ADHAN_META_KEY) || 'null');
+            const meta = safeJsonParse(localStorage.getItem(metaKey) || 'null', null);
             const cacheMatches = meta?.city === ADHAN_DEFAULTS.city
-                && meta?.year === ADHAN_DEFAULTS.jalaaliYear
+                && meta?.year === jalaaliYear
                 && meta?.version === ADHAN_CONFIG_VERSION;
 
             if (existing.length && cacheMatches) {
                 if (existing.length !== rawExisting.length) {
-                    localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
+                    localStorage.setItem(storageKey, JSON.stringify(existing));
                 }
                 return existing;
             }
 
-            const monthRequests = [
-                [2026, 3], [2026, 4], [2026, 5], [2026, 6], [2026, 7], [2026, 8],
-                [2026, 9], [2026, 10], [2026, 11], [2026, 12], [2027, 1], [2027, 2], [2027, 3]
-            ];
+            const monthRequests = buildMonthRequestsForJalaaliYear(jalaaliYear);
 
             try {
                 const responses = await Promise.all(monthRequests.map(async ([year, month]) => {
@@ -1319,15 +1685,15 @@
                 const adhanEvents = responses.flatMap(monthData => monthData.flatMap(item => {
                     const gregorian = item?.date?.gregorian;
                     if (!gregorian) return [];
-                    return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {});
+                    return buildAdhanEventsForDay(Number(gregorian.year), Number(gregorian.month.number), Number(gregorian.day), item.timings || {}, jalaaliYear);
                 }));
 
-                localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(adhanEvents));
-                localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+                localStorage.setItem(storageKey, JSON.stringify(adhanEvents));
+                localStorage.setItem(metaKey, JSON.stringify({
                     city: ADHAN_DEFAULTS.city,
                     country: ADHAN_DEFAULTS.country,
                     method: ADHAN_DEFAULTS.method,
-                    year: ADHAN_DEFAULTS.jalaaliYear,
+                    year: jalaaliYear,
                     version: ADHAN_CONFIG_VERSION,
                     generatedAt: new Date().toISOString()
                 }));
@@ -1335,12 +1701,12 @@
                 return adhanEvents;
             } catch (error) {
                 if (existing.length) {
-                    localStorage.setItem(ADHAN_STORAGE_KEY, JSON.stringify(existing));
-                    localStorage.setItem(ADHAN_META_KEY, JSON.stringify({
+                    localStorage.setItem(storageKey, JSON.stringify(existing));
+                    localStorage.setItem(metaKey, JSON.stringify({
                         city: ADHAN_DEFAULTS.city,
                         country: ADHAN_DEFAULTS.country,
                         method: ADHAN_DEFAULTS.method,
-                        year: ADHAN_DEFAULTS.jalaaliYear,
+                        year: jalaaliYear,
                         version: ADHAN_CONFIG_VERSION,
                         generatedAt: meta?.generatedAt || new Date().toISOString()
                     }));
