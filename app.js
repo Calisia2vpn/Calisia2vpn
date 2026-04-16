@@ -1343,6 +1343,75 @@ function renderSmartModules() {
     `).join('');
 }
 
+function buildOptimizationAdvice() {
+    const { tasks, habits, dietLog, goals, assets, exercises, socialMessages } = readLifeSyncArrays();
+    const signals = collectLocalAiSignals({ tasks, habits, dietLog, exercises });
+    const todayKey = normalizeGregorianDate(new Date());
+    const todayCalories = dietLog.filter(item => item.date === todayKey).reduce((sum, item) => sum + (Number(item.cal) || 0), 0);
+    const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active');
+    const financeTotal = assets.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0);
+    const lastMessage = socialMessages
+        .slice()
+        .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0))[0];
+    const daysSinceSocialTouch = lastMessage?.timestamp
+        ? Math.floor((new Date() - new Date(lastMessage.timestamp)) / (24 * 60 * 60 * 1000))
+        : 99;
+
+    const lines = [
+        '🔬 جمع‌بندی بهینگی (مبتنی بر اصول مدیریت انرژی، قانون پارکینسون و برنامه‌ریزی مبتنی بر شواهد):'
+    ];
+
+    if (signals.overdueTasks.length > 0) {
+        lines.push(`• ${formatFa(signals.overdueTasks.length)} تسک عقب‌مانده داری؛ برای هر روز حداکثر ۳ کار کلیدی بگذار (MIT Rule) و بقیه را زمان‌بندی مجدد کن.`);
+    } else {
+        lines.push('• وضعیت تسک‌ها خوب است؛ یک بلوک Deep Work ثابت ۹۰ دقیقه‌ای به برنامه روزانه اضافه کن.');
+    }
+
+    if (signals.scheduleConflicts.length > 0) {
+        lines.push(`• ${formatFa(signals.scheduleConflicts.length)} تداخل زمانی دیده شد؛ بین رویدادهای پشت‌سرهم ۱۵ دقیقه Buffer بگذار تا شکست برنامه کم شود.`);
+    }
+
+    if (signals.missedHabits.length > 0) {
+        lines.push(`• ${formatFa(signals.missedHabits.length)} عادت جامانده؛ از الگوی «نسخه ۲ دقیقه‌ای» استفاده کن تا پیوستگی حفظ شود.`);
+    }
+
+    if (todayCalories < 1200) {
+        lines.push('• کالری امروز پایین است؛ برای پایداری شناختی یک وعده سبک پروتئین+کربوهیدرات پیچیده اضافه کن.');
+    }
+
+    if (activeGoals.length === 0) {
+        lines.push('• جای خالی برنامه: هیچ هدف فعالی ثبت نشده. یک هدف ۳۰ روزه قابل اندازه‌گیری اضافه کن.');
+    } else {
+        lines.push(`• ${formatFa(activeGoals.length)} هدف فعال داری؛ هر هدف را به شاخص هفتگی تبدیل کن تا قابل پیگیری شود.`);
+    }
+
+    if (financeTotal <= 0) {
+        lines.push('• جای خالی برنامه: داده مالی کافی نداری. حداقل یک دارایی/قسط اضافه کن تا تحلیل ریسک واقعی شود.');
+    }
+
+    if (daysSinceSocialTouch > 4) {
+        lines.push(`• ${formatFa(daysSinceSocialTouch)} روز از آخرین تعامل اجتماعی گذشته؛ یک پیام پیگیری کوتاه برای حفظ کیفیت رابطه بفرست.`);
+    }
+
+    if (exercises.length === 0) {
+        lines.push('• جای خالی برنامه: فعالیت بدنی ثبت نشده. هفته‌ای ۳ جلسه ۲۰ دقیقه‌ای به تقویم اضافه کن.');
+    }
+
+    lines.push('✅ پیشنهاد اجرایی: همین امروز یک «بلوک بهینه‌سازی» ۳۰ دقیقه‌ای در تقویم ثبت کن و موارد بالا را اعمال کن.');
+    return lines.join('\n');
+}
+
+function bindOptimizationButton() {
+    const btn = document.getElementById('optimizationBtn');
+    const panel = document.getElementById('optimizationPanel');
+    if (!btn || !panel || btn.dataset.bound) return;
+    btn.addEventListener('click', () => {
+        panel.textContent = buildOptimizationAdvice();
+        panel.classList.add('visible');
+    });
+    btn.dataset.bound = 'true';
+}
+
 function renderLifeSyncInsights() {
     const container = document.getElementById('lifeSyncList');
     const meter = document.getElementById('lifeSyncMeter');
@@ -1405,6 +1474,7 @@ function renderLifeSyncInsights() {
 
     renderLocalAiPhone(collectLocalAiSignals({ tasks, habits, dietLog, exercises }));
     renderSmartModules();
+    bindOptimizationButton();
 }
 
 window.addEventListener('load', () => {
