@@ -49,7 +49,7 @@
             background-attachment: fixed;
         }
 
-        [data-theme="dark"] body {
+        body[data-theme="dark"] {
             background: linear-gradient(135deg, #1a1a1a 0%, #0e3a2f 50%, #1a2a28 100%);
         }
 
@@ -706,10 +706,10 @@
 
         <!-- تب‌ها -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('weight')">⚖️ وزن‌سنجی</button>
-            <button class="tab-btn" onclick="switchTab('exercise')">🏋️ تمرینات</button>
-            <button class="tab-btn" onclick="switchTab('bmi')">📊 شاخص‌های سلامت</button>
-            <button class="tab-btn" onclick="switchTab('history')">📈 سابقه</button>
+            <button class="tab-btn active" data-tab="weight" type="button">⚖️ وزن‌سنجی</button>
+            <button class="tab-btn" data-tab="exercise" type="button">🏋️ تمرینات</button>
+            <button class="tab-btn" data-tab="bmi" type="button">📊 شاخص‌های سلامت</button>
+            <button class="tab-btn" data-tab="history" type="button">📈 سابقه</button>
         </div>
 
         <!-- تب وزن‌سنجی -->
@@ -966,6 +966,27 @@
         let weightChart = null;
         let caloriesChart = null;
         let exerciseTypeChart = null;
+        const FITNESS_WEIGHT_KEY = 'fitnessWeights';
+        const FITNESS_EXERCISE_KEY = 'fitnessExercises';
+        const DIET_LOG_KEY = 'myDietLog';
+        const EXERCISE_LABELS = {
+            crossfit: 'کراس‌فیت',
+            running: 'دویدن',
+            walking: 'پیاده‌روی',
+            swimming: 'شنا',
+            cycling: 'دوچرخه',
+            yoga: 'یوگا',
+            weightlifting: 'بدنسازی',
+            basketball: 'بسکتبال',
+            football: 'فوتبال',
+            tennis: 'تنیس',
+            boxing: 'بوکس'
+        };
+        const INTENSITY_LABELS = {
+            light: 'سبک',
+            moderate: 'متوسط',
+            high: 'سنگین'
+        };
 
         // ============ متغیرهای عمومی ============
         const exerciseCalories = {
@@ -982,6 +1003,33 @@
             boxing: { light: 10, moderate: 15, high: 20 }
         };
 
+        function parseJson(raw, fallback) {
+            try {
+                const parsed = JSON.parse(raw);
+                return parsed ?? fallback;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function readWeights() {
+            const list = parseJson(localStorage.getItem(FITNESS_WEIGHT_KEY) || '[]', []);
+            return Array.isArray(list) ? list.slice().sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
+        }
+
+        function saveWeights(weights) {
+            localStorage.setItem(FITNESS_WEIGHT_KEY, JSON.stringify(weights));
+        }
+
+        function readExercises() {
+            const list = parseJson(localStorage.getItem(FITNESS_EXERCISE_KEY) || '[]', []);
+            return Array.isArray(list) ? list.slice().sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
+        }
+
+        function saveExercises(exercises) {
+            localStorage.setItem(FITNESS_EXERCISE_KEY, JSON.stringify(exercises));
+        }
+
         // ============ تاریخ شمسی ============
         function getTodayJalaali() {
             const today = new Date();
@@ -990,7 +1038,8 @@
         }
 
         function jalaaliToGregorian(jalaaliStr) {
-            const [jy, jm, jd] = jalaaliStr.split('/').map(Number);
+            const [jy, jm, jd] = String(jalaaliStr || '').split('/').map(Number);
+            if (![jy, jm, jd].every(Number.isFinite)) return '';
             const g = jalaali.toGregorian(jy, jm, jd);
             return new Date(g.gy, g.gm - 1, g.gd).toISOString().split('T')[0];
         }
@@ -1005,11 +1054,20 @@
             const j = gregorianToJalaali(dateStr);
             const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
                           'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-            const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
+            const days = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'];
             const [jy, jm, jd] = j.split('/').map(Number);
             const d = new Date(dateStr + 'T00:00:00');
             const dayName = days[d.getDay()];
             return `${dayName} ${jd} ${months[jm - 1]} ${jy}`;
+        }
+
+        function getJalaaliMonthLength(jy, jm) {
+            if (typeof jalaali.jalaaliMonthLength === 'function') {
+                return jalaali.jalaaliMonthLength(jy, jm);
+            }
+            if (jm <= 6) return 31;
+            if (jm <= 11) return 30;
+            return jalaali.isLeapJalaaliYear(jy) ? 30 : 29;
         }
 
         // ============ Date Picker شمسی ============
@@ -1091,16 +1149,8 @@
             const firstDayGreg = jalaali.toGregorian(currentPickerDate.jy, currentPickerDate.jm, 1);
             const firstDay = new Date(firstDayGreg.gy, firstDayGreg.gm - 1, firstDayGreg.gd);
             const startDay = firstDay.getDay(); // 0 = Sunday, 6 = Saturday
-            
-            // Persian week starts with Saturday (6), so adjust
-            const persianStartDay = startDay;
-            
-            // Get number of days in month
-            const nextMonth = currentPickerDate.jm === 12 ? 1 : currentPickerDate.jm + 1;
-            const nextYear = currentPickerDate.jm === 12 ? currentPickerDate.jy + 1 : currentPickerDate.jy;
-            const lastDayGreg = jalaali.toGregorian(nextYear, nextMonth, 1);
-            const lastDay = new Date(lastDayGreg.gy, lastDayGreg.gm - 1, lastDayGreg.gd - 1);
-            const daysInMonth = lastDay.getDate();
+            const persianStartDay = (startDay + 1) % 7;
+            const daysInMonth = getJalaaliMonthLength(currentPickerDate.jy, currentPickerDate.jm);
             
             // Today for highlighting
             const today = new Date();
@@ -1139,10 +1189,17 @@
         window.onload = function() {
             setDefaultDate();
             loadTheme();
+            bindTabs();
             updateAllStats();
             renderTodayExercises();
             autoFillWeight();
         };
+
+        function bindTabs() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+        }
 
         function setDefaultDate() {
             const today = getTodayJalaali();
@@ -1151,7 +1208,7 @@
         }
 
         function autoFillWeight() {
-            const weights = JSON.parse(localStorage.getItem('fitnessWeights')) || [];
+            const weights = readWeights();
             if (weights.length > 0) {
                 const lastWeight = weights[weights.length - 1];
                 document.getElementById('bmiWeight').value = lastWeight.weight;
@@ -1165,14 +1222,18 @@
             const note = document.getElementById('weightNote').value;
             const dateGreg = jalaaliToGregorian(dateJalaali);
 
-            if (!weight || !dateJalaali) {
+            if (!weight || !dateJalaali || !dateGreg) {
                 alert('لطفا وزن و تاریخ را وارد کنید');
                 return;
             }
+            if (weight < 20 || weight > 400) {
+                alert('وزن وارد شده معتبر نیست.');
+                return;
+            }
 
-            const weights = JSON.parse(localStorage.getItem('fitnessWeights')) || [];
+            const weights = readWeights();
             weights.push({ weight, date: dateGreg, jalaaliDate: dateJalaali, note, id: Date.now() });
-            localStorage.setItem('fitnessWeights', JSON.stringify(weights));
+            saveWeights(weights);
 
             document.getElementById('weightInput').value = '';
             document.getElementById('weightNote').value = '';
@@ -1187,7 +1248,7 @@
             const duration = parseFloat(document.getElementById('exerciseDuration').value) || 0;
             const intensity = document.getElementById('exerciseIntensity').value;
             
-            const weights = JSON.parse(localStorage.getItem('fitnessWeights')) || [];
+            const weights = readWeights();
             let weight = 70;
             if (weights.length > 0) {
                 weight = weights[weights.length - 1].weight;
@@ -1203,6 +1264,10 @@
             document.getElementById('caloriePreview').value = `${caloriesBurned} کالری`;
         }
 
+        function updateCalorieRate() {
+            updateCaloriePreview();
+        }
+
         function recordExercise() {
             const type = document.getElementById('exerciseType').value;
             const duration = parseFloat(document.getElementById('exerciseDuration').value);
@@ -1211,13 +1276,17 @@
             const note = document.getElementById('exerciseNote').value;
             const dateGreg = jalaaliToGregorian(dateJalaali);
 
-            if (!type || !duration || !dateJalaali) {
+            if (!type || !duration || !dateJalaali || !dateGreg) {
                 alert('تمام فیلدهای مورد نیاز را پر کنید');
+                return;
+            }
+            if (duration < 5 || duration > 360) {
+                alert('مدت تمرین باید بین ۵ تا ۳۶۰ دقیقه باشد.');
                 return;
             }
 
             // دریافت آخرین وزن
-            const weights = JSON.parse(localStorage.getItem('fitnessWeights')) || [];
+            const weights = readWeights();
             let weight = 70;
             if (weights.length > 0) {
                 weight = weights[weights.length - 1].weight;
@@ -1225,21 +1294,24 @@
 
             const calorieRate = exerciseCalories[type]?.[intensity] || 5;
             const caloriesBurned = Math.round(calorieRate * weight * (duration / 60) * 1.1);
+            const exerciseId = Date.now();
 
-            const exercises = JSON.parse(localStorage.getItem('fitnessExercises')) || [];
+            const exercises = readExercises();
             exercises.push({ 
                 type, duration, date: dateGreg, jalaaliDate: dateJalaali, intensity, 
-                weight, note, caloriesBurned, id: Date.now() 
+                weight, note, caloriesBurned, id: exerciseId 
             });
-            localStorage.setItem('fitnessExercises', JSON.stringify(exercises));
+            saveExercises(exercises);
 
             // اضافه کردن خودکار به رژیم
-            const dietHistory = JSON.parse(localStorage.getItem('myDietLog')) || [];
+            const dietHistory = parseJson(localStorage.getItem(DIET_LOG_KEY) || '[]', []);
             dietHistory.push({
-                id: Date.now(),
+                id: Date.now() + 1,
+                source: 'fitness',
+                sourceId: exerciseId,
                 date: dateGreg,
                 meal: 'ورزش',
-                name: `تمرین: ${type} (${duration} دقیقه)`,
+                name: `تمرین: ${EXERCISE_LABELS[type] || type} (${duration} دقیقه)`,
                 amount: duration,
                 unit: 'دقیقه',
                 temp: 'normal',
@@ -1249,7 +1321,7 @@
                 fat: 0,
                 caloriesBurned: caloriesBurned
             });
-            localStorage.setItem('myDietLog', JSON.stringify(dietHistory));
+            localStorage.setItem(DIET_LOG_KEY, JSON.stringify(dietHistory));
 
             document.getElementById('exerciseType').value = '';
             document.getElementById('exerciseDuration').value = '';
@@ -1263,8 +1335,8 @@
 
         function renderTodayExercises() {
             const today = new Date().toISOString().split('T')[0];
-            const exercises = JSON.parse(localStorage.getItem('fitnessExercises')) || [];
-            const todayExercises = exercises.filter(e => e.date === today);
+            const exercises = readExercises();
+            const todayExercises = exercises.filter(e => e.date === today).sort((a, b) => b.id - a.id);
 
             const container = document.getElementById('todayExerciseList');
             if (todayExercises.length === 0) {
@@ -1285,7 +1357,7 @@
                             <div class="exercise-icon">${icons[ex.type] || '🏋️'}</div>
                             <button class="exercise-delete" onclick="deleteExercise(${ex.id})">🗑️</button>
                         </div>
-                        <div class="exercise-name">${ex.type}</div>
+                        <div class="exercise-name">${EXERCISE_LABELS[ex.type] || ex.type}</div>
                         <div class="card-meta">${farsiDate}</div>
                         <div class="exercise-details">
                             <div class="exercise-detail">
@@ -1294,7 +1366,7 @@
                             </div>
                             <div class="exercise-detail">
                                 <div class="exercise-detail-label">شدت</div>
-                                <div class="exercise-detail-value">${ex.intensity}</div>
+                                <div class="exercise-detail-value">${INTENSITY_LABELS[ex.intensity] || ex.intensity}</div>
                             </div>
                         </div>
                         <div class="exercise-calories">🔥 ${ex.caloriesBurned} کالری</div>
@@ -1305,9 +1377,12 @@
 
         function deleteExercise(id) {
             if (confirm('حذف این ورزش؟')) {
-                let exercises = JSON.parse(localStorage.getItem('fitnessExercises')) || [];
+                let exercises = readExercises();
                 exercises = exercises.filter(e => e.id !== id);
-                localStorage.setItem('fitnessExercises', JSON.stringify(exercises));
+                saveExercises(exercises);
+                const dietHistory = parseJson(localStorage.getItem(DIET_LOG_KEY) || '[]', []);
+                const cleanedDiet = dietHistory.filter(item => !(item.source === 'fitness' && item.sourceId === id));
+                localStorage.setItem(DIET_LOG_KEY, JSON.stringify(cleanedDiet));
                 renderTodayExercises();
                 updateAllStats();
             }
@@ -1378,8 +1453,17 @@
         }
 
         function updateWeightStats() {
-            const weights = JSON.parse(localStorage.getItem('fitnessWeights')) || [];
-            if (weights.length === 0) return;
+            const weights = readWeights();
+            if (weights.length === 0) {
+                document.getElementById('currentWeightDisplay').textContent = '—';
+                document.getElementById('weightCurrent').textContent = '—';
+                document.getElementById('weightDate2').textContent = '—';
+                document.getElementById('weightMin').textContent = '—';
+                document.getElementById('weightMax').textContent = '—';
+                document.getElementById('weightChange').textContent = '۰';
+                document.getElementById('weightChangeDir').textContent = 'بدون داده';
+                return;
+            }
 
             const lastWeight = weights[weights.length - 1];
             const firstWeight = weights[0];
@@ -1395,7 +1479,7 @@
             document.getElementById('weightMin').textContent = minWeight;
             document.getElementById('weightMax').textContent = maxWeight;
             document.getElementById('weightChange').textContent = Math.abs(weightChange);
-            document.getElementById('weightChangeDir').textContent = weightChange > 0 ? '📈 افزایش' : '📉 کاهش';
+            document.getElementById('weightChangeDir').textContent = Number(weightChange) >= 0 ? '📈 افزایش' : '📉 کاهش';
 
             const height = parseFloat(document.getElementById('bmiHeight').value);
             if (height) {
@@ -1406,7 +1490,7 @@
         }
 
         function updateExerciseStats() {
-            const exercises = JSON.parse(localStorage.getItem('fitnessExercises')) || [];
+            const exercises = readExercises();
             const today = new Date().toISOString().split('T')[0];
             const todayExercises = exercises.filter(e => e.date === today);
             const totalCalories = todayExercises.reduce((sum, e) => sum + e.caloriesBurned, 0);
@@ -1420,7 +1504,7 @@
         }
 
         function updateWeightChart() {
-            const weights = JSON.parse(localStorage.getItem('fitnessWeights')) || [];
+            const weights = readWeights();
             if (weights.length === 0) return;
 
             const last30 = weights.slice(-30);
@@ -1461,7 +1545,7 @@
         }
 
         function updateCaloriesChart() {
-            const exercises = JSON.parse(localStorage.getItem('fitnessExercises')) || [];
+            const exercises = readExercises();
             const last30 = exercises.filter(e => {
                 const eDate = new Date(e.date);
                 const now = new Date();
@@ -1487,7 +1571,7 @@
                     datasets: [{
                         label: 'کالری سوزانده',
                         data: vals,
-                        backgroundColor: 'linear-gradient(180deg, #e74c3c 0%, #c0392b 100%)',
+                        backgroundColor: '#e74c3c',
                         borderRadius: 8
                     }]
                 },
@@ -1502,10 +1586,11 @@
         }
 
         function updateExerciseTypeChart() {
-            const exercises = JSON.parse(localStorage.getItem('fitnessExercises')) || [];
+            const exercises = readExercises();
             const typeMap = {};
             exercises.forEach(e => {
-                typeMap[e.type] = (typeMap[e.type] || 0) + 1;
+                const label = EXERCISE_LABELS[e.type] || e.type;
+                typeMap[label] = (typeMap[label] || 0) + 1;
             });
 
             const ctx = document.getElementById('exerciseTypeChart')?.getContext('2d');
@@ -1535,7 +1620,8 @@
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
+            const button = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+            if (button) button.classList.add('active');
             setTimeout(() => {
                 if (tabName === 'history') updateCharts();
             }, 100);
@@ -1547,5 +1633,6 @@
             document.body.setAttribute('data-theme', theme);
         }
     </script>
+    <script src="assistant-engine.js"></script>
 </body>
 </html>

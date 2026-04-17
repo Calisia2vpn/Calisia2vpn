@@ -74,7 +74,7 @@
             z-index: -1;
         }
 
-        [data-theme="dark"] body {
+        body[data-theme="dark"] {
             background: 
                 radial-gradient(circle at 20% 50%, rgba(0,102,204,0.2) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(192,57,43,0.2) 0%, transparent 50%),
@@ -334,6 +334,7 @@
             display: flex;
             gap: 8px;
             justify-content: flex-end;
+            flex-wrap: wrap;
         }
 
         .goal-btn {
@@ -349,6 +350,10 @@
         .goal-btn.edit { background: var(--info); color: white; }
         .goal-btn.delete { background: var(--danger); color: white; }
         .goal-btn.complete { background: var(--success); color: white; }
+        .goal-btn.secondary {
+            background: rgba(0, 102, 204, 0.1);
+            color: var(--persian-blue);
+        }
 
         .goal-btn:hover {
             transform: scale(1.05);
@@ -534,6 +539,17 @@
             box-shadow: 0 12px 30px rgba(0,102,204, 0.3);
         }
 
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-muted {
+            background: rgba(0, 102, 204, 0.1);
+            color: var(--persian-blue);
+        }
+
         /* ═══════════ آمار کلی ═══════════ */
         .stats-section {
             display: grid;
@@ -617,6 +633,28 @@
         .chart-canvas {
             position: relative;
             height: 300px;
+        }
+
+        .empty-goals {
+            grid-column: 1/-1;
+            text-align: center;
+            color: var(--text-gray);
+            padding: 40px;
+            border: 1px dashed rgba(0, 102, 204, 0.25);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.35);
+        }
+
+        .goal-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(0,102,204,0.1);
+            color: var(--persian-blue);
+            margin-inline-start: 8px;
         }
 
         /* ═══════════ ریسپانسیو ═══════════ */
@@ -763,11 +801,11 @@
 
         <!-- تب‌ها -->
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('overview')">📊 نمای کلی</button>
-            <button class="tab-btn" onclick="switchTab('short')">⚡ کوتاه‌مدت</button>
-            <button class="tab-btn" onclick="switchTab('medium')">🔄 میان‌مدت</button>
-            <button class="tab-btn" onclick="switchTab('long')">🎯 بلندمدت</button>
-            <button class="tab-btn" onclick="switchTab('add')">➕ اضافه کردن</button>
+            <button class="tab-btn active" data-tab="overview" type="button">📊 نمای کلی</button>
+            <button class="tab-btn" data-tab="short" type="button">⚡ کوتاه‌مدت</button>
+            <button class="tab-btn" data-tab="medium" type="button">🔄 میان‌مدت</button>
+            <button class="tab-btn" data-tab="long" type="button">🎯 بلندمدت</button>
+            <button class="tab-btn" data-tab="add" type="button">➕ اضافه کردن</button>
         </div>
 
         <!-- تب نمای کلی -->
@@ -885,7 +923,10 @@
 اقدام ۲: تماشای فیلم انگلیسی
 اقدام ۳: مکالمه هفتگی"></textarea>
                 </div>
-                <button class="btn btn-primary" onclick="addGoal()" style="width: 100%; margin-top: 20px;">🎯 ایجاد هدف</button>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="submitGoalBtn" type="button" style="flex: 1;">🎯 ایجاد هدف</button>
+                    <button class="btn btn-muted" id="cancelEditGoalBtn" type="button" style="display: none;">لغو ویرایش</button>
+                </div>
             </div>
         </div>
 
@@ -926,27 +967,52 @@
     <script>
         let goalsTypeChart = null;
         let progressChart = null;
-
-        // ============ متغیرهای عمومی ============
+        let editingGoalId = null;
         let currentPickerDate = null;
         let selectedDate = null;
         let targetInput = null;
 
-        // ============ بارگذاری اولیه ============
-        window.onload = function() {
-            loadTheme();
-            setDefaultDates();
-            loadGoals();
-            updateOverview();
-            renderCharts();
+        const GOALS_STORAGE_KEY = 'goals';
+        const MONTH_NAMES = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+        const DAY_NAMES = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'];
+        const TYPE_LABELS = { short: 'کوتاه‌مدت', medium: 'میان‌مدت', long: 'بلندمدت' };
+        const CATEGORY_LABELS = {
+            personal: 'شخصی',
+            career: 'شغلی',
+            health: 'سلامت',
+            education: 'آموزشی',
+            financial: 'مالی',
+            relationship: 'روابط',
+            other: 'سایر'
+        };
+        const CATEGORY_ICONS = {
+            personal: '👤',
+            career: '💼',
+            health: '🏥',
+            education: '📚',
+            financial: '💰',
+            relationship: '❤️',
+            other: '🎨'
         };
 
-        function setDefaultDates() {
-            const today = getTodayJalaali();
-            document.getElementById('goalStartDate').value = today;
+        function parseJson(raw, fallback) {
+            try {
+                const parsed = JSON.parse(raw);
+                return parsed ?? fallback;
+            } catch {
+                return fallback;
+            }
         }
 
-        // ============ تاریخ شمسی ============
+        function formatFa(value) {
+            return new Intl.NumberFormat('fa-IR', { useGrouping: false }).format(value);
+        }
+
+        function normalizeDateKey(dateLike) {
+            const date = dateLike ? new Date(dateLike) : new Date();
+            return date.toLocaleDateString('en-CA');
+        }
+
         function getTodayJalaali() {
             const today = new Date();
             const g2j = jalaali.toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
@@ -954,30 +1020,75 @@
         }
 
         function jalaaliToGregorian(jalaaliStr) {
-            const [jy, jm, jd] = jalaaliStr.split('/').map(Number);
+            const [jy, jm, jd] = String(jalaaliStr || '').split('/').map(Number);
+            if (![jy, jm, jd].every(Number.isFinite)) return '';
             const g = jalaali.toGregorian(jy, jm, jd);
-            return new Date(g.gy, g.gm - 1, g.gd).toISOString().split('T')[0];
+            return normalizeDateKey(new Date(g.gy, g.gm - 1, g.gd));
         }
 
         function gregorianToJalaali(dateStr) {
-            const d = new Date(dateStr + 'T00:00:00');
+            const d = new Date(`${dateStr}T00:00:00`);
+            if (Number.isNaN(d.getTime())) return '';
             const g2j = jalaali.toJalaali(d.getFullYear(), d.getMonth() + 1, d.getDate());
             return `${g2j.jy}/${String(g2j.jm).padStart(2, '0')}/${String(g2j.jd).padStart(2, '0')}`;
         }
 
         function formatDateFarsi(dateStr) {
+            if (!dateStr) return '-';
             const j = gregorianToJalaali(dateStr);
-            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
-                          'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-            const days = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
             const [jy, jm, jd] = j.split('/').map(Number);
-            const d = new Date(dateStr + 'T00:00:00');
-            const dayName = days[d.getDay()];
-            return `${dayName} ${jd} ${months[jm - 1]} ${jy}`;
+            const d = new Date(`${dateStr}T00:00:00`);
+            const dayName = DAY_NAMES[d.getDay()] || '';
+            return `${dayName} ${formatFa(jd)} ${MONTH_NAMES[jm - 1]} ${formatFa(jy)}`;
         }
 
-        // ============ مدیریت اهداف ============
-        function addGoal() {
+        function readGoals() {
+            const raw = parseJson(localStorage.getItem(GOALS_STORAGE_KEY) || '[]', []);
+            return Array.isArray(raw) ? raw.map(goal => ({
+                ...goal,
+                actions: Array.isArray(goal.actions) ? goal.actions : [],
+                progress: Math.max(0, Math.min(100, Number(goal.progress) || 0)),
+                status: goal.status === 'completed' ? 'completed' : 'active'
+            })) : [];
+        }
+
+        function saveGoals(goals) {
+            localStorage.setItem(GOALS_STORAGE_KEY, JSON.stringify(goals));
+        }
+
+        function calculateGoalProgress(goal) {
+            const manualProgress = Math.max(0, Math.min(100, Number(goal.progress) || 0));
+            if (!goal.actions?.length) return manualProgress;
+            const completed = goal.actions.filter(a => a.completed).length;
+            const actionsProgress = Math.round((completed / goal.actions.length) * 100);
+            return Math.max(actionsProgress, manualProgress);
+        }
+
+        function setDefaultDates() {
+            document.getElementById('goalStartDate').value = getTodayJalaali();
+            document.getElementById('goalEndDate').value = '';
+        }
+
+        function resetForm() {
+            document.getElementById('goalTitle').value = '';
+            document.getElementById('goalDescription').value = '';
+            document.getElementById('goalActions').value = '';
+            document.getElementById('goalType').value = 'short';
+            document.getElementById('goalPriority').value = 'medium';
+            document.getElementById('goalCategory').value = 'personal';
+            editingGoalId = null;
+            document.getElementById('submitGoalBtn').textContent = '🎯 ایجاد هدف';
+            document.getElementById('cancelEditGoalBtn').style.display = 'none';
+            setDefaultDates();
+        }
+
+        function refreshUI() {
+            loadGoals();
+            updateOverview();
+            renderCharts();
+        }
+
+        function submitGoal() {
             const title = document.getElementById('goalTitle').value.trim();
             const type = document.getElementById('goalType').value;
             const startDate = document.getElementById('goalStartDate').value;
@@ -988,123 +1099,70 @@
             const actionsText = document.getElementById('goalActions').value.trim();
 
             if (!title || !startDate || !endDate) {
-                alert('لطفا عنوان هدف و تاریخ‌ها را پر کنید');
+                alert('لطفاً عنوان هدف و تاریخ شروع/پایان را کامل کن.');
                 return;
             }
 
-            const actions = actionsText.split('\n').filter(a => a.trim()).map(action => ({
-                text: action.trim(),
-                completed: false,
-                date: null
-            }));
-
-            const goal = {
-                id: Date.now(),
-                title,
-                type,
-                startDate: jalaaliToGregorian(startDate),
-                endDate: jalaaliToGregorian(endDate),
-                priority,
-                category,
-                description,
-                actions,
-                progress: 0,
-                status: 'active',
-                createdAt: new Date().toISOString(),
-                completedAt: null
-            };
-
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            goals.push(goal);
-            localStorage.setItem('goals', JSON.stringify(goals));
-
-            // پاک کردن فرم
-            document.getElementById('goalTitle').value = '';
-            document.getElementById('goalDescription').value = '';
-            document.getElementById('goalActions').value = '';
-            setDefaultDates();
-
-            loadGoals();
-            updateOverview();
-            renderCharts();
-            alert('🎯 هدف با موفقیت اضافه شد!');
-        }
-
-        function loadGoals() {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            
-            // دسته‌بندی اهداف
-            const shortGoals = goals.filter(g => g.type === 'short' && g.status === 'active');
-            const mediumGoals = goals.filter(g => g.type === 'medium' && g.status === 'active');
-            const longGoals = goals.filter(g => g.type === 'long' && g.status === 'active');
-            
-            renderGoalsList('shortGoals', shortGoals);
-            renderGoalsList('mediumGoals', mediumGoals);
-            renderGoalsList('longGoals', longGoals);
-            
-            // اهداف اولویت‌دار برای نمای کلی
-            const priorityGoals = goals.filter(g => g.status === 'active' && g.priority === 'high').slice(0, 6);
-            renderGoalsList('priorityGoals', priorityGoals);
-        }
-
-        function renderGoalsList(containerId, goals) {
-            const container = document.getElementById(containerId);
-            if (goals.length === 0) {
-                container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-gray); padding: 40px;">هنوز هدفی تعریف نشده! 🎯</div>';
+            const startGregorian = jalaaliToGregorian(startDate);
+            const endGregorian = jalaaliToGregorian(endDate);
+            if (!startGregorian || !endGregorian) {
+                alert('فرمت تاریخ شمسی معتبر نیست.');
+                return;
+            }
+            if (new Date(endGregorian) < new Date(startGregorian)) {
+                alert('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.');
                 return;
             }
 
-            container.innerHTML = goals.map(goal => {
-                const progress = calculateGoalProgress(goal);
-                const typeLabels = {
-                    short: 'کوتاه‌مدت',
-                    medium: 'میان‌مدت', 
-                    long: 'بلندمدت'
-                };
-                const categoryIcons = {
-                    personal: '👤',
-                    career: '💼',
-                    health: '🏥',
-                    education: '📚',
-                    financial: '💰',
-                    relationship: '❤️',
-                    other: '🎨'
-                };
+            const actions = actionsText
+                .split('\n')
+                .map(line => line.trim())
+                .filter(Boolean)
+                .map(action => ({ text: action, completed: false, date: null }));
 
-                return `
-                    <div class="goal-card">
-                        <div class="goal-type ${goal.type}">${typeLabels[goal.type]}</div>
-                        <div class="goal-title">${goal.title}</div>
-                        <div class="goal-description">${goal.description || 'بدون توضیحات'}</div>
-                        <div class="goal-meta">
-                            <span>${categoryIcons[goal.category]} ${goal.category}</span>
-                            <span>⏰ ${formatDateFarsi(goal.endDate)}</span>
-                        </div>
-                        <div class="goal-progress">
-                            <div class="progress-bar" style="width: ${progress}%"></div>
-                        </div>
-                        <div class="progress-text">${progress}% تکمیل شده</div>
-                        <div style="margin: 10px 0;">
-                            <input type="range" min="0" max="100" step="1" value="${progress}" style="width: 100%;" oninput="setGoalProgress(${goal.id}, this.value)">
-                        </div>
-                        <div class="goal-actions">
-                            <button class="goal-btn edit" onclick="editGoal(${goal.id})">ویرایش</button>
-                            <button class="goal-btn delete" onclick="deleteGoal(${goal.id})">حذف</button>
-                            <button class="goal-btn complete" onclick="completeGoal(${goal.id})">تکمیل</button>
-                        </div>
-                        ${goal.trackMonthly ? `<div style="margin-bottom: 10px;"><button class="goal-btn complete" onclick="markGoalMonthlyProgress(${goal.id})">ثبت ماه جاری</button></div>` : ''}
-                        ${renderGoalActions(goal)}
-                    </div>
-                `;
-            }).join('');
+            const goals = readGoals();
+            if (editingGoalId) {
+                const goal = goals.find(item => item.id === editingGoalId);
+                if (!goal) return;
+                goal.title = title;
+                goal.type = type;
+                goal.startDate = startGregorian;
+                goal.endDate = endGregorian;
+                goal.priority = priority;
+                goal.category = category;
+                goal.description = description;
+                goal.actions = actions;
+                goal.updatedAt = new Date().toISOString();
+            } else {
+                goals.push({
+                    id: Date.now(),
+                    title,
+                    type,
+                    startDate: startGregorian,
+                    endDate: endGregorian,
+                    priority,
+                    category,
+                    description,
+                    actions,
+                    progress: 0,
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    completedAt: null
+                });
+            }
+
+            saveGoals(goals);
+            resetForm();
+            refreshUI();
+            switchTab('overview');
+            alert(editingGoalId ? '✅ هدف با موفقیت ویرایش شد.' : '🎯 هدف جدید اضافه شد.');
         }
 
         function renderGoalActions(goal) {
-            if (!goal.actions || goal.actions.length === 0) return '';
-            
+            if (!goal.actions?.length) return '';
             return `
                 <div class="actions-section">
-                    <div class="actions-title">📋 اقدامات (${goal.actions.filter(a => a.completed).length}/${goal.actions.length})</div>
+                    <div class="actions-title">📋 اقدامات (${formatFa(goal.actions.filter(a => a.completed).length)}/${formatFa(goal.actions.length)})</div>
                     ${goal.actions.map((action, index) => `
                         <div class="action-item">
                             <div class="action-checkbox ${action.completed ? 'checked' : ''}" onclick="toggleAction(${goal.id}, ${index})"></div>
@@ -1116,202 +1174,187 @@
             `;
         }
 
-        function calculateGoalProgress(goal) {
-            const manualProgress = Math.max(0, Math.min(100, Number(goal.progress) || 0));
-            if (!goal.actions || goal.actions.length === 0) return manualProgress;
-            const completed = goal.actions.filter(a => a.completed).length;
-            const actionsProgress = Math.round((completed / goal.actions.length) * 100);
-            return Math.max(actionsProgress, manualProgress);
+        function renderGoalsList(containerId, goals) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            if (!goals.length) {
+                container.innerHTML = '<div class="empty-goals">هنوز هدفی برای این بخش ثبت نشده است.</div>';
+                return;
+            }
+
+            container.innerHTML = goals.map(goal => {
+                const progress = calculateGoalProgress(goal);
+                const category = CATEGORY_LABELS[goal.category] || 'سایر';
+                const icon = CATEGORY_ICONS[goal.category] || '🎯';
+                return `
+                    <article class="goal-card">
+                        <div class="goal-type ${goal.type}">${TYPE_LABELS[goal.type] || 'هدف'}</div>
+                        <h4 class="goal-title">${goal.title}</h4>
+                        <div class="goal-description">${goal.description || 'بدون توضیح'}</div>
+                        <div class="goal-meta">
+                            <span>${icon} ${category} <span class="goal-chip">${goal.priority === 'high' ? 'اولویت بالا' : goal.priority === 'medium' ? 'اولویت متوسط' : 'اولویت کم'}</span></span>
+                            <span>⏰ ${formatDateFarsi(goal.endDate)}</span>
+                        </div>
+                        <div class="goal-progress"><div class="progress-bar" style="width:${progress}%"></div></div>
+                        <div class="progress-text">${formatFa(progress)}٪ تکمیل شده</div>
+                        <div style="margin:10px 0;">
+                            <input type="range" min="0" max="100" step="1" value="${progress}" style="width: 100%;" oninput="setGoalProgress(${goal.id}, this.value)">
+                        </div>
+                        <div class="goal-actions">
+                            <button class="goal-btn edit" type="button" onclick="editGoal(${goal.id})">ویرایش</button>
+                            <button class="goal-btn delete" type="button" onclick="deleteGoal(${goal.id})">حذف</button>
+                            ${goal.status === 'active' ? `<button class="goal-btn complete" type="button" onclick="completeGoal(${goal.id})">تکمیل</button>` : '<button class="goal-btn secondary" type="button" disabled>تکمیل شده</button>'}
+                        </div>
+                        ${renderGoalActions(goal)}
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function loadGoals() {
+            const goals = readGoals();
+            const activeGoals = goals.filter(goal => goal.status === 'active');
+            renderGoalsList('shortGoals', activeGoals.filter(goal => goal.type === 'short'));
+            renderGoalsList('mediumGoals', activeGoals.filter(goal => goal.type === 'medium'));
+            renderGoalsList('longGoals', activeGoals.filter(goal => goal.type === 'long'));
+
+            const priorityGoals = activeGoals
+                .sort((a, b) => (b.priority === 'high') - (a.priority === 'high'))
+                .slice(0, 6);
+            renderGoalsList('priorityGoals', priorityGoals);
         }
 
         function setGoalProgress(goalId, value) {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const goal = goals.find(g => g.id === goalId);
+            const goals = readGoals();
+            const goal = goals.find(item => item.id === goalId);
             if (!goal) return;
             goal.progress = Math.max(0, Math.min(100, Number(value) || 0));
-            localStorage.setItem('goals', JSON.stringify(goals));
-            loadGoals();
-            updateOverview();
-            renderCharts();
-        }
-
-        function markGoalMonthlyProgress(goalId) {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const goal = goals.find(g => g.id === goalId);
-            if (!goal) return;
-            const now = new Date();
-            const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-            const progress = Math.max(0, Math.min(100, Number(goal.progress) || 0));
-            const history = Array.isArray(goal.progressHistory) ? goal.progressHistory : [];
-            const index = history.findIndex(item => item?.month === month);
-            if (index >= 0) {
-                history[index] = { month, progress, updatedAt: now.toISOString() };
-            } else {
-                history.push({ month, progress, updatedAt: now.toISOString() });
-            }
-            goal.progressHistory = history;
-            localStorage.setItem('goals', JSON.stringify(goals));
-            loadGoals();
-            updateOverview();
-            renderCharts();
+            saveGoals(goals);
+            refreshUI();
         }
 
         function toggleAction(goalId, actionIndex) {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const goal = goals.find(g => g.id === goalId);
-            if (goal && goal.actions[actionIndex]) {
-                goal.actions[actionIndex].completed = !goal.actions[actionIndex].completed;
-                if (goal.actions[actionIndex].completed) {
-                    goal.actions[actionIndex].date = new Date().toISOString().split('T')[0];
-                } else {
-                    goal.actions[actionIndex].date = null;
-                }
-                goal.progress = calculateGoalProgress(goal);
-                localStorage.setItem('goals', JSON.stringify(goals));
-                loadGoals();
-                updateOverview();
-                renderCharts();
-            }
+            const goals = readGoals();
+            const goal = goals.find(item => item.id === goalId);
+            if (!goal?.actions?.[actionIndex]) return;
+            const action = goal.actions[actionIndex];
+            action.completed = !action.completed;
+            action.date = action.completed ? normalizeDateKey(new Date()) : null;
+            goal.progress = calculateGoalProgress(goal);
+            saveGoals(goals);
+            refreshUI();
         }
 
         function deleteGoal(goalId) {
-            if (confirm('آیا مطمئن هستید که می‌خواهید این هدف را حذف کنید؟')) {
-                const goals = JSON.parse(localStorage.getItem('goals')) || [];
-                const filtered = goals.filter(g => g.id !== goalId);
-                localStorage.setItem('goals', JSON.stringify(filtered));
-                loadGoals();
-                updateOverview();
-                renderCharts();
-            }
+            if (!confirm('این هدف حذف شود؟')) return;
+            const goals = readGoals().filter(goal => goal.id !== goalId);
+            saveGoals(goals);
+            refreshUI();
         }
 
         function completeGoal(goalId) {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const goal = goals.find(g => g.id === goalId);
-            if (goal) {
-                goal.status = 'completed';
-                goal.completedAt = new Date().toISOString();
-                goal.progress = 100;
-                localStorage.setItem('goals', JSON.stringify(goals));
-                loadGoals();
-                updateOverview();
-                renderCharts();
-                alert('🎉 تبریک! هدف با موفقیت تکمیل شد!');
-            }
+            const goals = readGoals();
+            const goal = goals.find(item => item.id === goalId);
+            if (!goal) return;
+            goal.status = 'completed';
+            goal.progress = 100;
+            goal.completedAt = new Date().toISOString();
+            saveGoals(goals);
+            refreshUI();
         }
 
         function editGoal(goalId) {
-            // برای نسخه بعدی - ویرایش هدف
-            alert('ویژگی ویرایش هدف به زودی اضافه خواهد شد! 🚧');
+            const goal = readGoals().find(item => item.id === goalId);
+            if (!goal) return;
+            editingGoalId = goalId;
+            document.getElementById('goalTitle').value = goal.title || '';
+            document.getElementById('goalType').value = goal.type || 'short';
+            document.getElementById('goalStartDate').value = gregorianToJalaali(goal.startDate);
+            document.getElementById('goalEndDate').value = gregorianToJalaali(goal.endDate);
+            document.getElementById('goalPriority').value = goal.priority || 'medium';
+            document.getElementById('goalCategory').value = goal.category || 'personal';
+            document.getElementById('goalDescription').value = goal.description || '';
+            document.getElementById('goalActions').value = (goal.actions || []).map(item => item.text).join('\n');
+            document.getElementById('submitGoalBtn').textContent = '💾 ذخیره ویرایش';
+            document.getElementById('cancelEditGoalBtn').style.display = 'inline-flex';
+            switchTab('add');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // ============ نمای کلی ============
         function updateOverview() {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const activeGoals = goals.filter(g => g.status === 'active');
-            const completedGoals = goals.filter(g => g.status === 'completed');
-            
-            // آمار کلی
-            document.getElementById('totalGoals').textContent = goals.length;
-            document.getElementById('completedGoals').textContent = completedGoals.length;
-            document.getElementById('inProgressGoals').textContent = activeGoals.length;
-            
-            // میانگین پیشرفت
-            const avgProgress = activeGoals.length > 0 
-                ? Math.round(activeGoals.reduce((sum, g) => sum + (g.progress || 0), 0) / activeGoals.length)
+            const goals = readGoals();
+            const activeGoals = goals.filter(goal => goal.status === 'active');
+            const completedGoals = goals.filter(goal => goal.status === 'completed');
+            const avgProgress = activeGoals.length
+                ? Math.round(activeGoals.reduce((sum, goal) => sum + calculateGoalProgress(goal), 0) / activeGoals.length)
                 : 0;
-            document.getElementById('avgProgress').textContent = avgProgress + '%';
-            
-            // آمار نمای کلی
-            document.getElementById('overviewTotal').textContent = activeGoals.length;
-            document.getElementById('overviewCompleted').textContent = completedGoals.filter(g => {
-                const completedDate = new Date(g.completedAt);
+
+            document.getElementById('totalGoals').textContent = formatFa(goals.length);
+            document.getElementById('completedGoals').textContent = formatFa(completedGoals.length);
+            document.getElementById('inProgressGoals').textContent = formatFa(activeGoals.length);
+            document.getElementById('avgProgress').textContent = `${formatFa(avgProgress)}٪`;
+
+            document.getElementById('overviewTotal').textContent = formatFa(activeGoals.length);
+            document.getElementById('overviewCompleted').textContent = formatFa(completedGoals.filter(goal => {
+                if (!goal.completedAt) return false;
+                const completedDate = new Date(goal.completedAt);
                 const now = new Date();
                 return completedDate.getMonth() === now.getMonth() && completedDate.getFullYear() === now.getFullYear();
-            }).length;
-            document.getElementById('overviewProgress').textContent = avgProgress + '%';
-            
-            // اهداف نزدیک به سررسید
-            const upcoming = activeGoals.filter(g => {
-                const endDate = new Date(g.endDate);
-                const now = new Date();
-                const diffTime = endDate - now;
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays <= 7 && diffDays >= 0;
-            }).length;
-            document.getElementById('overviewUpcoming').textContent = upcoming;
-        }
-
-        // ============ نمودارها ============
-        function renderCharts() {
-            renderGoalsTypeChart();
-            renderProgressChart();
+            }).length);
+            document.getElementById('overviewProgress').textContent = `${formatFa(avgProgress)}٪`;
+            document.getElementById('overviewUpcoming').textContent = formatFa(activeGoals.filter(goal => {
+                const endDate = new Date(`${goal.endDate}T23:59:59`);
+                const diffDays = Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24));
+                return diffDays >= 0 && diffDays <= 7;
+            }).length);
         }
 
         function renderGoalsTypeChart() {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
-            const typeData = {
-                short: goals.filter(g => g.type === 'short').length,
-                medium: goals.filter(g => g.type === 'medium').length,
-                long: goals.filter(g => g.type === 'long').length
-            };
-
+            const goals = readGoals();
+            const typeData = [
+                goals.filter(goal => goal.type === 'short').length,
+                goals.filter(goal => goal.type === 'medium').length,
+                goals.filter(goal => goal.type === 'long').length
+            ];
             const ctx = document.getElementById('goalsTypeChart')?.getContext('2d');
             if (!ctx) return;
-            
             if (goalsTypeChart) goalsTypeChart.destroy();
-            
             goalsTypeChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: ['کوتاه‌مدت', 'میان‌مدت', 'بلندمدت'],
-                    datasets: [{
-                        data: [typeData.short, typeData.medium, typeData.long],
-                        backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
-                        borderWidth: 0
-                    }]
+                    datasets: [{ data: typeData, backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'], borderWidth: 0 }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { family: "'Vazirmatn', sans-serif" } }
-                        }
-                    }
+                    plugins: { legend: { position: 'bottom', labels: { font: { family: "'Vazirmatn', sans-serif" } } } }
                 }
             });
         }
 
         function renderProgressChart() {
-            const goals = JSON.parse(localStorage.getItem('goals')) || [];
+            const goals = readGoals();
             const monthlyData = {};
-            
-            // جمع‌آوری داده‌های ماهانه
             goals.forEach(goal => {
-                if (goal.completedAt) {
-                    const date = new Date(goal.completedAt);
-                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                    monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
-                }
+                if (!goal.completedAt) return;
+                const date = new Date(goal.completedAt);
+                const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                monthlyData[key] = (monthlyData[key] || 0) + 1;
             });
-
-            const months = Object.keys(monthlyData).sort();
-            const values = months.map(month => monthlyData[month]);
-
+            const labels = Object.keys(monthlyData).sort();
+            const values = labels.map(label => monthlyData[label]);
+            if (!labels.length) {
+                labels.push('بدون داده');
+                values.push(0);
+            }
             const ctx = document.getElementById('progressChart')?.getContext('2d');
             if (!ctx) return;
-            
             if (progressChart) progressChart.destroy();
-            
             progressChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: months.map(m => {
-                        const [year, month] = m.split('-');
-                        return `${year}/${month}`;
-                    }),
+                    labels: labels.map(label => label === 'بدون داده' ? label : label.replace('-', '/')),
                     datasets: [{
                         label: 'اهداف تکمیل شده',
                         data: values,
@@ -1327,17 +1370,26 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { labels: { font: { family: "'Vazirmatn', sans-serif" } } }
-                    },
-                    scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
-                    }
+                    plugins: { legend: { labels: { font: { family: "'Vazirmatn', sans-serif" } } } },
+                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
                 }
             });
         }
 
-        // ============ Date Picker ============
+        function renderCharts() {
+            renderGoalsTypeChart();
+            renderProgressChart();
+        }
+
+        function getJalaaliMonthLength(jy, jm) {
+            if (typeof jalaali.jalaaliMonthLength === 'function') {
+                return jalaali.jalaaliMonthLength(jy, jm);
+            }
+            if (jm <= 6) return 31;
+            if (jm <= 11) return 30;
+            return jalaali.isLeapJalaaliYear(jy) ? 30 : 29;
+        }
+
         function openDatePicker(inputId) {
             targetInput = inputId;
             const currentValue = document.getElementById(inputId).value;
@@ -1346,16 +1398,15 @@
                 currentPickerDate = { jy, jm, jd };
                 selectedDate = { jy, jm, jd };
             } else {
-                const today = new Date();
-                const g2j = jalaali.toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-                currentPickerDate = { jy: g2j.jy, jm: g2j.jm, jd: g2j.jd };
-                selectedDate = { jy: g2j.jy, jm: g2j.jm, jd: g2j.jd };
+                const today = getTodayJalaali().split('/').map(Number);
+                currentPickerDate = { jy: today[0], jm: today[1], jd: today[2] };
+                selectedDate = { jy: today[0], jm: today[1], jd: today[2] };
             }
             renderDatePicker();
-            document.getElementById('datePickerModal').style.display = 'block';
-            
-            document.getElementById('datePickerModal').onclick = function(e) {
-                if (e.target === this) closeDatePicker();
+            const modal = document.getElementById('datePickerModal');
+            modal.style.display = 'block';
+            modal.onclick = function (event) {
+                if (event.target === modal) closeDatePicker();
             };
         }
 
@@ -1368,182 +1419,99 @@
             currentPickerDate.jm += delta;
             if (currentPickerDate.jm > 12) {
                 currentPickerDate.jm = 1;
-                currentPickerDate.jy++;
+                currentPickerDate.jy += 1;
             } else if (currentPickerDate.jm < 1) {
                 currentPickerDate.jm = 12;
-                currentPickerDate.jy--;
+                currentPickerDate.jy -= 1;
             }
             renderDatePicker();
         }
 
         function selectToday() {
-            const today = new Date();
-            const g2j = jalaali.toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-            selectedDate = { jy: g2j.jy, jm: g2j.jm, jd: g2j.jd };
+            const [jy, jm, jd] = getTodayJalaali().split('/').map(Number);
+            selectedDate = { jy, jm, jd };
             applySelectedDate();
         }
 
-        function selectDate(jd) {
-            selectedDate.jd = jd;
+        function selectDate(day) {
+            selectedDate.jd = day;
             applySelectedDate();
         }
 
         function applySelectedDate() {
-            if (targetInput && selectedDate) {
-                const dateStr = `${selectedDate.jy}/${String(selectedDate.jm).padStart(2, '0')}/${String(selectedDate.jd).padStart(2, '0')}`;
-                document.getElementById(targetInput).value = dateStr;
-                closeDatePicker();
-            }
+            if (!targetInput || !selectedDate) return;
+            document.getElementById(targetInput).value = `${selectedDate.jy}/${String(selectedDate.jm).padStart(2, '0')}/${String(selectedDate.jd).padStart(2, '0')}`;
+            closeDatePicker();
         }
 
         function renderDatePicker() {
-            const months = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
-                          'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
-            
-            document.getElementById('pickerMonthYear').textContent = `${months[currentPickerDate.jm - 1]} ${currentPickerDate.jy}`;
-            
+            document.getElementById('pickerMonthYear').textContent = `${MONTH_NAMES[currentPickerDate.jm - 1]} ${formatFa(currentPickerDate.jy)}`;
             const daysContainer = document.getElementById('datePickerDays');
             daysContainer.innerHTML = '';
-            
-            // Get first day of month
+
             const firstDayGreg = jalaali.toGregorian(currentPickerDate.jy, currentPickerDate.jm, 1);
             const firstDay = new Date(firstDayGreg.gy, firstDayGreg.gm - 1, firstDayGreg.gd);
-            const startDay = firstDay.getDay();
-            
-            // Persian week starts with Saturday
-            const persianStartDay = startDay;
-            
-            // Get number of days in month
-            const nextMonth = currentPickerDate.jm === 12 ? 1 : currentPickerDate.jm + 1;
-            const nextYear = currentPickerDate.jm === 12 ? currentPickerDate.jy + 1 : currentPickerDate.jy;
-            const lastDayGreg = jalaali.toGregorian(nextYear, nextMonth, 1);
-            const lastDay = new Date(lastDayGreg.gy, lastDayGreg.gm - 1, lastDayGreg.gd - 1);
-            const daysInMonth = lastDay.getDate();
-            
-            // Today for highlighting
-            const today = new Date();
-            const todayJ = jalaali.toJalaali(today.getFullYear(), today.getMonth() + 1, today.getDate());
-            
-            // Empty cells for days before month starts
-            for (let i = 0; i < persianStartDay; i++) {
+            const startOffset = (firstDay.getDay() + 1) % 7;
+            const daysInMonth = getJalaaliMonthLength(currentPickerDate.jy, currentPickerDate.jm);
+            const [todayJy, todayJm, todayJd] = getTodayJalaali().split('/').map(Number);
+
+            for (let i = 0; i < startOffset; i += 1) {
                 const emptyDay = document.createElement('div');
                 emptyDay.style.cssText = 'aspect-ratio: 1; border-radius: 8px; background: transparent;';
                 daysContainer.appendChild(emptyDay);
             }
-            
-            // Days of the month
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dayElement = document.createElement('div');
-                dayElement.style.cssText = `
-                    aspect-ratio: 1; display: flex; align-items: center; justify-content: center; 
-                    border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s ease; 
-                    border: 2px solid transparent; background: rgba(0,102,204,0.05);
-                `;
-                dayElement.textContent = day;
-                dayElement.onclick = () => selectDate(day);
-                
-                // Highlight today
-                if (currentPickerDate.jy === todayJ.jy && currentPickerDate.jm === todayJ.jm && day === todayJ.jd) {
-                    dayElement.style.background = 'var(--persian-blue)';
-                    dayElement.style.color = 'white';
+
+            for (let day = 1; day <= daysInMonth; day += 1) {
+                const node = document.createElement('button');
+                node.type = 'button';
+                node.style.cssText = 'aspect-ratio: 1; border-radius: 8px; border: 2px solid transparent; background: rgba(0,102,204,0.05); cursor: pointer; font-weight: 700;';
+                node.textContent = formatFa(day);
+                node.onclick = () => selectDate(day);
+
+                if (currentPickerDate.jy === todayJy && currentPickerDate.jm === todayJm && day === todayJd) {
+                    node.style.background = 'var(--persian-blue)';
+                    node.style.color = '#fff';
                 }
-                
-                // Highlight selected date
-                if (selectedDate && currentPickerDate.jy === selectedDate.jy && 
-                    currentPickerDate.jm === selectedDate.jm && day === selectedDate.jd) {
-                    dayElement.style.background = 'var(--persian-purple)';
-                    dayElement.style.color = 'white';
-                    dayElement.style.borderColor = 'var(--persian-purple)';
+                if (selectedDate && currentPickerDate.jy === selectedDate.jy && currentPickerDate.jm === selectedDate.jm && day === selectedDate.jd) {
+                    node.style.background = 'var(--persian-purple)';
+                    node.style.color = '#fff';
+                    node.style.borderColor = 'var(--persian-purple)';
                 }
-                
-                daysContainer.appendChild(dayElement);
+                daysContainer.appendChild(node);
             }
         }
 
-        // ============ تب‌ها ============
         function switchTab(tabName) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(tabName)?.classList.add('active');
+            document.querySelector(`.tab-btn[data-tab="${tabName}"]`)?.classList.add('active');
             if (tabName === 'overview') {
                 updateOverview();
                 renderCharts();
             }
         }
 
-        // تم تاریک
+        function bindUI() {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+            });
+            document.getElementById('submitGoalBtn').addEventListener('click', submitGoal);
+            document.getElementById('cancelEditGoalBtn').addEventListener('click', resetForm);
+        }
+
         function loadTheme() {
             const theme = localStorage.getItem('dashboardTheme') || 'light';
             document.body.setAttribute('data-theme', theme);
         }
 
-        // ============ داده‌های نمونه ============
-        function loadSampleData() {
-            const sampleGoals = [
-                {
-                    id: 1,
-                    title: "یادگیری زبان انگلیسی",
-                    type: "long",
-                    startDate: "2024-01-01",
-                    endDate: "2024-12-31",
-                    priority: "high",
-                    category: "education",
-                    description: "رسیدن به سطح B2 در زبان انگلیسی",
-                    actions: [
-                        { text: "تمرین گرامر روزانه", completed: true, date: "2024-01-15" },
-                        { text: "تماشای فیلم انگلیسی هفتگی", completed: false, date: null },
-                        { text: "مکالمه با native speaker", completed: false, date: null }
-                    ],
-                    progress: 33,
-                    status: "active",
-                    createdAt: "2024-01-01T00:00:00.000Z"
-                },
-                {
-                    id: 2,
-                    title: "ورزش منظم",
-                    type: "medium",
-                    startDate: "2024-01-01",
-                    endDate: "2024-06-30",
-                    priority: "high",
-                    category: "health",
-                    description: "ورزش ۵ روز در هفته",
-                    actions: [
-                        { text: "تمرین صبحگاهی", completed: true, date: "2024-01-20" },
-                        { text: "دوچرخه‌سواری آخر هفته", completed: false, date: null }
-                    ],
-                    progress: 50,
-                    status: "active",
-                    createdAt: "2024-01-01T00:00:00.000Z"
-                },
-                {
-                    id: 3,
-                    title: "خواندن کتاب",
-                    type: "short",
-                    startDate: "2024-01-01",
-                    endDate: "2024-03-31",
-                    priority: "medium",
-                    category: "personal",
-                    description: "خواندن ۲ کتاب در ماه",
-                    actions: [
-                        { text: "انتخاب کتاب اول", completed: true, date: "2024-01-05" },
-                        { text: "خواندن فصل اول", completed: true, date: "2024-01-10" }
-                    ],
-                    progress: 100,
-                    status: "completed",
-                    completedAt: "2024-01-25T00:00:00.000Z",
-                    createdAt: "2024-01-01T00:00:00.000Z"
-                }
-            ];
-
-            if (!localStorage.getItem('goals')) {
-                localStorage.setItem('goals', JSON.stringify(sampleGoals));
-            }
-        }
-
-        // بارگذاری داده‌های نمونه در اولین بازدید
-        loadSampleData();
+        window.addEventListener('load', () => {
+            loadTheme();
+            bindUI();
+            setDefaultDates();
+            refreshUI();
+        });
     </script>
+    <script src="assistant-engine.js"></script>
 </body>
 </html>
