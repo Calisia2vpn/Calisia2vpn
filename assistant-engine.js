@@ -46,6 +46,12 @@
             this._intervalId = null;
             this._autonomyId = null;
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
+    class AgenticAssistantKernel {
+        constructor(options = {}) {
+            this.hooks = options.hooks || {};
+            this.settings = parseJson(localStorage.getItem(SETTINGS_KEY) || '{}', {});
+            this.monitorIntervalMs = 60 * 1000;
+            this._intervalId = null;
         }
 
         configureProvider(input = {}) {
