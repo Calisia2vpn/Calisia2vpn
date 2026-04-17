@@ -3,6 +3,14 @@
     const REMINDERS_KEY = 'agentAssistantReminders';
     const INSTALLMENTS_KEY = 'financeInstallments';
     const HISTORY_KEY = 'agentAssistantHistory';
+    const AUTONOMY_KEY = 'agentAssistantAutonomyState';
+    const DEFAULT_SETTINGS = {
+        provider: 'gemini',
+        model: 'gemini-3-pro',
+        apiKey: 'AIzaSyCRYlfstQ6UaSxPr5Ypkw69dneFmLcgOsM',
+        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+        temperature: 0.4
+    };
 
     function parseJson(raw, fallback) {
         try {
@@ -24,6 +32,20 @@
         return `${baseDateKey}T${safeTime}:00`;
     }
 
+    function sanitizeText(text) {
+        return String(text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    class AgenticAssistantKernel {
+        constructor(options = {}) {
+            this.hooks = options.hooks || {};
+            const stored = parseJson(localStorage.getItem(SETTINGS_KEY) || '{}', {});
+            this.settings = { ...DEFAULT_SETTINGS, ...stored };
+            this.monitorIntervalMs = 60 * 1000;
+            this.autonomyIntervalMs = 5 * 60 * 1000;
+            this._intervalId = null;
+            this._autonomyId = null;
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
     class AgenticAssistantKernel {
         constructor(options = {}) {
             this.hooks = options.hooks || {};
@@ -35,10 +57,10 @@
         configureProvider(input = {}) {
             const next = {
                 provider: 'gemini',
-                model: input.model || this.settings.model || 'gemini-2.0-flash',
-                apiKey: input.apiKey || this.settings.apiKey || '',
-                endpoint: input.endpoint || this.settings.endpoint || 'https://generativelanguage.googleapis.com/v1beta/models',
-                temperature: Number.isFinite(Number(input.temperature)) ? Number(input.temperature) : 0.4
+                model: input.model || this.settings.model || DEFAULT_SETTINGS.model,
+                apiKey: input.apiKey || this.settings.apiKey || DEFAULT_SETTINGS.apiKey,
+                endpoint: input.endpoint || this.settings.endpoint || DEFAULT_SETTINGS.endpoint,
+                temperature: Number.isFinite(Number(input.temperature)) ? Number(input.temperature) : (this.settings.temperature ?? DEFAULT_SETTINGS.temperature)
             };
             this.settings = { ...this.settings, ...next };
             localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
@@ -56,7 +78,7 @@
         pushHistory(entry) {
             const history = this.getHistory();
             history.push({ ...entry, at: new Date().toISOString() });
-            localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-50)));
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history.slice(-100)));
         }
 
         readReminders() {
@@ -106,48 +128,54 @@
                 hour: '09',
                 category: 'مالی',
                 priority: 'high',
-                desc: `مبلغ ${item.amount} برای ${item.title}`
+                desc: `مبلغ ${item.amount.toLocaleString('fa-IR')} برای ${item.title}`
             });
             localStorage.setItem('proEvents', JSON.stringify(events));
             return item;
         }
 
+        getLocalSignalsFallback() {
+            const todayKey = normalizeDateKey(new Date());
+            const tasks = parseJson(localStorage.getItem('advancedTasks') || '[]', []);
+            const events = parseJson(localStorage.getItem('proEvents') || '[]', []);
+            const overdueTasks = tasks.filter(task => !task.completed && task.dueDate && normalizeDateKey(task.dueDate) < todayKey);
+            const upcomingEvents = events.filter(event => {
+                const raw = String(event?.date || '');
+                return raw === todayKey || raw === todayKey.replace(/-/g, '/');
+            });
+            return { overdueTasks, upcomingEvents };
+        }
+
         suggestFromSignals() {
-            const signals = typeof this.hooks.getSignals === 'function' ? this.hooks.getSignals() : null;
-            if (!signals) {
-                return 'داده کافی برای تحلیل سیگنال‌ها وجود ندارد. ابتدا چند تسک/عادت/رویداد ثبت کن.';
+            const signalHook = typeof this.hooks.getSignals === 'function' ? this.hooks.getSignals() : null;
+            if (signalHook) {
+                const notes = [];
+                if ((signalHook.overdueTasks || []).length > 0) notes.push('تسک عقب‌مانده داری؛ امروز فقط ۳ کار حیاتی را نگه دار.');
+                if ((signalHook.scheduleConflicts || []).length > 0) notes.push('تداخل زمانی دیده شده؛ بین قرارها ۱۵ دقیقه بافر بگذار.');
+                if ((signalHook.missedHabits || []).length > 0) notes.push('عادت جامانده داری؛ نسخه ۲ دقیقه‌ای را همین الان انجام بده.');
+                if (signalHook.todayProtein < signalHook.proteinGoal) notes.push('پروتئین امروز زیر هدف است؛ یک میان‌وعده پروتئینی اضافه کن.');
+                return notes.length ? notes.join('\n') : 'فعلاً وضعیت روزانه پایدار است.';
             }
-            const notes = [];
-            if ((signals.overdueTasks || []).length > 0) {
-                notes.push('تسک عقب‌مانده داری؛ پیشنهاد علمی: قانون ۳ کار حیاتی روزانه را فعال کن.');
+
+            const fallback = this.getLocalSignalsFallback();
+            if (fallback.overdueTasks.length || fallback.upcomingEvents.length) {
+                return `تسک عقب‌مانده: ${fallback.overdueTasks.length} | رویدادهای امروز: ${fallback.upcomingEvents.length}`;
             }
-            if ((signals.scheduleConflicts || []).length > 0) {
-                notes.push('تداخل برنامه دیده شده؛ بین جلسات ۱۵ دقیقه بافر بگذار تا خطای تصمیم کم شود.');
-            }
-            if ((signals.missedHabits || []).length > 0) {
-                notes.push('عادت جامانده وجود دارد؛ نسخه ۲ دقیقه‌ای همان عادت را اجرا کن تا زنجیره نشکند.');
-            }
-            if (signals.todayProtein < signals.proteinGoal) {
-                notes.push('پروتئین کمتر از هدف است؛ برای حفظ تمرکز یک وعده پروتئینی سبک اضافه کن.');
-            }
-            return notes.length ? notes.join('\n') : 'فعلاً ریسک جدی دیده نشد؛ برنامه پایدار است.';
+            return 'سیگنال فوری خاصی ثبت نشده است.';
         }
 
         async askGemini(message) {
-            if (!this.settings.apiKey) {
-                return 'کلید Gemini ثبت نشده است. در تنظیمات دستیار API Key را وارد کن.';
-            }
-            const model = this.settings.model || 'gemini-2.0-flash';
-            const endpointRoot = (this.settings.endpoint || '').replace(/\/+$/, '');
-            const url = `${endpointRoot}/${model}:generateContent?key=${encodeURIComponent(this.settings.apiKey)}`;
-            const context = typeof this.hooks.buildContext === 'function' ? this.hooks.buildContext() : {};
+            const model = this.settings.model || DEFAULT_SETTINGS.model;
+            const endpointRoot = (this.settings.endpoint || DEFAULT_SETTINGS.endpoint).replace(/\/+$/, '');
+            const url = `${endpointRoot}/${model}:generateContent?key=${encodeURIComponent(this.settings.apiKey || '')}`;
+            const context = typeof this.hooks.buildContext === 'function' ? this.hooks.buildContext() : this.getLocalSignalsFallback();
             const payload = {
                 contents: [{
                     role: 'user',
                     parts: [{ text: `Context: ${JSON.stringify(context)}\n\nUser: ${message}` }]
                 }],
                 generationConfig: {
-                    temperature: this.settings.temperature ?? 0.4
+                    temperature: this.settings.temperature ?? DEFAULT_SETTINGS.temperature
                 }
             };
 
@@ -158,7 +186,7 @@
             });
             if (!response.ok) {
                 const errText = await response.text();
-                return `اتصال به Gemini ناموفق بود: ${response.status} - ${errText.slice(0, 180)}`;
+                return `اتصال Gemini خطا داد (${response.status}). ${errText.slice(0, 180)}`;
             }
             const data = await response.json();
             return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'پاسخی از Gemini دریافت نشد.';
@@ -171,7 +199,7 @@
             if (/^(help|راهنما|دستورها)/i.test(text)) {
                 return {
                     type: 'help',
-                    payload: 'دستورهای قابل اجرا:\n- «یک قسط ۵۰۰۰۰۰ برای لپتاپ اضافه کن»\n- «یادآوری تماس با علی ساعت 19:30»\n- «هشدارهای امروز را بگو»\n- «تحلیل وضعیت من»'
+                    payload: 'دستورها:\n• «یک قسط 500000 برای بیمه اضافه کن»\n• «یادآوری تماس با علی ساعت 19:30»\n• «تحلیل وضعیت من»\n• «هشدارهای امروز را بگو»'
                 };
             }
 
@@ -179,8 +207,7 @@
                 || text.match(/(?:اضافه\s*کن|ثبت\s*کن).*(?:قسط)\s+(.+)/i);
             if (installmentMatch) {
                 const amountRaw = installmentMatch[1] || '0';
-                const normalizedDigits = amountRaw.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[,،]/g, '');
-                const amount = Number(normalizedDigits) || 0;
+                const amount = Number(amountRaw.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[,،]/g, '')) || 0;
                 const title = (installmentMatch[2] || 'قسط جدید').trim();
                 return { type: 'action:add_installment', payload: { title, amount, dueDate: normalizeDateKey(new Date()) } };
             }
@@ -196,14 +223,8 @@
                 };
             }
 
-            if (lowered.includes('هشدار') || lowered.includes('alert') || lowered.includes('today warnings')) {
-                return { type: 'insight:warnings' };
-            }
-
-            if (lowered.includes('تحلیل وضعیت') || lowered.includes('analysis')) {
-                return { type: 'insight:signals' };
-            }
-
+            if (lowered.includes('هشدار') || lowered.includes('today warnings')) return { type: 'insight:warnings' };
+            if (lowered.includes('تحلیل وضعیت') || lowered.includes('analysis')) return { type: 'insight:signals' };
             return { type: 'llm', payload: { message: text } };
         }
 
@@ -215,13 +236,11 @@
                 reply = command.payload;
             } else if (command.type === 'action:add_installment') {
                 const item = this.addInstallment(command.payload);
-                reply = `✅ انجام شد: ${item.title} با مبلغ ${item.amount.toLocaleString('fa-IR')} ثبت شد.`;
+                reply = `✅ قسط ثبت شد: ${item.title} (${item.amount.toLocaleString('fa-IR')} تومان).`;
             } else if (command.type === 'action:add_reminder') {
                 const item = this.addReminder(command.payload);
-                reply = `⏰ یادآوری ثبت شد: ${item.text} (${new Date(item.dueAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })})`;
-            } else if (command.type === 'insight:warnings') {
-                reply = this.suggestFromSignals();
-            } else if (command.type === 'insight:signals') {
+                reply = `⏰ یادآوری ثبت شد: ${item.text} ساعت ${new Date(item.dueAt).toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit' })}`;
+            } else if (command.type === 'insight:warnings' || command.type === 'insight:signals') {
                 reply = this.suggestFromSignals();
             } else {
                 reply = await this.askGemini(command.payload.message);
@@ -240,9 +259,7 @@
             }
             if (Notification.permission !== 'denied') {
                 Notification.requestPermission().then(permission => {
-                    if (permission === 'granted') {
-                        new Notification(title, { body });
-                    }
+                    if (permission === 'granted') new Notification(title, { body });
                 });
             }
         }
@@ -264,18 +281,152 @@
             if (changed) this.saveReminders(reminders);
         }
 
+        monitorAutonomy() {
+            const state = parseJson(localStorage.getItem(AUTONOMY_KEY) || '{}', {});
+            const todayKey = normalizeDateKey(new Date());
+            const fallback = this.getLocalSignalsFallback();
+            if (fallback.overdueTasks.length > 0 && state.overdueNotifiedFor !== todayKey) {
+                this.maybeNotify('هشدار دستیار', `شما ${fallback.overdueTasks.length} تسک عقب‌مانده دارید.`);
+                state.overdueNotifiedFor = todayKey;
+            }
+            if (fallback.upcomingEvents.length > 0 && state.eventsNotifiedFor !== todayKey) {
+                this.maybeNotify('یادآوری برنامه', `امروز ${fallback.upcomingEvents.length} رویداد دارید.`);
+                state.eventsNotifiedFor = todayKey;
+            }
+            localStorage.setItem(AUTONOMY_KEY, JSON.stringify(state));
+        }
+
         startMonitoring() {
-            if (this._intervalId) return;
-            this.monitorReminders();
-            this._intervalId = setInterval(() => this.monitorReminders(), this.monitorIntervalMs);
+            if (!this._intervalId) {
+                this.monitorReminders();
+                this._intervalId = setInterval(() => this.monitorReminders(), this.monitorIntervalMs);
+            }
+            if (!this._autonomyId) {
+                this.monitorAutonomy();
+                this._autonomyId = setInterval(() => this.monitorAutonomy(), this.autonomyIntervalMs);
+            }
         }
 
         stopMonitoring() {
-            if (!this._intervalId) return;
-            clearInterval(this._intervalId);
-            this._intervalId = null;
+            if (this._intervalId) {
+                clearInterval(this._intervalId);
+                this._intervalId = null;
+            }
+            if (this._autonomyId) {
+                clearInterval(this._autonomyId);
+                this._autonomyId = null;
+            }
         }
     }
 
+    class FloatingAssistantWidget {
+        constructor(kernel) {
+            this.kernel = kernel;
+            this.root = null;
+        }
+
+        mount() {
+            if (document.getElementById('globalAgentAssistant')) return;
+            this.root = document.createElement('section');
+            this.root.id = 'globalAgentAssistant';
+            this.root.className = 'global-agent-assistant';
+            this.root.innerHTML = `
+                <button type="button" id="assistantFab" class="assistant-fab" aria-label="باز کردن دستیار">🤖</button>
+                <div id="assistantPanel" class="assistant-panel" aria-live="polite">
+                    <div class="assistant-panel-head">
+                        <strong>Gemini 3 Pro Assistant</strong>
+                        <button id="assistantClose" type="button">×</button>
+                    </div>
+                    <div id="assistantFeed" class="assistant-feed"></div>
+                    <div class="assistant-quick-actions">
+                        <button type="button" data-quick="تحلیل وضعیت من">تحلیل وضعیت</button>
+                        <button type="button" data-quick="هشدارهای امروز را بگو">هشدارها</button>
+                    </div>
+                    <div class="assistant-input-wrap">
+                        <input id="assistantInput" type="text" placeholder="مثل: یک قسط 500000 برای بیمه اضافه کن">
+                        <button id="assistantSend" type="button">ارسال</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(this.root);
+            this.bind();
+            this.renderHistory();
+        }
+
+        append(role, text) {
+            const feed = this.root.querySelector('#assistantFeed');
+            const bubble = document.createElement('article');
+            bubble.className = `assistant-bubble ${role}`;
+            bubble.innerHTML = `<span>${role === 'assistant' ? 'دستیار' : 'شما'}</span><p>${sanitizeText(text)}</p>`;
+            feed.appendChild(bubble);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        renderHistory() {
+            const feed = this.root.querySelector('#assistantFeed');
+            feed.innerHTML = '';
+            const history = this.kernel.getHistory().slice(-12);
+            history.forEach(item => this.append(item.role, item.text));
+            if (!history.length) {
+                this.append('assistant', 'سلام 👋 من فعال هستم. می‌تونی دستور بدی، یادآوری ثبت کنی یا تحلیل بخوای.');
+            }
+        }
+
+        bind() {
+            const fab = this.root.querySelector('#assistantFab');
+            const panel = this.root.querySelector('#assistantPanel');
+            const close = this.root.querySelector('#assistantClose');
+            const send = this.root.querySelector('#assistantSend');
+            const input = this.root.querySelector('#assistantInput');
+
+            fab.addEventListener('click', () => panel.classList.toggle('open'));
+            close.addEventListener('click', () => panel.classList.remove('open'));
+
+            this.root.querySelectorAll('[data-quick]').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    input.value = btn.dataset.quick;
+                    await this.handleSend();
+                });
+            });
+
+            send.addEventListener('click', () => this.handleSend());
+            input.addEventListener('keydown', event => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    this.handleSend();
+                }
+            });
+        }
+
+        async handleSend() {
+            const input = this.root.querySelector('#assistantInput');
+            const send = this.root.querySelector('#assistantSend');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+            this.append('user', text);
+            send.disabled = true;
+            try {
+                const reply = await this.kernel.run(text);
+                this.append('assistant', reply);
+            } catch (error) {
+                this.append('assistant', `خطا: ${error.message}`);
+            } finally {
+                send.disabled = false;
+            }
+        }
+    }
+
+    function autoInitAssistant() {
+        if (window.__globalAgentAssistantMounted) return;
+        const kernel = new AgenticAssistantKernel();
+        kernel.startMonitoring();
+        const widget = new FloatingAssistantWidget(kernel);
+        widget.mount();
+        window.agenticAssistant = kernel;
+        window.__globalAgentAssistantMounted = true;
+    }
+
     window.AgenticAssistantKernel = AgenticAssistantKernel;
+    window.addEventListener('DOMContentLoaded', autoInitAssistant);
 })();
