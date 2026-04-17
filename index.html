@@ -1789,6 +1789,65 @@
         <p class="ai-phone-status" id="aiPhoneStatus">پایش خودکار فعال است.</p>
     </aside>
 
+    <section id="onboardingOverlay" class="onboarding-overlay" aria-live="polite">
+        <div class="onboarding-card">
+            <h3>👋 خوش اومدی! قبل از شروع، چند سوال کوتاه</h3>
+            <p>با این اطلاعات، دستیار AI بر اساس شخصیت و سبک زندگی خودت شخصی‌سازی می‌شود.</p>
+            <div class="onboarding-grid">
+                <label>اسمت چیه؟
+                    <input id="onboardingName" type="text" placeholder="مثال: علی">
+                </label>
+                <label>نماز می‌خونی؟
+                    <select id="onboardingPrayer">
+                        <option value="yes">بله</option>
+                        <option value="no">خیر</option>
+                    </select>
+                </label>
+                <label>اهل ورزش هستی؟
+                    <select id="onboardingExercise">
+                        <option value="yes">بله</option>
+                        <option value="no">خیر</option>
+                    </select>
+                </label>
+                <label>چه ورزش‌هایی؟
+                    <input id="onboardingExerciseTypes" type="text" placeholder="مثال: بدنسازی، دویدن">
+                </label>
+                <label>چند بار در هفته ورزش می‌کنی؟
+                    <input id="onboardingExerciseFrequency" type="number" min="0" max="14" value="3">
+                </label>
+                <label>عادت‌های مهم روزانه‌ات چیه؟
+                    <textarea id="onboardingHabits" rows="2" placeholder="مثال: مطالعه، نماز، ورزش، برنامه‌ریزی"></textarea>
+                </label>
+                <label>دلت می‌خواد به چی برسی؟
+                    <textarea id="onboardingGoals" rows="2" placeholder="مثال: مهاجرت، درآمد بالا، بدن سالم"></textarea>
+                </label>
+                <label>به نظرت چقدر تنبلی؟ (۱ کم - ۵ زیاد)
+                    <input id="onboardingLaziness" type="range" min="1" max="5" value="3">
+                </label>
+                <label>چقدر وقت‌شناس هستی؟ (۱ کم - ۵ زیاد)
+                    <input id="onboardingPunctuality" type="range" min="1" max="5" value="3">
+                </label>
+                <label>چقدر تمرکز عمیق داری؟ (۱ کم - ۵ زیاد)
+                    <input id="onboardingFocus" type="range" min="1" max="5" value="3">
+                </label>
+                <label>سبک مشاوره‌ای که دوست داری
+                    <select id="onboardingCoachingStyle">
+                        <option value="strict">سخت‌گیر و نتیجه‌محور</option>
+                        <option value="balanced">متعادل</option>
+                        <option value="gentle">آرام و حمایتی</option>
+                    </select>
+                </label>
+                <label>نکته شخصی خاص برای دستیار
+                    <textarea id="onboardingCustom" rows="2" placeholder="مثال: اگر کارها عقب افتاد، خیلی جدی پیگیریم کن"></textarea>
+                </label>
+            </div>
+            <div class="onboarding-actions">
+                <button id="onboardingSkip" type="button" class="onboarding-btn muted">بعداً انجام می‌دم</button>
+                <button id="onboardingSubmit" type="button" class="onboarding-btn">ثبت و شروع</button>
+            </div>
+        </div>
+    </section>
+
     <script>
         // Navigation Functions
         function toggleNav(open) {

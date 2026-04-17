@@ -1195,3 +1195,87 @@ body[data-theme='dark'] .assistant-panel {
     color: #fff;
     font-weight: 700;
 }
+
+/* Onboarding profile form */
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    z-index: 1400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+}
+
+.onboarding-overlay.visible {
+    display: flex;
+}
+
+.onboarding-card {
+    width: min(980px, 100%);
+    max-height: 92vh;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 20px;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    padding: 20px;
+    box-shadow: 0 35px 70px rgba(15, 23, 42, 0.25);
+}
+
+.onboarding-card h3 {
+    margin: 0 0 6px;
+}
+
+.onboarding-card p {
+    margin: 0 0 14px;
+    color: #475569;
+}
+
+.onboarding-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.onboarding-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.onboarding-grid input,
+.onboarding-grid select,
+.onboarding-grid textarea {
+    min-height: 38px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-family: inherit;
+}
+
+.onboarding-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.onboarding-btn {
+    min-height: 40px;
+    border: none;
+    border-radius: 10px;
+    padding: 0 14px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.onboarding-btn.muted {
+    background: rgba(37, 99, 235, 0.13);
+    color: #1e40af;
+}
