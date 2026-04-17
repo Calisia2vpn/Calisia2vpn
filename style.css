@@ -940,3 +940,342 @@ body[data-theme='dark'] .event-modal {
         font-size: 24px;
     }
 }
+
+/* Agentic Assistant (Gemini-ready) */
+.agent-assistant-card {
+    background: var(--surface-strong);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 14px 36px rgba(15, 23, 42, 0.08);
+}
+
+.agent-assistant-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.agent-assistant-head h3 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.assistant-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.1);
+    border-radius: 999px;
+    padding: 4px 10px;
+}
+
+.assistant-badge.connected {
+    color: #166534;
+    background: rgba(22, 101, 52, 0.14);
+}
+
+.assistant-hint {
+    margin: 0 0 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.assistant-config-row,
+.assistant-action-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.assistant-action-row {
+    grid-template-columns: 1fr auto;
+    margin-bottom: 0;
+}
+
+.assistant-input {
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0 10px;
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.assistant-btn {
+    border: none;
+    border-radius: 12px;
+    padding: 0 14px;
+    min-height: 40px;
+    cursor: pointer;
+    font-weight: 700;
+    background: var(--emerald);
+    color: white;
+}
+
+.assistant-btn.secondary {
+    background: var(--lapis);
+}
+
+.assistant-chat-log {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.5);
+    min-height: 140px;
+    max-height: 240px;
+    overflow: auto;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.assistant-message {
+    padding: 8px 10px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.assistant-message strong {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 4px;
+}
+
+.assistant-message p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.assistant-message.user {
+    background: rgba(15, 118, 110, 0.12);
+}
+
+.assistant-message.assistant {
+    background: rgba(33, 76, 99, 0.12);
+}
+
+@media (max-width: 900px) {
+    .assistant-config-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Global floating assistant */
+.global-agent-assistant {
+    position: fixed;
+    left: 18px;
+    bottom: 18px;
+    z-index: 1200;
+    direction: rtl;
+}
+
+.assistant-fab {
+    width: 58px;
+    height: 58px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 26px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    color: #fff;
+    box-shadow: 0 18px 35px rgba(37, 99, 235, 0.35);
+}
+
+.assistant-panel {
+    width: min(360px, calc(100vw - 28px));
+    max-height: 75vh;
+    margin-bottom: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+    border-radius: 18px;
+    box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22);
+    display: none;
+    overflow: hidden;
+}
+
+body[data-theme='dark'] .assistant-panel {
+    background: rgba(15, 23, 42, 0.95);
+    border-color: rgba(148, 163, 184, 0.25);
+}
+
+.assistant-panel.open {
+    display: block;
+}
+
+.assistant-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.assistant-panel-head button {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;
+    color: inherit;
+    min-height: 28px;
+}
+
+.assistant-feed {
+    max-height: 280px;
+    overflow: auto;
+    padding: 10px;
+}
+
+.assistant-bubble {
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border-radius: 12px;
+}
+
+.assistant-bubble span {
+    font-size: 11px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.assistant-bubble p {
+    margin: 0;
+    white-space: pre-wrap;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.assistant-bubble.user {
+    background: rgba(37, 99, 235, 0.12);
+}
+
+.assistant-bubble.assistant {
+    background: rgba(124, 58, 237, 0.12);
+}
+
+.assistant-quick-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 10px 8px;
+}
+
+.assistant-quick-actions button {
+    flex: 1;
+    min-height: 34px;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    border-radius: 10px;
+    background: rgba(37, 99, 235, 0.08);
+    cursor: pointer;
+}
+
+.assistant-input-wrap {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 10px;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.assistant-input-wrap input {
+    min-height: 38px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 10px;
+    padding: 0 10px;
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.assistant-input-wrap button {
+    min-height: 38px;
+    border: none;
+    border-radius: 10px;
+    padding: 0 12px;
+    cursor: pointer;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+}
+
+/* Onboarding profile form */
+.onboarding-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(6px);
+    z-index: 1400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+}
+
+.onboarding-overlay.visible {
+    display: flex;
+}
+
+.onboarding-card {
+    width: min(980px, 100%);
+    max-height: 92vh;
+    overflow: auto;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 20px;
+    border: 1px solid rgba(37, 99, 235, 0.25);
+    padding: 20px;
+    box-shadow: 0 35px 70px rgba(15, 23, 42, 0.25);
+}
+
+.onboarding-card h3 {
+    margin: 0 0 6px;
+}
+
+.onboarding-card p {
+    margin: 0 0 14px;
+    color: #475569;
+}
+
+.onboarding-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.onboarding-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.onboarding-grid input,
+.onboarding-grid select,
+.onboarding-grid textarea {
+    min-height: 38px;
+    border: 1px solid rgba(148, 163, 184, 0.45);
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-family: inherit;
+}
+
+.onboarding-actions {
+    margin-top: 14px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.onboarding-btn {
+    min-height: 40px;
+    border: none;
+    border-radius: 10px;
+    padding: 0 14px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.onboarding-btn.muted {
+    background: rgba(37, 99, 235, 0.13);
+    color: #1e40af;
+}

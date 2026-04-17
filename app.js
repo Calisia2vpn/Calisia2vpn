@@ -1619,6 +1619,210 @@ function renderLifeSyncInsights() {
     bindOptimizationButton();
 }
 
+
+function initAgenticAssistant() {
+    const mount = document.getElementById('agentAssistantPanel');
+    if (!mount || !window.AgenticAssistantKernel) return;
+
+    mount.innerHTML = `
+        <section class="agent-assistant-card" aria-live="polite">
+            <div class="agent-assistant-head">
+                <h3>🧠 سایه‌یار AURA</h3>
+                <span id="assistantConnectionBadge" class="assistant-badge">Gemini: تنظیم نشده</span>
+            </div>
+            <p class="assistant-hint">نمونه: «تسک شبکه اجتماعی ۲ ساعت اضافه کن» (اگه کم‌اثر باشه رد می‌کنم) یا «برنامه امروز»</p>
+            <div class="assistant-config-row">
+                <input id="assistantApiKey" type="password" class="assistant-input" placeholder="Gemini API Key">
+                <input id="assistantModel" type="text" class="assistant-input" value="gemini-2.0-flash" placeholder="Model">
+                <button id="assistantSaveConfig" type="button" class="assistant-btn secondary">ثبت تنظیمات</button>
+            </div>
+            <div class="assistant-chat-log" id="assistantChatLog"></div>
+            <div class="assistant-action-row">
+                <input id="assistantPrompt" type="text" class="assistant-input" placeholder="به دستیار بگو چه کاری انجام دهد...">
+                <button id="assistantRun" type="button" class="assistant-btn">اجرا</button>
+            </div>
+        </section>
+    `;
+
+    const hooks = {
+        getSignals: () => {
+            const { tasks, habits, dietLog, exercises } = readLifeSyncArrays();
+            return collectLocalAiSignals({ tasks, habits, dietLog, exercises });
+        },
+        buildContext: () => {
+            const { tasks, habits, dietLog, goals, assets } = readLifeSyncArrays();
+            return {
+                now: new Date().toISOString(),
+                pendingTasks: tasks.filter(task => !task.completed).slice(0, 10),
+                habits: habits.slice(0, 10),
+                todayDiet: dietLog.filter(item => item.date === normalizeGregorianDate(new Date())),
+                goals: goals.slice(0, 8),
+                assetsTotal: assets.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0)
+            };
+        }
+    };
+
+    const kernel = window.agenticAssistant || new window.AgenticAssistantKernel({
+        hooks,
+        onDataChanged: () => {
+            renderLifeSyncInsights();
+            renderTodaySchedule();
+            loadWeeklyStats();
+        }
+    });
+    kernel.hooks = hooks;
+
+    const apiKeyInput = document.getElementById('assistantApiKey');
+    const modelInput = document.getElementById('assistantModel');
+    const saveBtn = document.getElementById('assistantSaveConfig');
+    const runBtn = document.getElementById('assistantRun');
+    const promptInput = document.getElementById('assistantPrompt');
+    const chatLog = document.getElementById('assistantChatLog');
+    const badge = document.getElementById('assistantConnectionBadge');
+
+    function appendChat(role, text) {
+        if (!chatLog) return;
+        const node = document.createElement('article');
+        node.className = `assistant-message ${role}`;
+        node.innerHTML = `<strong>${role === 'assistant' ? 'دستیار' : 'شما'}</strong><p>${String(text || '').replace(/</g, '&lt;')}</p>`;
+        chatLog.appendChild(node);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function refreshStatus() {
+        const settings = kernel.getSettings();
+        const connected = Boolean(settings.apiKey);
+        badge.textContent = connected ? `Gemini: ${settings.model || 'active'}` : 'Gemini: تنظیم نشده';
+        badge.classList.toggle('connected', connected);
+    }
+
+    const history = kernel.getHistory();
+    history.slice(-10).forEach(item => appendChat(item.role, item.text));
+
+    saveBtn.addEventListener('click', () => {
+        kernel.configureProvider({
+            apiKey: apiKeyInput.value.trim(),
+            model: modelInput.value.trim() || 'gemini-2.0-flash'
+        });
+        apiKeyInput.value = '';
+        refreshStatus();
+        appendChat('assistant', 'تنظیمات Gemini ذخیره شد. از حالا می‌توانم روی API واقعی پاسخ بدهم.');
+    });
+
+    runBtn.addEventListener('click', async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+        promptInput.value = '';
+        appendChat('user', prompt);
+        runBtn.disabled = true;
+        try {
+            const response = await kernel.run(prompt);
+            appendChat('assistant', response);
+            renderLifeSyncInsights();
+        } catch (error) {
+            appendChat('assistant', `خطا: ${error.message}`);
+        } finally {
+            runBtn.disabled = false;
+        }
+    });
+
+    promptInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            runBtn.click();
+        }
+    });
+
+    kernel.startMonitoring();
+    refreshStatus();
+    window.agenticAssistant = kernel;
+}
+
+function initializeUserOnboarding() {
+    const overlay = document.getElementById('onboardingOverlay');
+    if (!overlay) return;
+    const PROFILE_KEY = 'userProfile';
+    const existing = safeJsonParse(localStorage.getItem(PROFILE_KEY) || 'null', null);
+    if (existing) return;
+
+    const submitBtn = document.getElementById('onboardingSubmit');
+    const skipBtn = document.getElementById('onboardingSkip');
+    if (!submitBtn || !skipBtn) return;
+
+    overlay.classList.add('visible');
+
+    function collectProfile() {
+        return {
+            name: document.getElementById('onboardingName')?.value?.trim() || '',
+            prayer: document.getElementById('onboardingPrayer')?.value || 'yes',
+            exercise: document.getElementById('onboardingExercise')?.value || 'yes',
+            exerciseTypes: document.getElementById('onboardingExerciseTypes')?.value?.trim() || '',
+            exerciseFrequency: Number(document.getElementById('onboardingExerciseFrequency')?.value) || 0,
+            keyHabits: document.getElementById('onboardingHabits')?.value?.trim() || '',
+            lifeGoals: document.getElementById('onboardingGoals')?.value?.trim() || '',
+            personality: {
+                laziness: Number(document.getElementById('onboardingLaziness')?.value) || 3,
+                punctuality: Number(document.getElementById('onboardingPunctuality')?.value) || 3,
+                focus: Number(document.getElementById('onboardingFocus')?.value) || 3
+            },
+            coachingStyle: document.getElementById('onboardingCoachingStyle')?.value || 'balanced',
+            custom: document.getElementById('onboardingCustom')?.value?.trim() || '',
+            createdAt: new Date().toISOString()
+        };
+    }
+
+    function addPrayerHabitIfNeeded(profile) {
+        if (profile.prayer !== 'yes') return;
+        const habits = safeJsonParse(localStorage.getItem('myHabits') || '[]', []);
+        const exists = habits.some(item => /نماز/.test(String(item?.name || item?.title || '')));
+        if (exists) return;
+        habits.push({
+            id: Date.now(),
+            name: 'نماز روزانه',
+            category: 'spiritual',
+            recurring: 'daily',
+            streak: 0,
+            history: [],
+            createdAt: new Date().toISOString()
+        });
+        localStorage.setItem('myHabits', JSON.stringify(habits));
+    }
+
+    function addPrayerRemindersIfNeeded(profile) {
+        if (profile.prayer !== 'yes' || !window.agenticAssistant?.addReminder) return;
+        const today = normalizeGregorianDate(new Date());
+        const slots = [
+            ['یادآوری نماز صبح', `${today}T05:00:00`],
+            ['یادآوری نماز ظهر', `${today}T12:15:00`],
+            ['یادآوری نماز مغرب', `${today}T18:30:00`]
+        ];
+        slots.forEach(([text, dueAt]) => {
+            window.agenticAssistant.addReminder({ text, dueAt, severity: 'high', tag: `prayer-${text}` });
+        });
+    }
+
+    function finalizeProfile(profile) {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+        addPrayerHabitIfNeeded(profile);
+        addPrayerRemindersIfNeeded(profile);
+        overlay.classList.remove('visible');
+        renderLifeSyncInsights();
+        alert('پروفایل شخصی‌سازی ذخیره شد ✅');
+    }
+
+    submitBtn.addEventListener('click', () => {
+        finalizeProfile(collectProfile());
+    });
+
+    skipBtn.addEventListener('click', () => {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify({
+            skipped: true,
+            createdAt: new Date().toISOString()
+        }));
+        overlay.classList.remove('visible');
+    });
+}
+
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
     setTheme(savedTheme);
@@ -1644,6 +1848,8 @@ window.addEventListener('load', () => {
         renderGoalFocus();
         renderTodayPrayerTimes();
         renderLifeSyncInsights();
+        initAgenticAssistant();
+        initializeUserOnboarding();
         if (timerDisplay) {
             initializeDashboardTimerControls();
         }
