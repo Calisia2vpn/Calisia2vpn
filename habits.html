@@ -603,6 +603,88 @@
             font-size: 12px;
         }
 
+        /* Minimal UX overrides */
+        .header-top {
+            padding: 16px 22px;
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+
+        .header-top h1 {
+            font-size: 28px;
+        }
+
+        .container {
+            gap: 18px;
+            grid-template-columns: 1fr 320px;
+        }
+
+        .panel {
+            border-radius: 14px;
+            border-width: 1px;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        .panel-header {
+            padding: 14px 16px;
+            font-size: 15px;
+        }
+
+        .panel-content {
+            padding: 16px;
+        }
+
+        .today-section {
+            background: rgba(15, 118, 110, 0.08);
+            border: 1px solid rgba(15, 118, 110, 0.14);
+            padding: 14px;
+            border-radius: 12px;
+        }
+
+        .today-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            box-shadow: none;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .habit-card {
+            padding: 14px;
+            border-radius: 12px;
+            box-shadow: none;
+            border: 1px solid rgba(148, 163, 184, 0.25);
+        }
+
+        .habit-card:hover {
+            transform: none;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+        }
+
+        .habit-header {
+            align-items: center;
+            gap: 12px;
+        }
+
+        .habit-minimal-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .habit-minimal-row .recurring-badge,
+        .habit-minimal-row .time-display {
+            font-size: 11px;
+            padding: 4px 8px;
+        }
+
+        .tick-btn {
+            min-height: 36px;
+            padding: 0 12px;
+            font-size: 12px;
+            border-radius: 9px;
+        }
+
         /* Responsive */
         @media (max-width: 1024px) {
             .container { grid-template-columns: 1fr; }
@@ -1194,6 +1276,15 @@
             return `${dayName}، ${toPersianNumber(todayJ.jd)} ${jMonths[todayJ.jm - 1]} ${toPersianNumber(todayJ.jy)}`;
         }
 
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         function getLast30DaysData(habit) {
             const labels = [];
             const data = [];
@@ -1350,6 +1441,7 @@
                 todayDiv.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">در حال حاضر عادت جدیدی وجود ندارد.</div>';
             } else {
                 filteredHabits.forEach(habit => {
+                    const safeTitle = escapeHtml(habit.title);
                     const isDoneToday = habit.history.includes(dateStrG);
                     const streak = getCurrentStreak(habit.history);
                     const completionRate = getCompletionRate(habit.history, habit.createdAtG);
@@ -1372,7 +1464,7 @@
                             <div class="today-item ${isDoneToday ? 'completed' : ''}">
                                 <div class="today-item-name">
                                     <div class="today-item-info">
-                                        <h3>${habit.title}</h3>
+                                        <h3>${safeTitle}</h3>
                                         <p>
                                             <span class="time-display">${toPersianNumber(habit.time)}</span>
                                             ${streak > 0 ? `<span class="recurring-badge">${toPersianNumber(streak)} روز پیوستگی</span>` : ''}
@@ -1394,46 +1486,22 @@
                             <button class="habit-delete" onclick="deleteHabit(${habit.id})">حذف</button>
                             <div class="habit-header">
                                 <div class="habit-title">
-                                    <h3>${habit.title}</h3>
+                                    <h3>${safeTitle}</h3>
                                     <p class="habit-category">${categoryLabel}</p>
                                 </div>
+                                <button onclick="toggleDay('${dateStrG}', ${habit.id})" class="tick-btn ${isDoneToday ? 'done' : ''}">
+                                    ${isDoneToday ? 'انجام شد' : 'انجامش کردم'}
+                                </button>
                             </div>
-                            <div class="habit-stats">
-                                <div class="stat">
-                                    <div class="stat-value" style="color: #f39c12; font-size: 22px;">${toPersianNumber(streak)}</div>
-                                    <div class="stat-label">پیوستگی</div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-value" style="color: #3498db; font-size: 22px;">${toPersianNumber(completionRate)}٪</div>
-                                    <div class="stat-label">درصد</div>
-                                </div>
-                                <div class="stat">
-                                    <div class="stat-value" style="color: #2ecc71; font-size: 22px;">${toPersianNumber(habit.history.length)}</div>
-                                    <div class="stat-label">کل</div>
-                                </div>
-                            </div>
-                            <div style="background: #f9f9f9; padding: 10px; border-radius: 8px; margin-bottom: 12px; font-size: 12px;">
+                            <div class="habit-minimal-row">
                                 <span class="time-display">${toPersianNumber(habit.time)}</span>
                                 <span class="recurring-badge">${recurringLabel}</span>
-                            </div>
-                            <div class="habit-chart">
-                                <div class="chart-label">آخرین ۳۰ روز</div>
-                                <div class="habit-chart-canvas">
-                                    <canvas id="chart-${habit.id}"></canvas>
-                                </div>
-                            </div>
-                            <div class="habit-chart">
-                                <div class="chart-label">ماه شمسی جاری (${jMonths[todayJ.jm - 1]} ${toPersianNumber(todayJ.jy)})</div>
-                                ${renderMonthlyCalendar(habit)}
+                                <span class="recurring-badge">پیوستگی ${toPersianNumber(streak)} روز</span>
+                                <span class="recurring-badge">تکمیل ${toPersianNumber(completionRate)}٪</span>
                             </div>
                         </div>
                     `;
                 });
-
-                // رسم نمودارها
-                setTimeout(() => {
-                    filteredHabits.forEach(habit => renderHabitChart(habit));
-                }, 100);
             }
 
             // آپدیت آمار

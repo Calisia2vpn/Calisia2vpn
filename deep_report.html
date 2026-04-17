@@ -70,7 +70,7 @@
             transition: background 0.5s ease, color 0.5s ease;
         }
 
-        [data-theme="dark"] body {
+        body[data-theme="dark"] {
             background: linear-gradient(135deg, #1a1a1a 0%, #2d3436 50%, #34495e 100%);
         }
 
@@ -767,10 +767,10 @@
                 <div class="chart-header">
                     <h3 class="chart-title">نمودار عملکرد هفتگی</h3>
                     <div class="chart-controls">
-                        <button class="chart-btn active" onclick="switchChart('tasks')">تسک‌ها</button>
-                        <button class="chart-btn" onclick="switchChart('habits')">عادت‌ها</button>
-                        <button class="chart-btn" onclick="switchChart('diet')">تغذیه</button>
-                        <button class="chart-btn" onclick="switchChart('calendar')">تقویم</button>
+                        <button class="chart-btn active" onclick="switchChart('tasks', this)">تسک‌ها</button>
+                        <button class="chart-btn" onclick="switchChart('habits', this)">عادت‌ها</button>
+                        <button class="chart-btn" onclick="switchChart('diet', this)">تغذیه</button>
+                        <button class="chart-btn" onclick="switchChart('calendar', this)">تقویم</button>
                     </div>
                 </div>
                 <canvas id="performanceChart" width="400" height="200"></canvas>
@@ -1153,10 +1153,10 @@
         }
 
         // تغییر نوع نمودار
-        function switchChart(type) {
+        function switchChart(type, button) {
             currentChartType = type;
             document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (button) button.classList.add('active');
             createPerformanceChart(type);
         }
 

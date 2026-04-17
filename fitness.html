@@ -1264,6 +1264,10 @@
             document.getElementById('caloriePreview').value = `${caloriesBurned} کالری`;
         }
 
+        function updateCalorieRate() {
+            updateCaloriePreview();
+        }
+
         function recordExercise() {
             const type = document.getElementById('exerciseType').value;
             const duration = parseFloat(document.getElementById('exerciseDuration').value);

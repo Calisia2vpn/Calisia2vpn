@@ -12,9 +12,9 @@
     const LOW_VALUE_PATTERNS = [/اسکرول/, /شبکه اجتماعی/, /بی‌هدف/, /تفریح طولانی/, /چک کردن( مداوم)? پیام/, /بدون اولویت/, /general/i];
     const HIGH_VALUE_PATTERNS = [/ورزش/, /مطالعه/, /زبان/, /درآمد/, /پروژه/, /نماز/, /خواب/, /health/i, /focus/i];
     const DEFAULT_SETTINGS = {
-        provider: 'gemini',
-        model: 'gemini-3-pro',
-        apiKey: 'AIzaSyCRYlfstQ6UaSxPr5Ypkw69dneFmLcgOsM',
+        provider: 'local',
+        model: 'gemini-2.5-flash',
+        apiKey: '',
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
         temperature: 0.4
     };
@@ -41,6 +41,15 @@
 
     function sanitizeText(text) {
         return String(text || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function getTodayJalaaliKey() {
+        if (typeof window.jalaali?.toJalaali === 'function') {
+            const now = new Date();
+            const j = window.jalaali.toJalaali(now.getFullYear(), now.getMonth() + 1, now.getDate());
+            return `${j.jy}/${String(j.jm).padStart(2, '0')}/${String(j.jd).padStart(2, '0')}`;
+        }
+        return '';
     }
 
     function textScore(text) {
@@ -72,7 +81,7 @@
 
         configureProvider(input = {}) {
             const next = {
-                provider: 'gemini',
+                provider: input.provider || this.settings.provider || DEFAULT_SETTINGS.provider,
                 model: input.model || this.settings.model || DEFAULT_SETTINGS.model,
                 apiKey: input.apiKey || this.settings.apiKey || DEFAULT_SETTINGS.apiKey,
                 endpoint: input.endpoint || this.settings.endpoint || DEFAULT_SETTINGS.endpoint,
@@ -258,6 +267,45 @@
             return { overdueTasks, upcomingEvents, openTasks, highPriorityTasks };
         }
 
+        buildTodayDigest() {
+            const todayG = normalizeDateKey(new Date());
+            const todayJ = getTodayJalaaliKey();
+            const tasks = this.readTasks().filter(item => !item.completed);
+            const habits = this.readHabits();
+            const events = this.readEvents();
+            const reminders = this.readReminders().filter(item => !item.done);
+
+            const todayTasks = tasks.filter(item => normalizeDateKey(item.dueDate) <= todayG);
+            const todayEvents = events.filter(item => {
+                const raw = String(item?.date || '');
+                return raw === todayG || raw === todayJ || raw === todayJ.replace(/\//g, '-');
+            });
+            const todayHabits = habits.filter(item => {
+                const recurring = item?.recurring || 'daily';
+                if (recurring !== 'daily') return false;
+                const history = Array.isArray(item?.history) ? item.history.map(String) : [];
+                return !history.includes(todayG) && !history.includes(todayJ);
+            });
+            const todayReminders = reminders.filter(item => normalizeDateKey(item.dueAt) === todayG);
+
+            const lines = [
+                ...todayTasks.slice(0, 3).map(item => `📝 ${item.title}`),
+                ...todayHabits.slice(0, 2).map(item => `🌿 ${item.name || item.title}`),
+                ...todayEvents.slice(0, 2).map(item => `📅 ${item.title}`),
+                ...todayReminders.slice(0, 2).map(item => `⏰ ${item.text}`)
+            ];
+
+            return {
+                counts: {
+                    tasks: todayTasks.length,
+                    habits: todayHabits.length,
+                    events: todayEvents.length,
+                    reminders: todayReminders.length
+                },
+                lines
+            };
+        }
+
         getUserProfile() {
             return parseJson(localStorage.getItem(PROFILE_KEY) || 'null', null);
         }
@@ -301,6 +349,9 @@
         }
 
         async askGemini(message) {
+            if (!this.settings.apiKey) {
+                return 'برای استفاده از Gemini باید API Key را در پنل دستیار وارد کنید. تا آن زمان از تحلیل داخلی استفاده می‌کنم.';
+            }
             const model = this.settings.model || DEFAULT_SETTINGS.model;
             const endpointRoot = (this.settings.endpoint || DEFAULT_SETTINGS.endpoint).replace(/\/+$/, '');
             const url = `${endpointRoot}/${model}:generateContent?key=${encodeURIComponent(this.settings.apiKey || '')}`;
@@ -316,14 +367,19 @@
                 }
             };
 
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            let response;
+            try {
+                response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch {
+                return 'اتصال به Gemini در دسترس نیست. پاسخ داخلی را امتحان کنید.';
+            }
             if (!response.ok) {
                 const errText = await response.text();
-                return `اتصال Gemini خطا داد (${response.status}). ${errText.slice(0, 180)}`;
+                return `اتصال Gemini خطا داد (${response.status}). ${errText.slice(0, 180)}.`;
             }
             const data = await response.json();
             return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'پاسخی از Gemini دریافت نشد.';
@@ -631,12 +687,70 @@
         }
     }
 
+    class DailyPulseBar {
+        constructor(kernel) {
+            this.kernel = kernel;
+            this.root = null;
+            this._interval = null;
+        }
+
+        mount() {
+            if (document.getElementById('dailyPulseBar')) return;
+            this.root = document.createElement('aside');
+            this.root.id = 'dailyPulseBar';
+            this.root.className = 'daily-pulse-bar';
+            this.root.innerHTML = `
+                <button type="button" id="dailyPulseToggle" class="daily-pulse-toggle">📌 خلاصه امروز</button>
+                <div id="dailyPulsePanel" class="daily-pulse-panel">
+                    <div class="daily-pulse-head">
+                        <strong>کارهای باقی‌مانده امروز</strong>
+                        <button type="button" id="dailyPulseClose">×</button>
+                    </div>
+                    <div id="dailyPulseStats" class="daily-pulse-stats"></div>
+                    <div id="dailyPulseItems" class="daily-pulse-items"></div>
+                </div>
+            `;
+            document.body.appendChild(this.root);
+            this.bind();
+            this.refresh();
+            this._interval = setInterval(() => this.refresh(), 60 * 1000);
+            window.addEventListener('storage', () => this.refresh());
+        }
+
+        bind() {
+            const toggle = this.root.querySelector('#dailyPulseToggle');
+            const close = this.root.querySelector('#dailyPulseClose');
+            const panel = this.root.querySelector('#dailyPulsePanel');
+            toggle.addEventListener('click', () => panel.classList.toggle('open'));
+            close.addEventListener('click', () => panel.classList.remove('open'));
+        }
+
+        refresh() {
+            const digest = this.kernel.buildTodayDigest();
+            const statsNode = this.root.querySelector('#dailyPulseStats');
+            const itemsNode = this.root.querySelector('#dailyPulseItems');
+            statsNode.innerHTML = `
+                <span>📝 ${digest.counts.tasks}</span>
+                <span>🌿 ${digest.counts.habits}</span>
+                <span>📅 ${digest.counts.events}</span>
+                <span>⏰ ${digest.counts.reminders}</span>
+            `;
+            if (!digest.lines.length) {
+                itemsNode.innerHTML = '<p class="daily-pulse-empty">برای امروز کار باز خاصی نداری 👌</p>';
+                return;
+            }
+            itemsNode.innerHTML = digest.lines.map(line => `<p>${sanitizeText(line)}</p>`).join('');
+        }
+    }
+
     function autoInitAssistant() {
         if (window.__globalAgentAssistantMounted) return;
         const kernel = new AgenticAssistantKernel();
         kernel.startMonitoring();
         const widget = new FloatingAssistantWidget(kernel);
+        const pulseBar = new DailyPulseBar(kernel);
         widget.mount();
+        pulseBar.mount();
         window.agenticAssistant = kernel;
         window.__globalAgentAssistantMounted = true;
     }

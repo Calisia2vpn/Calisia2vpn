@@ -83,6 +83,34 @@ function formatFaText(value) {
     return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function showPageToast(message, type = 'success') {
+    const rootId = 'pageToastRoot';
+    let root = document.getElementById(rootId);
+    if (!root) {
+        root = document.createElement('div');
+        root.id = rootId;
+        root.className = 'page-toast-root';
+        document.body.appendChild(root);
+    }
+    const toast = document.createElement('div');
+    toast.className = `page-toast ${type}`;
+    toast.textContent = message;
+    root.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('leave');
+        setTimeout(() => toast.remove(), 280);
+    }, 2800);
+}
+
 function loadDashboardSnapshot() {
     const calories = Number(localStorage.getItem('todayCalories')) || 1450;
     const snapshotCalories = document.getElementById('snapshotCalories');
@@ -97,6 +125,8 @@ function loadDashboardSnapshot() {
 
 const TIMER_STORAGE_KEY = 'dashboardTimerState';
 const STOPWATCH_STORAGE_KEY = 'dashboardStopwatchState';
+const MOOD_STORAGE_KEY = 'dashboardMoodCheckin';
+const WALLPAPER_STORAGE_KEY = 'dashboardWallpaper';
 const ADHAN_STORAGE_KEY_PREFIX = 'adhanEvents';
 const ADHAN_META_KEY_PREFIX = 'adhanEventsMeta';
 const ADHAN_CONFIG_VERSION = 3;
@@ -545,8 +575,8 @@ function renderTodaySchedule() {
     priorityList.innerHTML = dashboardTasks.length ? dashboardTasks.map(item => `
         <a href="${item.link}" class="plan-item">
             <div class="plan-item-main">
-                <span>${item.title}</span>
-                <span class="plan-item-meta">${item.meta || ''}</span>
+                <span>${escapeHtml(item.title)}</span>
+                <span class="plan-item-meta">${escapeHtml(item.meta || '')}</span>
             </div>
             <span class="priority-badge ${item.className}">${item.badge}</span>
         </a>
@@ -563,8 +593,8 @@ function renderTodaySchedule() {
     programsList.innerHTML = todayPrograms.length ? todayPrograms.map(item => `
         <a href="${item.link}" class="plan-item">
             <div class="plan-item-main">
-                <span>${item.title}</span>
-                <span class="plan-item-meta">${item.time}</span>
+                <span>${escapeHtml(item.title)}</span>
+                <span class="plan-item-meta">${escapeHtml(item.time)}</span>
             </div>
             <span class="event-time">امروز</span>
         </a>
@@ -577,6 +607,136 @@ function renderTodaySchedule() {
             <span class="event-time">خالی</span>
         </div>
     `;
+}
+
+function renderHomeGlanceStrip() {
+    const tasksEl = document.getElementById('glanceTasks');
+    const eventsEl = document.getElementById('glanceEvents');
+    const habitsEl = document.getElementById('glanceHabits');
+    const focusEl = document.getElementById('glanceFocus');
+    if (!tasksEl || !eventsEl || !habitsEl || !focusEl) return;
+
+    const todayKey = normalizeGregorianDate(new Date());
+    const tasks = readDashboardTasks();
+    const activeTasks = tasks.filter(task => !task.completed);
+    const dueToday = activeTasks.filter(task => normalizeGregorianDate(task.dueDate || task.date) === todayKey).length;
+    tasksEl.textContent = `${formatFaPlain(dueToday)} کار امروز / ${formatFaPlain(activeTasks.length)} باز`;
+
+    const todayEvents = getTodayPrograms();
+    eventsEl.textContent = todayEvents.length
+        ? `${formatFaPlain(todayEvents.length)} رویداد برای امروز`
+        : 'امروز رویداد ثبت نشده';
+
+    const habits = safeJsonParse(localStorage.getItem('myHabits') || '[]', []);
+    const completedHabits = habits.filter(h => Array.isArray(h.history) && h.history.includes(todayKey)).length;
+    habitsEl.textContent = habits.length
+        ? `${formatFaPlain(completedHabits)} از ${formatFaPlain(habits.length)} عادت انجام شد`
+        : 'هنوز عادتی ثبت نشده';
+
+    const goals = readDashboardGoals();
+    const averageProgress = goals.length
+        ? Math.round(goals.reduce((sum, item) => sum + (Number(item.progress) || 0), 0) / goals.length)
+        : 0;
+    focusEl.textContent = goals.length
+        ? `میانگین پیشرفت اهداف: ${formatFaPlain(averageProgress)}٪`
+        : 'هدفی برای دنبال‌کردن ثبت نشده';
+}
+
+function initializeMoodCheckin() {
+    const root = document.getElementById('moodActions');
+    const hint = document.getElementById('moodHint');
+    if (!root || !hint) return;
+    const moodMap = {
+        awful: 'امروز سخت شروع شده؛ فقط یک کار ۱۰ دقیقه‌ای انجام بده و باقی را سبک کن.',
+        low: 'انرژی کمه؛ اول یک کار کوتاه + کمی حرکت بدنی، بعد کار اصلی.',
+        ok: 'حالت متعادل است؛ بهترین زمان برای یک کار عمیق ۲۵ دقیقه‌ای.',
+        good: 'انرژی خوبه؛ یک کار مهم را کامل ببند و جشن کوچیک بگیر.',
+        great: 'فوق‌العاده‌ای! سخت‌ترین کار روز را همین الان شروع کن.'
+    };
+    const savedMood = localStorage.getItem(MOOD_STORAGE_KEY) || '';
+
+    function setMood(mood) {
+        localStorage.setItem(MOOD_STORAGE_KEY, mood);
+        root.querySelectorAll('.mood-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mood === mood);
+        });
+        hint.textContent = moodMap[mood] || 'حالت امروز را انتخاب کن.';
+    }
+
+    root.querySelectorAll('.mood-btn').forEach(btn => {
+        btn.addEventListener('click', () => setMood(btn.dataset.mood || ''));
+    });
+    setMood(savedMood);
+}
+
+function initializeFocusRoulette() {
+    const button = document.getElementById('focusRouletteBtn');
+    const result = document.getElementById('focusRouletteResult');
+    if (!button || !result) return;
+
+    function buildCandidates() {
+        const tasks = readDashboardTasks()
+            .filter(task => !task.completed)
+            .map(task => ({
+                type: 'task',
+                priority: task.priority || 'medium',
+                text: `تسک: ${task.title}`
+            }));
+        const habits = safeJsonParse(localStorage.getItem('myHabits') || '[]', [])
+            .map(habit => ({ type: 'habit', priority: 'medium', text: `عادت: ${habit.title || habit.name || 'عادت بدون عنوان'}` }));
+        return [...tasks, ...habits];
+    }
+
+    button.addEventListener('click', () => {
+        const candidates = buildCandidates();
+        if (!candidates.length) {
+            result.textContent = 'فعلاً داده‌ای نیست؛ یک تسک یا عادت اضافه کن تا پیشنهاد دقیق بدهیم.';
+            return;
+        }
+        const weighted = candidates
+            .sort((a, b) => (a.priority === 'high' ? -1 : 0) - (b.priority === 'high' ? -1 : 0))
+            .slice(0, Math.min(6, candidates.length));
+        const picked = weighted[Math.floor(Math.random() * weighted.length)];
+        result.textContent = `پیشنهاد فوری: ${picked.text} — فقط ۹۰ ثانیه شروعش کن.`;
+    });
+}
+
+function initializeWallpaperPicker() {
+    const picker = document.getElementById('wallpaperPicker');
+    const resetBtn = document.getElementById('wallpaperResetBtn');
+    if (!picker) return;
+
+    const presets = {
+        mint: 'radial-gradient(circle at top right, rgba(31, 143, 134, 0.3), transparent 28%), radial-gradient(circle at 10% 80%, rgba(20, 184, 166, 0.22), transparent 30%), linear-gradient(180deg, #d9f6f2 0%, #c8ece6 100%)',
+        sunset: 'radial-gradient(circle at 20% 20%, rgba(255,255,255,0.24), transparent 40%), linear-gradient(135deg, #f97316 0%, #ec4899 55%, #8b5cf6 100%)',
+        night: 'radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.2), transparent 30%), linear-gradient(140deg, #0f172a 0%, #1e293b 52%, #334155 100%)',
+        forest: 'radial-gradient(circle at 10% 10%, rgba(255,255,255,0.18), transparent 35%), linear-gradient(135deg, #0f766e 0%, #16a34a 58%, #84cc16 100%)'
+    };
+
+    function applyWallpaper(name) {
+        const body = document.body;
+        const background = presets[name];
+        picker.querySelectorAll('.wallpaper-option').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.wallpaper === name);
+        });
+        if (!background) {
+            body.classList.remove('custom-wallpaper');
+            body.style.removeProperty('--wallpaper-bg');
+            localStorage.removeItem(WALLPAPER_STORAGE_KEY);
+            return;
+        }
+        body.classList.add('custom-wallpaper');
+        body.style.setProperty('--wallpaper-bg', background);
+        localStorage.setItem(WALLPAPER_STORAGE_KEY, name);
+    }
+
+    picker.querySelectorAll('.wallpaper-option').forEach(btn => {
+        btn.addEventListener('click', () => applyWallpaper(btn.dataset.wallpaper || ''));
+    });
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => applyWallpaper(''));
+    }
+    applyWallpaper(localStorage.getItem(WALLPAPER_STORAGE_KEY) || '');
 }
 
 function readDashboardGoals() {
@@ -1633,7 +1793,7 @@ function initAgenticAssistant() {
             <p class="assistant-hint">نمونه: «تسک شبکه اجتماعی ۲ ساعت اضافه کن» (اگه کم‌اثر باشه رد می‌کنم) یا «برنامه امروز»</p>
             <div class="assistant-config-row">
                 <input id="assistantApiKey" type="password" class="assistant-input" placeholder="Gemini API Key">
-                <input id="assistantModel" type="text" class="assistant-input" value="gemini-2.0-flash" placeholder="Model">
+                <input id="assistantModel" type="text" class="assistant-input" value="gemini-2.5-flash" placeholder="Model">
                 <button id="assistantSaveConfig" type="button" class="assistant-btn secondary">ثبت تنظیمات</button>
             </div>
             <div class="assistant-chat-log" id="assistantChatLog"></div>
@@ -1692,7 +1852,9 @@ function initAgenticAssistant() {
     function refreshStatus() {
         const settings = kernel.getSettings();
         const connected = Boolean(settings.apiKey);
-        badge.textContent = connected ? `Gemini: ${settings.model || 'active'}` : 'Gemini: تنظیم نشده';
+        badge.textContent = connected
+            ? `Gemini: ${settings.model || 'active'}`
+            : 'حالت داخلی: فعال';
         badge.classList.toggle('connected', connected);
     }
 
@@ -1701,12 +1863,13 @@ function initAgenticAssistant() {
 
     saveBtn.addEventListener('click', () => {
         kernel.configureProvider({
+            provider: apiKeyInput.value.trim() ? 'gemini' : 'local',
             apiKey: apiKeyInput.value.trim(),
-            model: modelInput.value.trim() || 'gemini-2.0-flash'
+            model: modelInput.value.trim() || 'gemini-2.5-flash'
         });
         apiKeyInput.value = '';
         refreshStatus();
-        appendChat('assistant', 'تنظیمات Gemini ذخیره شد. از حالا می‌توانم روی API واقعی پاسخ بدهم.');
+        appendChat('assistant', 'تنظیمات ذخیره شد. بدون API هم حالت داخلی در دسترس است.');
     });
 
     runBtn.addEventListener('click', async () => {
@@ -1807,7 +1970,8 @@ function initializeUserOnboarding() {
         addPrayerRemindersIfNeeded(profile);
         overlay.classList.remove('visible');
         renderLifeSyncInsights();
-        alert('پروفایل شخصی‌سازی ذخیره شد ✅');
+        renderHomeGlanceStrip();
+        showPageToast('پروفایل شخصی‌سازی ذخیره شد ✅');
     }
 
     submitBtn.addEventListener('click', () => {
@@ -1846,6 +2010,10 @@ window.addEventListener('load', () => {
         loadDashboardSnapshot();
         renderTodaySchedule();
         renderGoalFocus();
+        renderHomeGlanceStrip();
+        initializeMoodCheckin();
+        initializeFocusRoulette();
+        initializeWallpaperPicker();
         renderTodayPrayerTimes();
         renderLifeSyncInsights();
         initAgenticAssistant();
@@ -1872,6 +2040,7 @@ window.addEventListener('load', () => {
                 renderTodayPrayerTimes();
                 renderTodaySchedule();
                 renderGoalFocus();
+                renderHomeGlanceStrip();
                 loadWeeklyStats();
                 renderLifeSyncInsights();
             })
@@ -1890,6 +2059,7 @@ window.addEventListener('storage', event => {
     loadDashboardSnapshot();
     renderTodaySchedule();
     renderGoalFocus();
+    renderHomeGlanceStrip();
     renderTodayPrayerTimes();
     loadWeeklyStats();
     renderLifeSyncInsights();

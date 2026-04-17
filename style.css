@@ -1279,3 +1279,91 @@ body[data-theme='dark'] .assistant-panel {
     background: rgba(37, 99, 235, 0.13);
     color: #1e40af;
 }
+
+/* Daily pulse minimal summary bar */
+.daily-pulse-bar {
+    position: fixed;
+    right: 14px;
+    bottom: 18px;
+    z-index: 1190;
+    direction: rtl;
+}
+
+.daily-pulse-toggle {
+    border: none;
+    border-radius: 999px;
+    min-height: 42px;
+    padding: 0 14px;
+    cursor: pointer;
+    background: rgba(15, 23, 42, 0.88);
+    color: #fff;
+    font-weight: 700;
+}
+
+.daily-pulse-panel {
+    width: min(320px, calc(100vw - 24px));
+    margin-bottom: 8px;
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 14px;
+    box-shadow: 0 24px 45px rgba(15, 23, 42, 0.2);
+    display: none;
+    overflow: hidden;
+}
+
+body[data-theme='dark'] .daily-pulse-panel {
+    background: rgba(15, 23, 42, 0.97);
+    border-color: rgba(148, 163, 184, 0.22);
+}
+
+.daily-pulse-panel.open {
+    display: block;
+}
+
+.daily-pulse-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.daily-pulse-head button {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+    color: inherit;
+    min-height: 26px;
+}
+
+.daily-pulse-stats {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.daily-pulse-stats span {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.daily-pulse-items {
+    max-height: 180px;
+    overflow: auto;
+    padding: 8px 10px;
+}
+
+.daily-pulse-items p {
+    margin: 0 0 6px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.daily-pulse-empty {
+    color: #64748b;
+}
