@@ -35,6 +35,12 @@
                 linear-gradient(180deg, var(--page-bg) 0%, var(--page-bg-alt) 100%);
         }
 
+        body.custom-wallpaper {
+            background: var(--wallpaper-bg) !important;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+
         body::before {
             display: none;
         }
@@ -861,6 +867,155 @@
             overflow: hidden;
         }
 
+        .home-glance-strip {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin: 0 0 20px;
+        }
+
+        .glance-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            display: grid;
+            gap: 6px;
+            min-height: 92px;
+        }
+
+        .glance-card strong {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .glance-card p {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.8;
+            color: var(--text);
+        }
+
+        .page-toast-root {
+            position: fixed;
+            top: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1800;
+            display: grid;
+            gap: 8px;
+            pointer-events: none;
+        }
+
+        .page-toast {
+            min-width: 220px;
+            max-width: min(90vw, 420px);
+            padding: 11px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(15, 118, 110, 0.18);
+            background: rgba(236, 253, 245, 0.96);
+            color: #065f46;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, 0.15);
+            font-size: 13px;
+            font-weight: 700;
+            transition: transform .25s ease, opacity .25s ease;
+        }
+
+        .page-toast.leave {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+
+        .idea-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin: 0 0 20px;
+        }
+
+        .idea-card {
+            background: var(--surface-strong);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 16px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .idea-title {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .idea-subtitle {
+            margin: 0;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.9;
+        }
+
+        .mood-actions {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .mood-btn {
+            min-height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--surface-soft);
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .mood-btn.active {
+            border-color: rgba(15, 118, 110, 0.38);
+            box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+        }
+
+        .idea-result {
+            margin: 0;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px dashed rgba(15, 118, 110, 0.24);
+            background: rgba(15, 118, 110, 0.05);
+            font-size: 12px;
+            line-height: 1.9;
+        }
+
+        .wallpaper-picker {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .wallpaper-option {
+            min-height: 44px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .wallpaper-option.active::after {
+            content: '✓';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            color: #fff;
+            background: rgba(15, 23, 42, 0.28);
+        }
+
+        .wallpaper-reset {
+            justify-self: start;
+        }
+
         .section-frame::before,
         .plan-list::before {
             display: none;
@@ -1442,6 +1597,14 @@
         }
 
         @media (max-width: 1080px) {
+            .home-glance-strip {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .idea-grid {
+                grid-template-columns: 1fr;
+            }
+
             .dashboard-hero,
             .plans-grid {
                 grid-template-columns: 1fr;
@@ -1490,6 +1653,18 @@
             .plan-list {
                 padding: 20px;
                 border-radius: 24px;
+            }
+
+            .home-glance-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .mood-actions {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .wallpaper-picker {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
             .hero-meta,
@@ -1662,6 +1837,59 @@
         </header>
 
         <main>
+            <section class="home-glance-strip" aria-label="خلاصه سریع وضعیت امروز">
+                <article class="glance-card">
+                    <strong>تسک‌ها</strong>
+                    <p id="glanceTasks">در حال بارگذاری...</p>
+                </article>
+                <article class="glance-card">
+                    <strong>رویدادها</strong>
+                    <p id="glanceEvents">در حال بارگذاری...</p>
+                </article>
+                <article class="glance-card">
+                    <strong>عادت‌ها</strong>
+                    <p id="glanceHabits">در حال بارگذاری...</p>
+                </article>
+                <article class="glance-card">
+                    <strong>تمرکز روی هدف</strong>
+                    <p id="glanceFocus">در حال بارگذاری...</p>
+                </article>
+            </section>
+
+            <section class="idea-grid" aria-label="ابزارهای خلاقانه روزانه">
+                <article class="idea-card">
+                    <div class="idea-title">🎭 چک‌این حال‌وهوا</div>
+                    <p class="idea-subtitle">حالت امروزت را ثبت کن تا پیشنهاد روز متناسب‌تر شود.</p>
+                    <div class="mood-actions" id="moodActions">
+                        <button class="mood-btn" data-mood="awful" type="button" aria-label="خیلی بد">😵</button>
+                        <button class="mood-btn" data-mood="low" type="button" aria-label="کم‌انرژی">😕</button>
+                        <button class="mood-btn" data-mood="ok" type="button" aria-label="معمولی">😐</button>
+                        <button class="mood-btn" data-mood="good" type="button" aria-label="خوب">🙂</button>
+                        <button class="mood-btn" data-mood="great" type="button" aria-label="عالی">🔥</button>
+                    </div>
+                    <p id="moodHint" class="idea-result">حالت امروز را انتخاب کن.</p>
+                </article>
+
+                <article class="idea-card">
+                    <div class="idea-title">🎯 رولت تمرکز ۹۰ ثانیه‌ای</div>
+                    <p class="idea-subtitle">یک پیشنهاد فوری و اجرایی از بین مهم‌ترین کارها/عادت‌ها می‌دهد.</p>
+                    <button id="focusRouletteBtn" class="button-accent" type="button">یک پیشنهاد باحال بده</button>
+                    <p id="focusRouletteResult" class="idea-result">آماده‌ام؛ دکمه را بزن.</p>
+                </article>
+
+                <article class="idea-card">
+                    <div class="idea-title">🖼️ انتخاب والپیپر</div>
+                    <p class="idea-subtitle">برای صفحه خانه، بک‌گراند دلخواهت را انتخاب کن.</p>
+                    <div class="wallpaper-picker" id="wallpaperPicker">
+                        <button class="wallpaper-option" type="button" data-wallpaper="mint" style="background: linear-gradient(180deg,#d9f6f2,#c8ece6);"></button>
+                        <button class="wallpaper-option" type="button" data-wallpaper="sunset" style="background: linear-gradient(135deg,#f97316,#ec4899,#8b5cf6);"></button>
+                        <button class="wallpaper-option" type="button" data-wallpaper="night" style="background: linear-gradient(135deg,#0f172a,#1e293b,#334155);"></button>
+                        <button class="wallpaper-option" type="button" data-wallpaper="forest" style="background: linear-gradient(135deg,#0f766e,#16a34a,#84cc16);"></button>
+                    </div>
+                    <button id="wallpaperResetBtn" class="button-outline wallpaper-reset" type="button">بازگشت به حالت پیش‌فرض</button>
+                </article>
+            </section>
+
             <div class="dashboard-grid">
                 <article class="dashboard-card dashboard-card--wide">
                     <div class="card-header-accent">
@@ -1758,6 +1986,7 @@
                 </div>
                 <div id="optimizationPanel" class="optimization-panel"></div>
                 <div id="smartModulesGrid" class="smart-modules-grid"></div>
+                <div id="agentAssistantPanel" style="margin-top: 16px;"></div>
             </section>
 
             <section class="section-frame" style="margin-top: 22px;">
@@ -1787,6 +2016,65 @@
         <div class="ai-phone-body" id="aiPhoneBody"></div>
         <p class="ai-phone-status" id="aiPhoneStatus">پایش خودکار فعال است.</p>
     </aside>
+
+    <section id="onboardingOverlay" class="onboarding-overlay" aria-live="polite">
+        <div class="onboarding-card">
+            <h3>👋 خوش اومدی! قبل از شروع، چند سوال کوتاه</h3>
+            <p>با این اطلاعات، دستیار AI بر اساس شخصیت و سبک زندگی خودت شخصی‌سازی می‌شود.</p>
+            <div class="onboarding-grid">
+                <label>اسمت چیه؟
+                    <input id="onboardingName" type="text" placeholder="مثال: علی">
+                </label>
+                <label>نماز می‌خونی؟
+                    <select id="onboardingPrayer">
+                        <option value="yes">بله</option>
+                        <option value="no">خیر</option>
+                    </select>
+                </label>
+                <label>اهل ورزش هستی؟
+                    <select id="onboardingExercise">
+                        <option value="yes">بله</option>
+                        <option value="no">خیر</option>
+                    </select>
+                </label>
+                <label>چه ورزش‌هایی؟
+                    <input id="onboardingExerciseTypes" type="text" placeholder="مثال: بدنسازی، دویدن">
+                </label>
+                <label>چند بار در هفته ورزش می‌کنی؟
+                    <input id="onboardingExerciseFrequency" type="number" min="0" max="14" value="3">
+                </label>
+                <label>عادت‌های مهم روزانه‌ات چیه؟
+                    <textarea id="onboardingHabits" rows="2" placeholder="مثال: مطالعه، نماز، ورزش، برنامه‌ریزی"></textarea>
+                </label>
+                <label>دلت می‌خواد به چی برسی؟
+                    <textarea id="onboardingGoals" rows="2" placeholder="مثال: مهاجرت، درآمد بالا، بدن سالم"></textarea>
+                </label>
+                <label>به نظرت چقدر تنبلی؟ (۱ کم - ۵ زیاد)
+                    <input id="onboardingLaziness" type="range" min="1" max="5" value="3">
+                </label>
+                <label>چقدر وقت‌شناس هستی؟ (۱ کم - ۵ زیاد)
+                    <input id="onboardingPunctuality" type="range" min="1" max="5" value="3">
+                </label>
+                <label>چقدر تمرکز عمیق داری؟ (۱ کم - ۵ زیاد)
+                    <input id="onboardingFocus" type="range" min="1" max="5" value="3">
+                </label>
+                <label>سبک مشاوره‌ای که دوست داری
+                    <select id="onboardingCoachingStyle">
+                        <option value="strict">سخت‌گیر و نتیجه‌محور</option>
+                        <option value="balanced">متعادل</option>
+                        <option value="gentle">آرام و حمایتی</option>
+                    </select>
+                </label>
+                <label>نکته شخصی خاص برای دستیار
+                    <textarea id="onboardingCustom" rows="2" placeholder="مثال: اگر کارها عقب افتاد، خیلی جدی پیگیریم کن"></textarea>
+                </label>
+            </div>
+            <div class="onboarding-actions">
+                <button id="onboardingSkip" type="button" class="onboarding-btn muted">بعداً انجام می‌دم</button>
+                <button id="onboardingSubmit" type="button" class="onboarding-btn">ثبت و شروع</button>
+            </div>
+        </div>
+    </section>
 
     <script>
         // Navigation Functions
@@ -1826,6 +2114,12 @@
             link.addEventListener('click', () => toggleNav(false));
         });
 
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape') {
+                toggleNav(false);
+            }
+        });
+
         // Load theme and init
         const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
         document.body.setAttribute('data-theme', savedTheme);
@@ -1833,6 +2127,7 @@
 
     </script>
     <script src="dashboard-data.js"></script>
+    <script src="assistant-engine.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

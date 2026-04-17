@@ -74,7 +74,7 @@
             z-index: -1;
         }
 
-        [data-theme="dark"] body {
+        body[data-theme="dark"] {
             background:
                 radial-gradient(circle at 20% 50%, rgba(0,102,204,0.2) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(192,57,43,0.2) 0%, transparent 50%),
@@ -941,11 +941,11 @@
 
         <!-- ناوبری اصلی -->
         <div class="main-nav">
-            <button class="nav-btn active" onclick="switchSection('feed')">📱 فید</button>
-            <button class="nav-btn" onclick="switchSection('chat')">💬 چت</button>
-            <button class="nav-btn" onclick="switchSection('groups')">👥 گروه‌ها</button>
-            <button class="nav-btn" onclick="switchSection('league')">🏆 لیگ</button>
-            <button class="nav-btn" onclick="switchSection('profile')">👤 پروفایل</button>
+            <button class="nav-btn active" onclick="switchSection('feed', this)">📱 فید</button>
+            <button class="nav-btn" onclick="switchSection('chat', this)">💬 چت</button>
+            <button class="nav-btn" onclick="switchSection('groups', this)">👥 گروه‌ها</button>
+            <button class="nav-btn" onclick="switchSection('league', this)">🏆 لیگ</button>
+            <button class="nav-btn" onclick="switchSection('profile', this)">👤 پروفایل</button>
         </div>
 
         <!-- بخش فید -->
@@ -980,8 +980,8 @@
             <div class="chat-section">
                 <div class="chat-sidebar">
                     <div class="chat-tabs">
-                        <button class="chat-tab active" onclick="switchChatTab('private')">خصوصی</button>
-                        <button class="chat-tab" onclick="switchChatTab('groups')">گروهی</button>
+                        <button class="chat-tab active" onclick="switchChatTab('private', this)">خصوصی</button>
+                        <button class="chat-tab" onclick="switchChatTab('groups', this)">گروهی</button>
                     </div>
                     <div class="chat-list" id="chatList">
                         <!-- Chat items will be populated by JavaScript -->
@@ -1348,10 +1348,10 @@
         }
 
         // ============ چت ============
-        function switchChatTab(type) {
+        function switchChatTab(type, button) {
             chatType = type;
             document.querySelectorAll('.chat-tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            if (button) button.classList.add('active');
             renderChatList();
         }
 
@@ -1613,11 +1613,11 @@
         }
 
         // ============ ناوبری ============
-        function switchSection(sectionName) {
+        function switchSection(sectionName, button) {
             document.querySelectorAll('.nav-content').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(sectionName).classList.add('active');
-            event.target.classList.add('active');
+            if (button) button.classList.add('active');
         }
 
         // ============ تم ============
@@ -1626,5 +1626,6 @@
             document.body.setAttribute('data-theme', theme);
         }
     </script>
+    <script src="assistant-engine.js"></script>
 </body>
 </html>
