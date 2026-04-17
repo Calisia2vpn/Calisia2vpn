@@ -1619,6 +1619,117 @@ function renderLifeSyncInsights() {
     bindOptimizationButton();
 }
 
+
+function initAgenticAssistant() {
+    const mount = document.getElementById('agentAssistantPanel');
+    if (!mount || !window.AgenticAssistantKernel) return;
+
+    mount.innerHTML = `
+        <section class="agent-assistant-card" aria-live="polite">
+            <div class="agent-assistant-head">
+                <h3>🧠 دستیار ایجنتی</h3>
+                <span id="assistantConnectionBadge" class="assistant-badge">Gemini: تنظیم نشده</span>
+            </div>
+            <p class="assistant-hint">دستور نمونه: «یک قسط ۲۵۰۰۰۰۰ برای بیمه اضافه کن» یا «یادآوری تماس با حسابدار ساعت 18:30»</p>
+            <div class="assistant-config-row">
+                <input id="assistantApiKey" type="password" class="assistant-input" placeholder="Gemini API Key">
+                <input id="assistantModel" type="text" class="assistant-input" value="gemini-2.0-flash" placeholder="Model">
+                <button id="assistantSaveConfig" type="button" class="assistant-btn secondary">ثبت تنظیمات</button>
+            </div>
+            <div class="assistant-chat-log" id="assistantChatLog"></div>
+            <div class="assistant-action-row">
+                <input id="assistantPrompt" type="text" class="assistant-input" placeholder="به دستیار بگو چه کاری انجام دهد...">
+                <button id="assistantRun" type="button" class="assistant-btn">اجرا</button>
+            </div>
+        </section>
+    `;
+
+    const kernel = new window.AgenticAssistantKernel({
+        hooks: {
+            getSignals: () => {
+                const { tasks, habits, dietLog, exercises } = readLifeSyncArrays();
+                return collectLocalAiSignals({ tasks, habits, dietLog, exercises });
+            },
+            buildContext: () => {
+                const { tasks, habits, dietLog, goals, assets } = readLifeSyncArrays();
+                return {
+                    now: new Date().toISOString(),
+                    pendingTasks: tasks.filter(task => !task.completed).slice(0, 10),
+                    habits: habits.slice(0, 10),
+                    todayDiet: dietLog.filter(item => item.date === normalizeGregorianDate(new Date())),
+                    goals: goals.slice(0, 8),
+                    assetsTotal: assets.reduce((sum, item) => sum + (Number(item.totalValue) || 0), 0)
+                };
+            }
+        }
+    });
+
+    const apiKeyInput = document.getElementById('assistantApiKey');
+    const modelInput = document.getElementById('assistantModel');
+    const saveBtn = document.getElementById('assistantSaveConfig');
+    const runBtn = document.getElementById('assistantRun');
+    const promptInput = document.getElementById('assistantPrompt');
+    const chatLog = document.getElementById('assistantChatLog');
+    const badge = document.getElementById('assistantConnectionBadge');
+
+    function appendChat(role, text) {
+        if (!chatLog) return;
+        const node = document.createElement('article');
+        node.className = `assistant-message ${role}`;
+        node.innerHTML = `<strong>${role === 'assistant' ? 'دستیار' : 'شما'}</strong><p>${String(text || '').replace(/</g, '&lt;')}</p>`;
+        chatLog.appendChild(node);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function refreshStatus() {
+        const settings = kernel.getSettings();
+        const connected = Boolean(settings.apiKey);
+        badge.textContent = connected ? `Gemini: ${settings.model || 'active'}` : 'Gemini: تنظیم نشده';
+        badge.classList.toggle('connected', connected);
+    }
+
+    const history = kernel.getHistory();
+    history.slice(-10).forEach(item => appendChat(item.role, item.text));
+
+    saveBtn.addEventListener('click', () => {
+        kernel.configureProvider({
+            apiKey: apiKeyInput.value.trim(),
+            model: modelInput.value.trim() || 'gemini-2.0-flash'
+        });
+        apiKeyInput.value = '';
+        refreshStatus();
+        appendChat('assistant', 'تنظیمات Gemini ذخیره شد. از حالا می‌توانم روی API واقعی پاسخ بدهم.');
+    });
+
+    runBtn.addEventListener('click', async () => {
+        const prompt = promptInput.value.trim();
+        if (!prompt) return;
+        promptInput.value = '';
+        appendChat('user', prompt);
+        runBtn.disabled = true;
+        try {
+            const response = await kernel.run(prompt);
+            appendChat('assistant', response);
+            renderLifeSyncInsights();
+        } catch (error) {
+            appendChat('assistant', `خطا: ${error.message}`);
+        } finally {
+            runBtn.disabled = false;
+        }
+    });
+
+    promptInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            runBtn.click();
+        }
+    });
+
+    kernel.startMonitoring();
+    refreshStatus();
+    window.agenticAssistant = kernel;
+}
+
 window.addEventListener('load', () => {
     const savedTheme = localStorage.getItem('dashboardTheme') || 'light';
     setTheme(savedTheme);
@@ -1644,6 +1755,7 @@ window.addEventListener('load', () => {
         renderGoalFocus();
         renderTodayPrayerTimes();
         renderLifeSyncInsights();
+        initAgenticAssistant();
         if (timerDisplay) {
             initializeDashboardTimerControls();
         }
