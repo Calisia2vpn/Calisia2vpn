@@ -1,11 +1,14 @@
 (function () {
   const TOKEN_KEY = 'accessToken';
+  const GUEST_KEY = 'guestMode';
   const API_BASE_KEY = 'apiBaseUrl';
   const PUBLIC_PAGES = new Set(['auth.html']);
   const page = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
   const apiBase = window.__APP_CONFIG?.API_BASE_URL || localStorage.getItem(API_BASE_KEY) || '/api';
 
   if (PUBLIC_PAGES.has(page)) return;
+
+  if (localStorage.getItem(GUEST_KEY) === '1') return;
 
   const token = localStorage.getItem(TOKEN_KEY);
   if (!token) {
