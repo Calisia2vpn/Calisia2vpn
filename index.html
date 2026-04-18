@@ -1707,9 +1707,88 @@
                 bottom: 16px;
             }
         }
+
+        /* مینیمال‌سازی صفحه‌ی اول */
+        body.minimal-home .page-shell {
+            max-width: 980px;
+            padding-top: 18px;
+        }
+
+        body.minimal-home .dashboard-hero {
+            grid-template-columns: 1fr;
+            gap: 16px;
+            padding: 22px;
+            border-radius: 24px;
+            margin-bottom: 18px;
+        }
+
+        body.minimal-home .hero-header h1 {
+            font-size: clamp(30px, 4.2vw, 46px);
+            margin: 12px 0 8px;
+        }
+
+        body.minimal-home .hero-subtitle {
+            font-size: 15px;
+            line-height: 1.9;
+            max-width: 100%;
+        }
+
+        body.minimal-home .hero-quote-strip,
+        body.minimal-home .idea-grid,
+        body.minimal-home .dashboard-grid,
+        body.minimal-home .section-frame:nth-of-type(2),
+        body.minimal-home .section-frame:nth-of-type(3),
+        body.minimal-home .ai-phone-widget {
+            display: none !important;
+        }
+
+        body.minimal-home .home-glance-strip {
+            margin-bottom: 14px;
+            gap: 10px;
+        }
+
+        body.minimal-home .glance-card {
+            padding: 12px 14px;
+            border-radius: 14px;
+            min-height: unset;
+        }
+
+        body.minimal-home .section-frame {
+            margin-top: 14px !important;
+            border-radius: 18px;
+            padding: 18px 16px;
+            box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
+        }
+
+        body.minimal-home .section-title {
+            margin-bottom: 4px;
+            font-size: 20px;
+        }
+
+        body.minimal-home .section-subtitle {
+            margin-bottom: 12px;
+            font-size: 13px;
+            line-height: 1.8;
+        }
+
+        body.minimal-home .module-hub-grid {
+            gap: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+        }
+
+        body.minimal-home .module-hub-card {
+            border-radius: 14px;
+            padding: 12px 8px;
+            gap: 6px;
+            min-height: 78px;
+        }
+
+        body.minimal-home .module-hub-icon {
+            font-size: 20px;
+        }
     </style>
 </head>
-<body data-theme="light">
+<body data-theme="light" class="minimal-home">
     <!-- Navigation Sidebar -->
     <div class="nav-sidebar" id="navSidebar">
         <div class="nav-header">
@@ -1781,8 +1860,8 @@
         <header class="hero-header dashboard-hero">
             <div class="hero-copy">
                 <span class="hero-label">داشبورد روزانه</span>
-                <h1>روزت را جمع‌وجور و بدون شلوغی جلو ببر</h1>
-                <p class="hero-subtitle">صفحه‌ی اول را جوری چیدم که هم چشم‌نوازتر باشد، هم اطلاعات مهم و لینک‌های اصلی در یک نقطه‌ی تمیز و زنده جمع شوند.</p>
+                <h1>همه‌چیز مهمِ امروز، یکجا</h1>
+                <p class="hero-subtitle">این صفحه سبک‌تر و جمع‌وجورتر شده تا سریع به اطلاعات اصلی و مسیرهای ضروری برسید؛ بدون شلوغی اضافه.</p>
                 <div class="hero-quote-strip">
                     <span class="hero-quote-label">فکر امروز</span>
                     <p id="dailyQuote">هر روز فرصتی تازه است تا وجود را به نظم بکشی.</p>
