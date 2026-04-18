@@ -9,96 +9,128 @@
     <title>ورود / ثبت‌نام</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .auth-shell { max-width: 560px; margin: 48px auto; padding: 18px; }
+        body { display: grid; place-items: center; padding: 24px; }
+        .auth-shell { width: min(100%, 960px); }
+        .auth-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+            gap: 18px;
+            align-items: stretch;
+        }
+        .auth-panel,
         .auth-card {
-            background: linear-gradient(160deg, rgba(255,255,255,0.92), rgba(240,255,251,0.84));
+            background: rgba(255,255,255,0.88);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 22px;
-            box-shadow: 0 22px 50px rgba(15, 23, 42, 0.12);
-            position: relative;
-            overflow: hidden;
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
         }
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at top right, rgba(20,184,166,0.14), transparent 32%);
-            pointer-events: none;
+        .auth-panel { padding: 28px; display: grid; gap: 14px; }
+        .auth-card { padding: 22px; }
+        .auth-kicker { color: var(--emerald); font-weight: 800; font-size: 13px; }
+        .auth-title { margin: 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.15; }
+        .auth-subtitle { margin: 0; color: var(--text-muted); line-height: 1.9; }
+        .auth-points { display: grid; gap: 10px; margin-top: 8px; }
+        .auth-point {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(15,118,110,0.08);
+            color: var(--text);
+            font-size: 14px;
         }
-        .auth-title { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.02em; }
-        .auth-subtitle { margin: 0 0 18px; color: var(--text-muted); line-height: 1.9; }
-        .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; position: relative; z-index: 1; }
-        .auth-tab { border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.72); padding: 10px; font-weight: 700; cursor: pointer; }
-        .auth-tab.active { background: linear-gradient(135deg, #0f766e, #14b8a6); color: #fff; border-color: transparent; box-shadow: 0 8px 20px rgba(15,118,110,0.24); }
-        .auth-form { display: none; gap: 12px; position: relative; z-index: 1; }
+        .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .auth-tab {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.72);
+            padding: 11px 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .auth-tab.active { background: #0f766e; color: #fff; border-color: #0f766e; }
+        .auth-form { display: none; gap: 12px; }
         .auth-form.active { display: grid; }
-        .auth-form label { font-size: 13px; color: var(--text-muted); font-weight: 600; }
-        .auth-form input { width: 100%; background: rgba(255,255,255,0.86); }
-        .auth-submit { margin-top: 6px; }
-        .auth-message { min-height: 24px; margin-top: 10px; font-size: 13px; }
+        .auth-form label { display: grid; gap: 6px; font-size: 13px; color: var(--text-muted); font-weight: 600; }
+        .auth-form input { width: 100%; background: rgba(255,255,255,0.96); }
+        .auth-submit { margin-top: 4px; }
+        .auth-form.is-loading { opacity: 0.7; pointer-events: none; }
+        .auth-message { min-height: 24px; margin-top: 12px; font-size: 13px; }
         .auth-message.error { color: #b42318; }
         .auth-message.success { color: #0f766e; }
-        .auth-links { margin-top: 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
+        .auth-links { margin-top: 16px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
         .auth-skip-btn {
-            margin-top: 10px;
             width: 100%;
             border: 1px dashed rgba(15,118,110,0.36);
             border-radius: 12px;
-            padding: 10px 12px;
-            background: rgba(255,255,255,0.52);
+            padding: 11px 12px;
+            background: transparent;
             color: #0f766e;
             font-size: 13px;
             font-weight: 700;
             cursor: pointer;
         }
-        .auth-skip-btn:hover {
-            background: rgba(20,184,166,0.14);
+        .auth-skip-btn:hover { background: rgba(15,118,110,0.08); }
+        @media (max-width: 860px) {
+            .auth-layout { grid-template-columns: 1fr; }
+            .auth-panel { order: 2; }
+            .auth-card { order: 1; }
         }
     </style>
 </head>
 <body>
     <div class="auth-shell">
-        <div class="auth-card">
-            <h1 class="auth-title">ورود و ثبت‌نام</h1>
-            <p class="auth-subtitle">برای شروع، حساب بساز یا وارد شو.</p>
+        <div class="auth-layout">
+            <section class="auth-panel">
+                <span class="auth-kicker">Calisia</span>
+                <h1 class="auth-title">ورود ساده و سریع، بدون شلوغی اضافه</h1>
+                <p class="auth-subtitle">صفحه ورود و ثبت‌نام بازطراحی شد تا فرم‌ها ساده‌تر، واضح‌تر و بدون تداخل باشند.</p>
+                <div class="auth-points">
+                    <div class="auth-point">ثبت‌نام فقط با اطلاعات ضروری انجام می‌شود.</div>
+                    <div class="auth-point">نسخه انگلیسی و فارسی روی همین ساختار مشترک اجرا می‌شوند.</div>
+                    <div class="auth-point">اگر فعلاً نمی‌خواهی وارد شوی، می‌توانی به‌صورت مهمان ادامه بدهی.</div>
+                </div>
+            </section>
 
-            <div class="auth-tabs">
-                <button type="button" id="tabLogin" class="auth-tab active">ورود</button>
-                <button type="button" id="tabRegister" class="auth-tab">ثبت‌نام</button>
-            </div>
+            <div class="auth-card">
+                <h2 class="auth-title" style="font-size:28px; margin-bottom:8px;">ورود و ثبت‌نام</h2>
+                <p class="auth-subtitle" style="margin-bottom:18px;">برای شروع، حساب بساز یا وارد شو.</p>
 
-            <form id="loginForm" class="auth-form active">
-                <label>شماره موبایل یا ایمیل
-                    <input type="text" id="loginInput" placeholder="مثال: 0912xxxxxxx یا email@site.com" required>
-                </label>
-                <label>رمز عبور
-                    <input type="password" id="loginPassword" placeholder="رمز عبور" required>
-                </label>
-                <button type="submit" class="btn btn-primary auth-submit">ورود</button>
-            </form>
+                <div class="auth-tabs">
+                    <button type="button" id="tabLogin" class="auth-tab active">ورود</button>
+                    <button type="button" id="tabRegister" class="auth-tab">ثبت‌نام</button>
+                </div>
 
-            <form id="registerForm" class="auth-form">
-                <label>نام و نام خانوادگی
-                    <input type="text" id="regName" placeholder="مثال: علی رضایی" required>
-                </label>
-                <label>شماره موبایل
-                    <input type="text" id="regMobile" placeholder="مثال: 0912xxxxxxx" required>
-                </label>
-                <label>ایمیل (اختیاری)
-                    <input type="email" id="regEmail" placeholder="email@site.com">
-                </label>
-                <label>رمز عبور
-                    <input type="password" id="regPassword" placeholder="حداقل ۶ کاراکتر" required>
-                </label>
-                <button type="submit" class="btn btn-primary auth-submit">ثبت‌نام</button>
-            </form>
+                <form id="loginForm" class="auth-form active" novalidate>
+                    <label>شماره موبایل یا ایمیل
+                        <input type="text" id="loginInput" placeholder="0912xxxxxxx یا email@site.com" autocomplete="username" required>
+                    </label>
+                    <label>رمز عبور
+                        <input type="password" id="loginPassword" placeholder="رمز عبور" autocomplete="current-password" required>
+                    </label>
+                    <button type="submit" class="btn btn-primary auth-submit">ورود</button>
+                </form>
 
-            <div id="authMessage" class="auth-message"></div>
-            <button id="skipAuthBtn" type="button" class="auth-skip-btn">فعلاً رد کن و مهمان وارد شو</button>
-            <div class="auth-links">
-                <a href="index.html">بازگشت به داشبورد</a>
-                <a href="#" id="apiHintLink">تنظیم آدرس API</a>
+                <form id="registerForm" class="auth-form" novalidate>
+                    <label>نام و نام خانوادگی
+                        <input type="text" id="regName" placeholder="مثال: علی رضایی" autocomplete="name" required>
+                    </label>
+                    <label>شماره موبایل
+                        <input type="tel" id="regMobile" placeholder="مثال: 0912xxxxxxx" inputmode="numeric" autocomplete="tel" required>
+                    </label>
+                    <label>ایمیل (اختیاری)
+                        <input type="email" id="regEmail" placeholder="email@site.com" autocomplete="email">
+                    </label>
+                    <label>رمز عبور
+                        <input type="password" id="regPassword" placeholder="حداقل ۸ کاراکتر" autocomplete="new-password" required>
+                    </label>
+                    <button type="submit" class="btn btn-primary auth-submit">ثبت‌نام</button>
+                </form>
+
+                <div id="authMessage" class="auth-message"></div>
+                <button id="skipAuthBtn" type="button" class="auth-skip-btn">فعلاً رد کن و مهمان وارد شو</button>
+                <div class="auth-links">
+                    <a href="index.html">بازگشت به داشبورد</a>
+                    <a href="#" id="apiHintLink">تنظیم آدرس API</a>
+                </div>
             </div>
         </div>
     </div>

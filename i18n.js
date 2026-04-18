@@ -1,13 +1,29 @@
 (() => {
   const STORAGE_KEY = 'preferredLanguage';
   const defaultLanguage = 'fa';
-
   const textSourceMap = new WeakMap();
   const attrSourceMap = new WeakMap();
   let isApplyingLanguage = false;
   let observerDebounceTimer = null;
 
-  const faToEn = {
+  const translations = {
+    'ورود': 'Login',
+    'ثبت‌نام': 'Sign Up',
+    'ورود و ثبت‌نام': 'Login & Sign Up',
+    'برای شروع، حساب بساز یا وارد شو.': 'Create an account or log in to start.',
+    'ورود ساده و سریع، بدون شلوغی اضافه': 'Simple and fast access, without clutter.',
+    'صفحه ورود و ثبت‌نام بازطراحی شد تا فرم‌ها ساده‌تر، واضح‌تر و بدون تداخل باشند.': 'The auth page is redesigned to make forms simpler, clearer, and conflict-free.',
+    'ثبت‌نام فقط با اطلاعات ضروری انجام می‌شود.': 'Sign up only asks for essential information.',
+    'نسخه انگلیسی و فارسی روی همین ساختار مشترک اجرا می‌شوند.': 'Persian and English now share the same stable layout.',
+    'اگر فعلاً نمی‌خواهی وارد شوی، می‌توانی به‌صورت مهمان ادامه بدهی.': 'If you do not want to sign in yet, you can continue as a guest.',
+    'نام و نام خانوادگی': 'Full Name',
+    'شماره موبایل': 'Mobile Number',
+    'ایمیل (اختیاری)': 'Email (Optional)',
+    'رمز عبور': 'Password',
+    'شماره موبایل یا ایمیل': 'Mobile Number or Email',
+    'بازگشت به داشبورد': 'Back to Dashboard',
+    'تنظیم آدرس API': 'Set API URL',
+    'فعلاً رد کن و مهمان وارد شو': 'Skip for now and continue as guest',
     'خانه داشبورد': 'Dashboard Home',
     'تسک‌ها': 'Tasks',
     'عادت‌ها': 'Habits',
@@ -19,127 +35,51 @@
     'تغذیه': 'Nutrition',
     'جسم‌پرداز': 'Fitness',
     'روابط': 'Social',
+    'خروج از حساب': 'Logout',
+    'داشبورد روزانه': 'Daily Dashboard',
+    'همه‌چیز مهمِ امروز، یکجا': 'Everything important today, in one place.',
+    'نسخه فارسی سبک‌تر شد تا بدون تداخل و شلوغی، سریع به مسیرهای اصلی برسی.': 'The Persian homepage is now lighter so you can reach key paths faster with less visual noise.',
     'برنامه‌ی امروز': 'Today Plan',
     'تقویم کامل': 'Full Calendar',
-    'تغییر تم': 'Toggle Theme',
-    'تم تاریک': 'Dark Theme',
-    'تم روشن': 'Light Theme',
+    'وقت جاری': 'Current Time',
+    'روز و تاریخ': 'Date',
+    'تقویم امروز': 'Today Calendar',
+    'اوقات شرعی': 'Prayer Times',
+    'نماز بعدی': 'Next Prayer',
+    'مسیرهای سریع': 'Quick Links',
+    'فقط سه مسیر ضروری نگه داشته شد تا خانه ساده‌تر بماند.': 'Only three essential shortcuts remain to keep the homepage simple.',
+    'امروز': 'Today',
+    'ماژول‌ها': 'Modules',
+    'هم‌افزایی': 'Overview',
+    'ابزار زمان': 'Time Tools',
+    'خلاصه سریع وضعیت امروز': 'Quick Overview',
+    'رویدادها': 'Events',
+    'تمرکز روی هدف': 'Goal Focus',
+    'در حال بارگذاری...': 'Loading...',
+    'همه ماژول‌ها': 'All Modules',
+    'همه‌ی بخش‌ها یکجا جمع شده‌اند تا لازم نباشد دنبالش بگردی.': 'All sections are gathered here so you can access them quickly.',
+    'داشبورد': 'Dashboard',
+    'تم تاریک': 'Dark Mode',
+    'تم روشن': 'Light Mode',
     'منو': 'Menu',
     'بستن': 'Close',
     'شروع': 'Start',
     'بازنشانی': 'Reset',
-    'ماه قبل': 'Prev Month',
-    'ماه بعد': 'Next Month',
-    'امروز': 'Today',
     'ذخیره': 'Save',
     'انصراف': 'Cancel',
-    'ثبت': 'Submit',
-    'لغو ویرایش': 'Cancel Edit',
-    'افزودن': 'Add',
-    'لغو': 'Cancel',
-    'ثبت و شروع': 'Save & Start',
-    'بعداً انجام می‌دم': 'Do it later',
-    'خلاصه سریع وضعیت امروز': 'Quick Today Summary',
-    'همه ماژول‌ها': 'All Modules',
-    'داشبورد روزانه': 'Daily Dashboard',
-    'همه‌چیز مهمِ امروز، یکجا': 'Everything important today, in one place',
-    'این صفحه سبک‌تر و جمع‌وجورتر شده تا سریع به اطلاعات اصلی و مسیرهای ضروری برسید؛ بدون شلوغی اضافه.': 'This page is lighter and more compact so you can quickly access key information and essential paths without clutter.',
-    'فکر امروز': 'Today Thought',
-    'نماز بعدی': 'Next Prayer',
-    'اوقات شرعی': 'Prayer Times',
-    'وقت جاری': 'Current Time',
-    'روز و تاریخ': 'Day & Date',
-    'لینک‌های کاربردی داخلی': 'Quick Internal Links',
-    'ماژول‌های هوشمند جدید': 'New Smart Modules',
-    'بهینگی موقتاً غیرفعال است': 'Optimization is temporarily disabled',
-    'داشبورد': 'Dashboard',
-    'فیلتر': 'Filter',
-    'افزودن دارایی': 'Add Asset',
-    'ثبت در برنامه ✅': 'Log to Plan ✅',
-    'ثبت ورزش ✅': 'Save Workout ✅',
-    'محاسبه 🧮': 'Calculate 🧮',
-    '+ گروه جدید': '+ New Group',
-    'ذخیره تغییرات': 'Save Changes',
-    'آمار و گزارشات من': 'My Analytics & Reports',
-    'ورود': 'Login',
-    'ثبت‌نام': 'Sign Up',
-    'ورود و ثبت‌نام': 'Login & Sign Up',
-    'برای شروع، حساب بساز یا وارد شو.': 'Create an account or login to start.',
-    'نام و نام خانوادگی': 'Full Name',
-    'شماره موبایل': 'Mobile Number',
-    'ایمیل (اختیاری)': 'Email (Optional)',
-    'رمز عبور': 'Password',
-    'شماره موبایل یا ایمیل': 'Mobile or Email',
-    'بازگشت به داشبورد': 'Back to Dashboard',
-    'تنظیم آدرس API': 'Set API Base URL',
-    'خروج از حساب': 'Logout',
-    'فعلاً رد کن و مهمان وارد شو': 'Skip for now and continue as guest'
+    'افزودن': 'Add'
   };
 
-  const faPhraseReplace = [
-    ['فروردین', 'Farvardin'], ['اردیبهشت', 'Ordibehesht'], ['خرداد', 'Khordad'], ['تیر', 'Tir'],
-    ['مرداد', 'Mordad'], ['شهریور', 'Shahrivar'], ['مهر', 'Mehr'], ['آبان', 'Aban'],
-    ['آذر', 'Azar'], ['دی', 'Dey'], ['بهمن', 'Bahman'], ['اسفند', 'Esfand'],
-    ['شنبه', 'Saturday'], ['یکشنبه', 'Sunday'], ['دوشنبه', 'Monday'], ['سه‌شنبه', 'Tuesday'],
-    ['چهارشنبه', 'Wednesday'], ['پنج‌شنبه', 'Thursday'], ['جمعه', 'Friday']
-  ];
-
-  const faWordReplace = {
-    'در': 'in',
-    'حال': 'state',
-    'بارگذاری': 'loading',
-    'زمان': 'time',
-    'روز': 'day',
-    'ماه': 'month',
-    'سال': 'year',
-    'رویداد': 'event',
-    'رویدادها': 'events',
-    'اولویت': 'priority',
-    'بالا': 'high',
-    'متوسط': 'medium',
-    'کم': 'low',
-    'پیشنهاد': 'suggestion',
-    'هدف': 'goal',
-    'اهداف': 'goals',
-    'امتیاز': 'score',
-    'وضعیت': 'status',
-    'هشدار': 'alert',
-    'فعال': 'active',
-    'غیرفعال': 'inactive',
-    'ثبت': 'save',
-    'پیشرفت': 'progress',
-    'لیست': 'list'
+  const enToFa = Object.fromEntries(Object.entries(translations).map(([fa, en]) => [en, fa]));
+  const monthMap = {
+    'فروردین': 'Farvardin', 'اردیبهشت': 'Ordibehesht', 'خرداد': 'Khordad', 'تیر': 'Tir',
+    'مرداد': 'Mordad', 'شهریور': 'Shahrivar', 'مهر': 'Mehr', 'آبان': 'Aban',
+    'آذر': 'Azar', 'دی': 'Dey', 'بهمن': 'Bahman', 'اسفند': 'Esfand'
   };
-
-  const enToFa = Object.fromEntries(Object.entries(faToEn).map(([fa, en]) => [en, fa]));
-
-  const faDigits = '۰۱۲۳۴۵۶۷۸۹';
-  const arDigits = '٠١٢٣٤٥٦٧٨٩';
-
-  function toEnglishDigits(value) {
-    return String(value)
-      .replace(/[۰-۹]/g, d => String(faDigits.indexOf(d)))
-      .replace(/[٠-٩]/g, d => String(arDigits.indexOf(d)));
-  }
-
-  function dictionaryTranslate(value) {
-    let out = String(value);
-    for (const [fa, en] of faPhraseReplace) {
-      out = out.split(fa).join(en);
-    }
-
-    for (const [fa, en] of Object.entries(faToEn)) {
-      out = out.split(fa).join(en);
-    }
-
-    for (const [fa, en] of Object.entries(faWordReplace)) {
-      const pattern = new RegExp(`(^|\\s|\\b)${fa}(\\s|\\b|$)`, 'g');
-      out = out.replace(pattern, (_, p1, p2) => `${p1}${en}${p2}`);
-    }
-
-    out = toEnglishDigits(out);
-    return out;
-  }
+  const dayMap = {
+    'شنبه': 'Saturday', 'یکشنبه': 'Sunday', 'دوشنبه': 'Monday', 'سه‌شنبه': 'Tuesday',
+    'چهارشنبه': 'Wednesday', 'پنج‌شنبه': 'Thursday', 'جمعه': 'Friday'
+  };
 
   function getCurrentLanguage() {
     const lang = localStorage.getItem(STORAGE_KEY);
@@ -147,95 +87,67 @@
   }
 
   function rememberOriginalText(node) {
-    if (!textSourceMap.has(node)) {
-      textSourceMap.set(node, node.nodeValue);
+    if (!textSourceMap.has(node)) textSourceMap.set(node, node.nodeValue);
+  }
+
+  function rememberOriginalAttributes(element) {
+    if (!attrSourceMap.has(element)) {
+      attrSourceMap.set(element, {
+        placeholder: element.getAttribute('placeholder'),
+        title: element.getAttribute('title'),
+        ariaLabel: element.getAttribute('aria-label')
+      });
     }
   }
 
-  function rememberOriginalAttr(el, attr) {
-    if (!attrSourceMap.has(el)) attrSourceMap.set(el, {});
-    const store = attrSourceMap.get(el);
-    if (!(attr in store)) store[attr] = el.getAttribute(attr);
-  }
-
-  function translateSingleText(rawFaText, targetLang) {
-    if (targetLang === 'fa') return rawFaText;
-
-    const trimmed = rawFaText.trim();
-    if (!trimmed) return rawFaText;
-
-    if (faToEn[trimmed]) {
-      return rawFaText.replace(trimmed, faToEn[trimmed]);
+  function translateText(value, targetLang) {
+    const input = String(value || '').trim();
+    if (!input) return value;
+    if (targetLang === 'en') {
+      if (translations[input]) return translations[input];
+      let out = String(value);
+      Object.entries(monthMap).forEach(([fa, en]) => { out = out.split(fa).join(en); });
+      Object.entries(dayMap).forEach(([fa, en]) => { out = out.split(fa).join(en); });
+      out = out.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+      return out;
     }
-
-    return dictionaryTranslate(rawFaText);
+    return enToFa[input] || value;
   }
 
-  function translateTextNodes(targetLang) {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
-      acceptNode(node) {
-        if (!node.parentElement) return NodeFilter.FILTER_REJECT;
-        const tag = node.parentElement.tagName;
-        if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(tag)) return NodeFilter.FILTER_REJECT;
-        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_SKIP;
-        return NodeFilter.FILTER_ACCEPT;
-      }
-    });
+  function shouldTranslateTextNode(node) {
+    const parent = node.parentElement;
+    if (!parent) return false;
+    if (parent.closest('script, style')) return false;
+    return Boolean(node.nodeValue && node.nodeValue.trim());
+  }
 
+  function translatePageText(targetLang) {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
     const nodes = [];
     while (walker.nextNode()) nodes.push(walker.currentNode);
-
     nodes.forEach(node => {
+      if (!shouldTranslateTextNode(node)) return;
       rememberOriginalText(node);
-      const rawFaText = textSourceMap.get(node);
-      if (targetLang === 'fa') {
-        node.nodeValue = rawFaText;
-        return;
-      }
-      node.nodeValue = translateSingleText(rawFaText, targetLang);
+      const original = textSourceMap.get(node);
+      node.nodeValue = targetLang === 'fa' ? original : translateText(original, 'en');
     });
   }
 
   function translateAttributes(targetLang) {
-    const attrs = ['placeholder', 'title', 'aria-label'];
-
-    document.querySelectorAll('*').forEach(el => {
-      attrs.forEach(attr => {
-        if (!el.hasAttribute(attr)) return;
-
-        rememberOriginalAttr(el, attr);
-        const source = attrSourceMap.get(el)?.[attr] ?? el.getAttribute(attr);
-        if (!source) return;
-
-        if (targetLang === 'fa') {
-          el.setAttribute(attr, source);
-          return;
-        }
-
-        const trimmed = source.trim();
-        if (faToEn[trimmed]) {
-          el.setAttribute(attr, source.replace(trimmed, faToEn[trimmed]));
-        } else {
-          el.setAttribute(attr, dictionaryTranslate(source));
-        }
+    document.querySelectorAll('[placeholder], [title], [aria-label]').forEach(element => {
+      rememberOriginalAttributes(element);
+      const original = attrSourceMap.get(element);
+      [['placeholder', original.placeholder], ['title', original.title], ['aria-label', original.ariaLabel]].forEach(([attr, value]) => {
+        if (!value) return;
+        element.setAttribute(attr, targetLang === 'fa' ? value : translateText(value, 'en'));
       });
     });
   }
 
-  function applyLanguage(targetLang) {
-    if (isApplyingLanguage) return;
-    isApplyingLanguage = true;
-
-    localStorage.setItem(STORAGE_KEY, targetLang);
-    document.documentElement.lang = targetLang === 'en' ? 'en' : 'fa';
-    document.documentElement.dir = targetLang === 'en' ? 'ltr' : 'rtl';
+  function updateDocumentLanguage(targetLang) {
+    document.documentElement.lang = targetLang;
+    document.documentElement.dir = targetLang === 'fa' ? 'rtl' : 'ltr';
     document.body.classList.toggle('lang-en', targetLang === 'en');
-
-    translateTextNodes(targetLang);
-    translateAttributes(targetLang);
-    updateSwitcher(targetLang);
-
-    isApplyingLanguage = false;
   }
 
   function updateSwitcher(targetLang) {
@@ -246,35 +158,42 @@
     enBtn.classList.toggle('active', targetLang === 'en');
   }
 
+  function applyLanguage(targetLang) {
+    if (isApplyingLanguage) return;
+    isApplyingLanguage = true;
+    localStorage.setItem(STORAGE_KEY, targetLang);
+    updateDocumentLanguage(targetLang);
+    translatePageText(targetLang);
+    translateAttributes(targetLang);
+    updateSwitcher(targetLang);
+    isApplyingLanguage = false;
+  }
+
   function mountSwitcher() {
     if (document.getElementById('langSwitcher')) return;
     const wrap = document.createElement('div');
     wrap.id = 'langSwitcher';
     wrap.className = 'lang-switcher';
-    wrap.innerHTML = `
-      <button id="langFaBtn" type="button" class="lang-btn">FA</button>
-      <button id="langEnBtn" type="button" class="lang-btn">EN</button>
-    `;
+    wrap.innerHTML = '<button id="langFaBtn" type="button" class="lang-btn">FA</button><button id="langEnBtn" type="button" class="lang-btn">EN</button>';
     document.body.appendChild(wrap);
-
     document.getElementById('langFaBtn')?.addEventListener('click', () => applyLanguage('fa'));
     document.getElementById('langEnBtn')?.addEventListener('click', () => applyLanguage('en'));
   }
 
-  window.setLanguage = applyLanguage;
-
-  window.addEventListener('load', () => {
-    mountSwitcher();
-    applyLanguage(getCurrentLanguage());
-
+  function observeMutations() {
     const observer = new MutationObserver(() => {
-      if (isApplyingLanguage) return;
-      clearTimeout(observerDebounceTimer);
-      observerDebounceTimer = setTimeout(() => {
-        const lang = getCurrentLanguage();
-        applyLanguage(lang);
-      }, 40);
+      if (observerDebounceTimer) clearTimeout(observerDebounceTimer);
+      observerDebounceTimer = setTimeout(() => applyLanguage(getCurrentLanguage()), 60);
     });
     observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  window.applyLanguage = applyLanguage;
+  window.getCurrentLanguage = getCurrentLanguage;
+
+  window.addEventListener('DOMContentLoaded', () => {
+    mountSwitcher();
+    applyLanguage(getCurrentLanguage());
+    observeMutations();
   });
 })();

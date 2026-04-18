@@ -57,10 +57,13 @@ function updateHeaderClock() {
 }
 
 function pickDailyQuote() {
+    const quoteNode = document.getElementById('dailyQuote');
+    const authorNode = document.getElementById('quoteAuthor');
+    if (!quoteNode || !authorNode) return;
     const index = today.getDate() % motivationQuotes.length;
     const quote = motivationQuotes[index];
-    document.getElementById('dailyQuote').textContent = quote.quote;
-    document.getElementById('quoteAuthor').textContent = `- ${quote.author}`;
+    quoteNode.textContent = quote.quote;
+    authorNode.textContent = `- ${quote.author}`;
 }
 
 function formatFa(value) {
@@ -671,9 +674,7 @@ function initializeMoodCheckin() {
 }
 
 function initializeFocusRoulette() {
-    const button = document.getElementById('focusRouletteBtn');
-    const result = document.getElementById('focusRouletteResult');
-    if (!button || !result) return;
+    return;
 
     function buildCandidates() {
         const tasks = readDashboardTasks()
@@ -703,9 +704,7 @@ function initializeFocusRoulette() {
 }
 
 function initializeWallpaperPicker() {
-    const picker = document.getElementById('wallpaperPicker');
-    const resetBtn = document.getElementById('wallpaperResetBtn');
-    if (!picker) return;
+    return;
 
     const presets = {
         mint: 'radial-gradient(circle at top right, rgba(31, 143, 134, 0.3), transparent 28%), radial-gradient(circle at 10% 80%, rgba(20, 184, 166, 0.22), transparent 30%), linear-gradient(180deg, #d9f6f2 0%, #c8ece6 100%)',

@@ -2018,35 +2018,25 @@
     <div class="nav-overlay" id="navOverlay" onclick="toggleNav(false)"></div>
     <button class="nav-toggle" onclick="toggleNav(true)" title="منو">☰</button>
 
-    <div class="home-topbar">
+    <div class="home-topbar home-topbar--simple">
         <div class="home-topbar-brand">
-            <span>⚡</span>
-            <strong>Calisia Command Center</strong>
-            <span class="home-topbar-status">
-                <span class="home-status-pill">Live Dashboard</span>
-            </span>
+            <strong>Calisia</strong>
+            <span class="home-status-pill">Dashboard</span>
         </div>
         <div class="home-topbar-actions">
             <a href="auth.html" class="home-chip-btn">ورود/ثبت‌نام</a>
-            <button class="home-chip-btn" type="button" onclick="window.logoutUser && window.logoutUser()">خروج</button>
+            <button class="home-chip-btn" id="themeToggle" type="button" aria-label="تغییر تم">تم</button>
         </div>
     </div>
 
     <div class="page-shell">
-        <header class="hero-header dashboard-hero">
+        <header class="hero-header dashboard-hero dashboard-hero--simple">
             <div class="hero-copy">
                 <span class="hero-label">داشبورد روزانه</span>
-                <h1>همه‌چیز مهمِ امروز، یکجا</h1>
-                <p class="hero-subtitle">این صفحه سبک‌تر و جمع‌وجورتر شده تا سریع به اطلاعات اصلی و مسیرهای ضروری برسید؛ بدون شلوغی اضافه.</p>
-                <div class="hero-quote-strip">
-                    <span class="hero-quote-label">فکر امروز</span>
-                    <p id="dailyQuote">هر روز فرصتی تازه است تا وجود را به نظم بکشی.</p>
-                    <p class="quote-author" id="quoteAuthor">- حکیم ایرانی</p>
-                </div>
+                <h1>همه‌چیز مهمِ امروز</h1>
+                <p class="hero-subtitle">نسخه خانه ساده‌تر و جمع‌وجورتر شد.</p>
                 <div class="hero-actions">
                     <button class="hero-action button-accent" type="button" onclick="scrollToTodayPlans()">برنامه‌ی امروز</button>
-                    <button class="hero-action button-outline" type="button" onclick="goToCalendarPage()">تقویم کامل</button>
-                    <button class="hero-action button-ghost" id="themeToggle" type="button" aria-label="تغییر تم">🌙</button>
                 </div>
             </div>
             <div class="hero-corner-card">
@@ -2078,10 +2068,6 @@
                     </div>
                 </div>
                 <div class="hero-corner-bottom">
-                    <div class="hero-corner-bottom-copy">
-                        <span class="hero-corner-bottom-label">لینک‌های کاربردی داخلی</span>
-                        <p>سه مسیر سریع برای چیزهایی که بیشتر از همه لازم می‌شوند.</p>
-                    </div>
                     <div class="hero-shortcuts hero-shortcuts--corner">
                         <a href="tasks.html" class="hero-shortcut">📝 تسک‌ها</a>
                         <a href="habits.html" class="hero-shortcut">🌿 عادت‌ها</a>
@@ -2096,7 +2082,6 @@
                 <a href="#todaySection">امروز</a>
                 <a href="#modulesSection">ماژول‌ها</a>
                 <a href="#lifeSyncSection">هم‌افزایی</a>
-                <a href="#smartSection">هوشمند</a>
                 <a href="#timerSection">ابزار زمان</a>
             </section>
             <section class="home-glance-strip" aria-label="خلاصه سریع وضعیت امروز">
@@ -2120,35 +2105,9 @@
 
             <section class="idea-grid" aria-label="ابزارهای خلاقانه روزانه">
                 <article class="idea-card">
-                    <div class="idea-title">🎭 چک‌این حال‌وهوا</div>
-                    <p class="idea-subtitle">حالت امروزت را ثبت کن تا پیشنهاد روز متناسب‌تر شود.</p>
-                    <div class="mood-actions" id="moodActions">
-                        <button class="mood-btn" data-mood="awful" type="button" aria-label="خیلی بد">😵</button>
-                        <button class="mood-btn" data-mood="low" type="button" aria-label="کم‌انرژی">😕</button>
-                        <button class="mood-btn" data-mood="ok" type="button" aria-label="معمولی">😐</button>
-                        <button class="mood-btn" data-mood="good" type="button" aria-label="خوب">🙂</button>
-                        <button class="mood-btn" data-mood="great" type="button" aria-label="عالی">🔥</button>
-                    </div>
-                    <p id="moodHint" class="idea-result">حالت امروز را انتخاب کن.</p>
-                </article>
-
-                <article class="idea-card">
-                    <div class="idea-title">🎯 رولت تمرکز ۹۰ ثانیه‌ای</div>
-                    <p class="idea-subtitle">یک پیشنهاد فوری و اجرایی از بین مهم‌ترین کارها/عادت‌ها می‌دهد.</p>
-                    <button id="focusRouletteBtn" class="button-accent" type="button">یک پیشنهاد باحال بده</button>
-                    <p id="focusRouletteResult" class="idea-result">آماده‌ام؛ دکمه را بزن.</p>
-                </article>
-
-                <article class="idea-card">
-                    <div class="idea-title">🖼️ انتخاب والپیپر</div>
-                    <p class="idea-subtitle">برای صفحه خانه، بک‌گراند دلخواهت را انتخاب کن.</p>
-                    <div class="wallpaper-picker" id="wallpaperPicker">
-                        <button class="wallpaper-option" type="button" data-wallpaper="mint" style="background: linear-gradient(180deg,#d9f6f2,#c8ece6);"></button>
-                        <button class="wallpaper-option" type="button" data-wallpaper="sunset" style="background: linear-gradient(135deg,#f97316,#ec4899,#8b5cf6);"></button>
-                        <button class="wallpaper-option" type="button" data-wallpaper="night" style="background: linear-gradient(135deg,#0f172a,#1e293b,#334155);"></button>
-                        <button class="wallpaper-option" type="button" data-wallpaper="forest" style="background: linear-gradient(135deg,#0f766e,#16a34a,#84cc16);"></button>
-                    </div>
-                    <button id="wallpaperResetBtn" class="button-outline wallpaper-reset" type="button">بازگشت به حالت پیش‌فرض</button>
+                    <div class="idea-title">وضعیت امروز</div>
+                    <p class="idea-subtitle">خلاصه‌ای کوتاه از وضعیت روز برای شروع سریع.</p>
+                    <p id="moodHint" class="idea-result">خانه مینیمال شد و ابزارهای اضافه حذف شدند.</p>
                 </article>
             </section>
 
@@ -2239,17 +2198,6 @@
                 <div id="lifeSyncMeter" class="life-sync-meter">در حال محاسبه وضعیت یکپارچه...</div>
             </section>
 
-            <section class="section-frame" style="margin-top: 22px;" id="smartSection">
-                <div class="section-title">ماژول‌های هوشمند جدید</div>
-                <p class="section-subtitle">نسخه‌ی AI: تشخیص تضاد، پیش‌بینی ریسک و پیشنهاد اقدام برای همه‌ی بخش‌ها.</p>
-                <div class="optimization-toolbar">
-                    <button id="optimizationBtn" class="optimization-btn" type="button">دکمه بهینگی</button>
-                    <span class="section-subtitle" style="margin:0;">تحلیل مبتنی بر علم برنامه‌ریزی و کشف خلأهای برنامه</span>
-                </div>
-                <div id="optimizationPanel" class="optimization-panel"></div>
-                <div id="smartModulesGrid" class="smart-modules-grid"></div>
-                <div id="agentAssistantPanel" style="margin-top: 16px;"></div>
-            </section>
 
             <section class="section-frame" style="margin-top: 22px;" id="modulesSection">
                 <div class="section-title">همه ماژول‌ها</div>
@@ -2269,15 +2217,6 @@
             </section>
         </main>
     </div>
-
-    <aside class="ai-phone-widget" id="aiPhoneWidget" aria-live="polite" aria-label="هشدار هوش مصنوعی محلی">
-        <div class="ai-phone-header">
-            <p class="ai-phone-title">🤖 دستیار هوش مصنوعی لوکال</p>
-            <button class="ai-phone-close" id="aiPhoneClose" type="button">بستن</button>
-        </div>
-        <div class="ai-phone-body" id="aiPhoneBody"></div>
-        <p class="ai-phone-status" id="aiPhoneStatus">پایش خودکار فعال است.</p>
-    </aside>
 
     <section id="onboardingOverlay" class="onboarding-overlay" aria-live="polite">
         <div class="onboarding-card">
