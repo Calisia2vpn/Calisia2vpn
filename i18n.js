@@ -2,9 +2,6 @@
   const STORAGE_KEY = 'preferredLanguage';
   const defaultLanguage = 'fa';
 
-  const textSourceMap = new WeakMap();
-  const attrSourceMap = new WeakMap();
-
   const faToEn = {
     'خانه داشبورد': 'Dashboard Home',
     'تسک‌ها': 'Tasks',
@@ -58,99 +55,29 @@
     'محاسبه 🧮': 'Calculate 🧮',
     '+ گروه جدید': '+ New Group',
     'ذخیره تغییرات': 'Save Changes',
-    'آمار و گزارشات من': 'My Analytics & Reports',
-    'ورود': 'Login',
-    'ثبت‌نام': 'Sign Up',
-    'ورود و ثبت‌نام': 'Login & Sign Up',
-    'برای شروع، حساب بساز یا وارد شو.': 'Create an account or login to start.',
-    'نام و نام خانوادگی': 'Full Name',
-    'شماره موبایل': 'Mobile Number',
-    'ایمیل (اختیاری)': 'Email (Optional)',
-    'رمز عبور': 'Password',
-    'شماره موبایل یا ایمیل': 'Mobile or Email',
-    'بازگشت به داشبورد': 'Back to Dashboard',
-    'تنظیم آدرس API': 'Set API Base URL',
-    'خروج از حساب': 'Logout'
-  };
-
-  const faPhraseReplace = [
-    ['فروردین', 'Farvardin'], ['اردیبهشت', 'Ordibehesht'], ['خرداد', 'Khordad'], ['تیر', 'Tir'],
-    ['مرداد', 'Mordad'], ['شهریور', 'Shahrivar'], ['مهر', 'Mehr'], ['آبان', 'Aban'],
-    ['آذر', 'Azar'], ['دی', 'Dey'], ['بهمن', 'Bahman'], ['اسفند', 'Esfand'],
-    ['شنبه', 'Saturday'], ['یکشنبه', 'Sunday'], ['دوشنبه', 'Monday'], ['سه‌شنبه', 'Tuesday'],
-    ['چهارشنبه', 'Wednesday'], ['پنج‌شنبه', 'Thursday'], ['جمعه', 'Friday']
-  ];
-
-  const faCharToLatin = {
-    'ا': 'a', 'آ': 'aa', 'ب': 'b', 'پ': 'p', 'ت': 't', 'ث': 's', 'ج': 'j', 'چ': 'ch',
-    'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'z', 'ر': 'r', 'ز': 'z', 'ژ': 'zh', 'س': 's',
-    'ش': 'sh', 'ص': 's', 'ض': 'z', 'ط': 't', 'ظ': 'z', 'ع': 'a', 'غ': 'gh', 'ف': 'f',
-    'ق': 'gh', 'ک': 'k', 'گ': 'g', 'ل': 'l', 'م': 'm', 'ن': 'n', 'و': 'v', 'ه': 'h',
-    'ی': 'y', 'ئ': 'y', 'ء': '', 'ٔ': '', '‌': ' ', 'ى': 'y', 'ة': 'h'
+    'آمار و گزارشات من': 'My Analytics & Reports'
   };
 
   const enToFa = Object.fromEntries(Object.entries(faToEn).map(([fa, en]) => [en, fa]));
-
-  const faDigits = '۰۱۲۳۴۵۶۷۸۹';
-  const arDigits = '٠١٢٣٤٥٦٧٨٩';
-
-  function toEnglishDigits(value) {
-    return String(value)
-      .replace(/[۰-۹]/g, d => String(faDigits.indexOf(d)))
-      .replace(/[٠-٩]/g, d => String(arDigits.indexOf(d)));
-  }
-
-  function transliteratePersian(value) {
-    return String(value).replace(/[اآبپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئءٔ‌ىة]/g, ch => faCharToLatin[ch] ?? ch);
-  }
-
-  function strictEnglishize(value) {
-    let out = String(value);
-    for (const [fa, en] of faPhraseReplace) {
-      out = out.split(fa).join(en);
-    }
-    out = toEnglishDigits(out);
-    out = transliteratePersian(out);
-    return out;
-  }
 
   function getCurrentLanguage() {
     const lang = localStorage.getItem(STORAGE_KEY);
     return lang === 'en' || lang === 'fa' ? lang : defaultLanguage;
   }
 
-  function rememberOriginalText(node) {
-    if (!textSourceMap.has(node)) {
-      textSourceMap.set(node, node.nodeValue);
-    }
-  }
-
-  function rememberOriginalAttr(el, attr) {
-    if (!attrSourceMap.has(el)) attrSourceMap.set(el, {});
-    const store = attrSourceMap.get(el);
-    if (!(attr in store)) store[attr] = el.getAttribute(attr);
-  }
-
-  function translateSingleText(rawFaText, targetLang) {
-    if (targetLang === 'fa') return rawFaText;
-
-    const trimmed = rawFaText.trim();
-    if (!trimmed) return rawFaText;
-
-    if (faToEn[trimmed]) {
-      return rawFaText.replace(trimmed, faToEn[trimmed]);
-    }
-
-    return strictEnglishize(rawFaText);
+  function getDictionary(targetLang) {
+    return targetLang === 'en' ? faToEn : enToFa;
   }
 
   function translateTextNodes(targetLang) {
+    const dict = getDictionary(targetLang);
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
       acceptNode(node) {
         if (!node.parentElement) return NodeFilter.FILTER_REJECT;
         const tag = node.parentElement.tagName;
         if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(tag)) return NodeFilter.FILTER_REJECT;
-        if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_SKIP;
+        const trimmed = node.nodeValue.trim();
+        if (!trimmed || !dict[trimmed]) return NodeFilter.FILTER_SKIP;
         return NodeFilter.FILTER_ACCEPT;
       }
     });
@@ -159,38 +86,23 @@
     while (walker.nextNode()) nodes.push(walker.currentNode);
 
     nodes.forEach(node => {
-      rememberOriginalText(node);
-      const rawFaText = textSourceMap.get(node);
-      if (targetLang === 'fa') {
-        node.nodeValue = rawFaText;
-        return;
-      }
-      node.nodeValue = translateSingleText(rawFaText, targetLang);
+      const original = node.nodeValue;
+      const trimmed = original.trim();
+      const translated = dict[trimmed];
+      if (!translated) return;
+      node.nodeValue = original.replace(trimmed, translated);
     });
   }
 
   function translateAttributes(targetLang) {
+    const dict = getDictionary(targetLang);
     const attrs = ['placeholder', 'title', 'aria-label'];
-
     document.querySelectorAll('*').forEach(el => {
       attrs.forEach(attr => {
-        if (!el.hasAttribute(attr)) return;
-
-        rememberOriginalAttr(el, attr);
-        const source = attrSourceMap.get(el)?.[attr] ?? el.getAttribute(attr);
-        if (!source) return;
-
-        if (targetLang === 'fa') {
-          el.setAttribute(attr, source);
-          return;
-        }
-
-        const trimmed = source.trim();
-        if (faToEn[trimmed]) {
-          el.setAttribute(attr, source.replace(trimmed, faToEn[trimmed]));
-        } else {
-          el.setAttribute(attr, strictEnglishize(source));
-        }
+        const value = el.getAttribute(attr);
+        if (!value) return;
+        const trimmed = value.trim();
+        if (dict[trimmed]) el.setAttribute(attr, value.replace(trimmed, dict[trimmed]));
       });
     });
   }
@@ -200,7 +112,6 @@
     document.documentElement.lang = targetLang === 'en' ? 'en' : 'fa';
     document.documentElement.dir = targetLang === 'en' ? 'ltr' : 'rtl';
     document.body.classList.toggle('lang-en', targetLang === 'en');
-
     translateTextNodes(targetLang);
     translateAttributes(targetLang);
     updateSwitcher(targetLang);

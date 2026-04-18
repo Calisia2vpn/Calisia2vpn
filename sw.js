@@ -4,7 +4,6 @@ const OFFLINE_URL = './index.html';
 const CORE_ASSETS = [
   './',
   './index.html',
-  './auth.html',
   './tasks.html',
   './habits.html',
   './calendar.html',
@@ -18,9 +17,6 @@ const CORE_ASSETS = [
   './stats.html',
   './style.css',
   './app.js',
-  './auth-ui.js',
-  './auth-guard.js',
-  './i18n.js',
   './dashboard-data.js',
   './jalaali.min.js',
   './manifest.webmanifest',
