@@ -84,12 +84,31 @@
     ['چهارشنبه', 'Wednesday'], ['پنج‌شنبه', 'Thursday'], ['جمعه', 'Friday']
   ];
 
-  const faCharToLatin = {
-    'ا': 'a', 'آ': 'aa', 'ب': 'b', 'پ': 'p', 'ت': 't', 'ث': 's', 'ج': 'j', 'چ': 'ch',
-    'ح': 'h', 'خ': 'kh', 'د': 'd', 'ذ': 'z', 'ر': 'r', 'ز': 'z', 'ژ': 'zh', 'س': 's',
-    'ش': 'sh', 'ص': 's', 'ض': 'z', 'ط': 't', 'ظ': 'z', 'ع': 'a', 'غ': 'gh', 'ف': 'f',
-    'ق': 'gh', 'ک': 'k', 'گ': 'g', 'ل': 'l', 'م': 'm', 'ن': 'n', 'و': 'v', 'ه': 'h',
-    'ی': 'y', 'ئ': 'y', 'ء': '', 'ٔ': '', '‌': ' ', 'ى': 'y', 'ة': 'h'
+  const faWordReplace = {
+    'در': 'in',
+    'حال': 'state',
+    'بارگذاری': 'loading',
+    'زمان': 'time',
+    'روز': 'day',
+    'ماه': 'month',
+    'سال': 'year',
+    'رویداد': 'event',
+    'رویدادها': 'events',
+    'اولویت': 'priority',
+    'بالا': 'high',
+    'متوسط': 'medium',
+    'کم': 'low',
+    'پیشنهاد': 'suggestion',
+    'هدف': 'goal',
+    'اهداف': 'goals',
+    'امتیاز': 'score',
+    'وضعیت': 'status',
+    'هشدار': 'alert',
+    'فعال': 'active',
+    'غیرفعال': 'inactive',
+    'ثبت': 'save',
+    'پیشرفت': 'progress',
+    'لیست': 'list'
   };
 
   const enToFa = Object.fromEntries(Object.entries(faToEn).map(([fa, en]) => [en, fa]));
@@ -103,17 +122,22 @@
       .replace(/[٠-٩]/g, d => String(arDigits.indexOf(d)));
   }
 
-  function transliteratePersian(value) {
-    return String(value).replace(/[اآبپتثجچحخدذرزژسشصضطظعغفقکگلمنوهیئءٔ‌ىة]/g, ch => faCharToLatin[ch] ?? ch);
-  }
-
-  function strictEnglishize(value) {
+  function dictionaryTranslate(value) {
     let out = String(value);
     for (const [fa, en] of faPhraseReplace) {
       out = out.split(fa).join(en);
     }
+
+    for (const [fa, en] of Object.entries(faToEn)) {
+      out = out.split(fa).join(en);
+    }
+
+    for (const [fa, en] of Object.entries(faWordReplace)) {
+      const pattern = new RegExp(`(^|\\s|\\b)${fa}(\\s|\\b|$)`, 'g');
+      out = out.replace(pattern, (_, p1, p2) => `${p1}${en}${p2}`);
+    }
+
     out = toEnglishDigits(out);
-    out = transliteratePersian(out);
     return out;
   }
 
@@ -144,7 +168,7 @@
       return rawFaText.replace(trimmed, faToEn[trimmed]);
     }
 
-    return strictEnglishize(rawFaText);
+    return dictionaryTranslate(rawFaText);
   }
 
   function translateTextNodes(targetLang) {
@@ -192,7 +216,7 @@
         if (faToEn[trimmed]) {
           el.setAttribute(attr, source.replace(trimmed, faToEn[trimmed]));
         } else {
-          el.setAttribute(attr, strictEnglishize(source));
+          el.setAttribute(attr, dictionaryTranslate(source));
         }
       });
     });
