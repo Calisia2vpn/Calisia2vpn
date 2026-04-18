@@ -18,24 +18,13 @@ export function createPaymentGateway(provider = 'mock') {
     };
   }
 
-  // Placeholder for future providers (e.g. Zarinpal, Stripe, etc.)
   return {
     provider,
-    async createCheckoutSession({ userId, amount, currency = 'IRR', planId }) {
-      return {
-        ok: true,
-        provider,
-        checkoutUrl: 'https://example.com/provider-not-implemented',
-        referenceId: `stub-pay-${Date.now()}`,
-        amount,
-        currency,
-        planId,
-        userId,
-        note: 'Payment provider adapter not implemented yet'
-      };
+    async createCheckoutSession() {
+      throw Object.assign(new Error(`Payment provider \"${provider}\" is not implemented`), { statusCode: 503 });
     },
-    async verifyPayment({ referenceId }) {
-      return { ok: true, provider, referenceId, status: 'pending', note: 'Provider adapter not implemented yet' };
+    async verifyPayment() {
+      throw Object.assign(new Error(`Payment provider \"${provider}\" is not implemented`), { statusCode: 503 });
     }
   };
 }

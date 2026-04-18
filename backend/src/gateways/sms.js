@@ -9,12 +9,10 @@ export function createSmsGateway(provider = 'mock') {
     };
   }
 
-  // Placeholder for future providers (e.g. Kavenegar, Twilio, etc.)
   return {
     provider,
-    async sendOtp({ mobile, code }) {
-      console.log(`[SMS:${provider}] NOT IMPLEMENTED - OTP ${code} -> ${mobile}`);
-      return { ok: true, provider, messageId: `stub-${Date.now()}`, note: 'Provider adapter not implemented yet' };
+    async sendOtp() {
+      throw Object.assign(new Error(`SMS provider \"${provider}\" is not implemented`), { statusCode: 503 });
     }
   };
 }

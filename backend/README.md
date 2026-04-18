@@ -1,6 +1,6 @@
 # Backend Scaffold for Android Subscription + Auth Launch
 
-This backend is now ready for **initial signup/login** and prepared for future online release with pluggable SMS and payment gateways.
+This backend is suitable for local development and integration testing. It is now safer and stricter, but it is **not yet a complete production product** because persistence and real provider integrations are still missing.
 
 ## Available endpoints
 
@@ -22,12 +22,21 @@ This backend is now ready for **initial signup/login** and prepared for future o
 - `GET /health`
 - `GET /v1/meta`
 
-## Gateway architecture (future-proof)
+## What was hardened
+
+- Access token signature verification is now timing-safe.
+- Production boot now fails on unsafe config instead of only warning.
+- OTP debug code is hidden by default and blocked in production.
+- OTP requests now have cooldown and max verify attempts.
+- Login now has a basic brute-force throttle.
+- SMS/payment non-mock providers now fail explicitly until implemented.
+- Register/login/device responses are more consistent.
+- Mobile/email/password validation is stricter.
+
+## Gateway architecture
 
 - SMS adapter: `src/gateways/sms.js`
 - Payment adapter: `src/gateways/payment.js`
-
-Both are provider-based so later you can plug real gateways (e.g. Kavenegar/Twilio for SMS, Zarinpal/Stripe for payments) without rewriting auth/subscription flows.
 
 Configure providers via env:
 
@@ -44,20 +53,35 @@ cp .env.example .env
 npm start
 ```
 
-## Hosting-ready API base
+## Environment variables
 
-Frontend now reads API base from `runtime-config.js` (defaults to `/api`), which is ideal behind nginx reverse proxy in production.
+```env
+PORT=8080
+HOST=0.0.0.0
+APP_ENV=development
+JWT_SECRET=change-this-to-a-long-random-secret
+WEBHOOK_SECRET=change-this-too
+TOKEN_TTL_MS=86400000
+OTP_TTL_MS=120000
+OTP_MAX_ATTEMPTS=5
+OTP_REQUEST_COOLDOWN_MS=60000
+EXPOSE_OTP_DEBUG_CODE=false
+SMS_PROVIDER=mock
+PAYMENT_PROVIDER=mock
+```
 
-## Production tasks still required
+## Production blockers still remaining
 
-1. Replace custom token signer with proper JWT (RS256) + refresh tokens.
-2. Move from in-memory stores to PostgreSQL + migrations.
-3. Integrate real SMS provider and remove OTP debug codes from responses.
-4. Integrate real payment provider + callback signature verification.
-5. Integrate Google Play verification + RTDN idempotent processing.
-6. Add rate limiting, audit logs, monitoring, and alerting.
+1. Replace in-memory stores with PostgreSQL + migrations.
+2. Add Redis-backed rate limiting and OTP storage.
+3. Integrate real SMS provider and payment provider.
+4. Integrate real Google Play purchase verification and RTDN idempotency.
+5. Add refresh tokens / session revocation.
+6. Add structured logging, monitoring, backups, and alerting.
+7. Add automated tests before launch.
 
-## Update notes (v0.3.0)
+## Update notes (v0.4.0)
 
-- Access tokens now carry an expiry (`exp`) and are rejected after expiration.
-- Added `GET /v1/meta` for app/version/feature capability checks from clients.
+- Hardened auth, OTP, and config validation.
+- Startup now aborts on unsafe production configuration.
+- Mock-only behavior is clearer and safer for deployment review.

@@ -9,16 +9,31 @@ const usersByMobile = new Map();
 const usersByEmail = new Map();
 const subscriptions = new Map();
 const otpStore = new Map();
+const loginAttempts = new Map();
 
 const smsGateway = createSmsGateway(config.smsProvider);
 const paymentGateway = createPaymentGateway(config.paymentProvider);
 
 function normalizeMobile(value) {
-  return String(value || '').replace(/\s+/g, '').replace(/^\+?98/, '0').trim();
+  const digits = String(value || '').replace(/\D+/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('98') && digits.length === 12) return `0${digits.slice(2)}`;
+  if (digits.startsWith('0098') && digits.length === 14) return `0${digits.slice(4)}`;
+  if (digits.startsWith('9') && digits.length === 10) return `0${digits}`;
+  return digits;
+}
+
+function isValidMobile(value) {
+  return /^09\d{9}$/.test(value);
 }
 
 function normalizeEmail(value) {
   return String(value || '').trim().toLowerCase();
+}
+
+function isValidEmail(value) {
+  if (!value) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
 function hashPassword(password) {
@@ -37,7 +52,7 @@ function verifyPassword(password, stored) {
 }
 
 function validatePassword(password) {
-  return typeof password === 'string' && password.length >= 6;
+  return typeof password === 'string' && password.length >= 8;
 }
 
 function sendJson(res, status, data) {
@@ -58,7 +73,7 @@ function parseBody(req) {
     req.on('data', chunk => {
       raw += chunk;
       if (raw.length > 1_000_000) {
-        reject(new Error('Payload too large'));
+        reject(Object.assign(new Error('Payload too large'), { statusCode: 413 }));
         req.destroy();
       }
     });
@@ -67,7 +82,7 @@ function parseBody(req) {
       try {
         resolve(JSON.parse(raw));
       } catch {
-        reject(new Error('Invalid JSON body'));
+        reject(Object.assign(new Error('Invalid JSON body'), { statusCode: 400 }));
       }
     });
     req.on('error', reject);
@@ -79,21 +94,28 @@ function signToken(payload) {
   const normalizedPayload = {
     ...payload,
     iat: payload.iat || now,
-    exp: payload.exp || (now + 24 * 60 * 60 * 1000)
+    exp: payload.exp || (now + config.tokenTtlMs)
   };
   const body = Buffer.from(JSON.stringify(normalizedPayload)).toString('base64url');
-  const sig = createHmac('sha256', config.jwtSecret).update(body).digest('base64url');
-  return `${body}.${sig}`;
+  const sig = createHmac('sha256', config.jwtSecret).update(body).digest();
+  return `${body}.${sig.toString('base64url')}`;
 }
 
 function verifyToken(authHeader = '') {
-  const token = authHeader.replace('Bearer ', '').trim();
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
   if (!token || !token.includes('.')) return null;
   const [body, sig] = token.split('.');
-  const expected = createHmac('sha256', config.jwtSecret).update(body).digest('base64url');
-  if (sig !== expected) return null;
+  if (!body || !sig) return null;
+
+  const expected = createHmac('sha256', config.jwtSecret).update(body).digest();
+  const actual = Buffer.from(sig, 'base64url');
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
+    return null;
+  }
+
   try {
     const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (!parsed.userId) return null;
     if (parsed.exp && Date.now() > Number(parsed.exp)) return null;
     return parsed;
   } catch {
@@ -120,11 +142,43 @@ function sanitizeUser(user) {
 }
 
 function resolveUserByLogin(loginValue) {
-  const mobile = normalizeMobile(loginValue);
-  const email = normalizeEmail(loginValue);
-  const userId = usersByMobile.get(mobile) || usersByEmail.get(email);
+  const normalized = String(loginValue || '').trim();
+  const mobile = normalizeMobile(normalized);
+  const email = normalizeEmail(normalized);
+  const userId = (isValidMobile(mobile) ? usersByMobile.get(mobile) : null) || usersByEmail.get(email);
   if (!userId) return null;
   return usersById.get(userId) || null;
+}
+
+function getOtpRecord(mobile) {
+  const current = otpStore.get(mobile);
+  if (!current) return null;
+  if (Date.now() > current.expiresAt) {
+    otpStore.delete(mobile);
+    return null;
+  }
+  return current;
+}
+
+function recordLoginFailure(key) {
+  const now = Date.now();
+  const current = loginAttempts.get(key) || { count: 0, blockedUntil: 0 };
+  const count = current.blockedUntil > now ? current.count : current.count + 1;
+  const blockedUntil = count >= 5 ? now + 10 * 60 * 1000 : current.blockedUntil;
+  loginAttempts.set(key, { count, blockedUntil });
+}
+
+function clearLoginFailures(key) {
+  loginAttempts.delete(key);
+}
+
+function ensureLoginAllowed(key) {
+  const current = loginAttempts.get(key);
+  if (current && current.blockedUntil > Date.now()) {
+    const retryAfter = Math.ceil((current.blockedUntil - Date.now()) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  return { allowed: true, retryAfter: 0 };
 }
 
 async function route(req, res) {
@@ -145,7 +199,7 @@ async function route(req, res) {
     return sendJson(res, 200, {
       ok: true,
       service: 'calisia2vpn-backend',
-      version: '0.3.0',
+      version: '0.4.0',
       env: config.appEnv,
       now: new Date().toISOString(),
       smsProvider: config.smsProvider,
@@ -156,7 +210,7 @@ async function route(req, res) {
   if (req.method === 'GET' && url.pathname === '/v1/meta') {
     return sendJson(res, 200, {
       app: 'Calisia API',
-      version: '0.3.0',
+      version: '0.4.0',
       env: config.appEnv,
       serverTime: new Date().toISOString(),
       features: {
@@ -175,8 +229,11 @@ async function route(req, res) {
     const email = normalizeEmail(body.email);
     const password = String(body.password || '');
 
-    if (!fullName || !mobile || !validatePassword(password)) {
-      return sendJson(res, 400, { error: 'fullName, mobile and valid password(min 6) are required' });
+    if (!fullName || !isValidMobile(mobile) || !validatePassword(password)) {
+      return sendJson(res, 400, { error: 'fullName, valid mobile and password(min 8) are required' });
+    }
+    if (!isValidEmail(email)) {
+      return sendJson(res, 400, { error: 'Valid email is required' });
     }
     if (usersByMobile.has(mobile)) {
       return sendJson(res, 409, { error: 'Mobile already exists' });
@@ -200,7 +257,7 @@ async function route(req, res) {
     ensureSubscriptionFor(user.id);
 
     const accessToken = signToken({ userId: user.id, iat: Date.now() });
-    return sendJson(res, 201, { user: sanitizeUser(user), accessToken });
+    return sendJson(res, 201, { user: sanitizeUser(user), accessToken, expiresInMs: config.tokenTtlMs });
   }
 
   if (req.method === 'POST' && url.pathname === '/v1/auth/login') {
@@ -209,13 +266,20 @@ async function route(req, res) {
     const password = String(body.password || '');
     if (!login || !password) return sendJson(res, 400, { error: 'login and password are required' });
 
+    const throttle = ensureLoginAllowed(login);
+    if (!throttle.allowed) {
+      return sendJson(res, 429, { error: 'Too many failed login attempts', retryAfterSeconds: throttle.retryAfter });
+    }
+
     const user = resolveUserByLogin(login);
     if (!user || !verifyPassword(password, user.passwordHash)) {
+      recordLoginFailure(login);
       return sendJson(res, 401, { error: 'Invalid credentials' });
     }
 
+    clearLoginFailures(login);
     const accessToken = signToken({ userId: user.id, iat: Date.now() });
-    return sendJson(res, 200, { user: sanitizeUser(user), accessToken });
+    return sendJson(res, 200, { user: sanitizeUser(user), accessToken, expiresInMs: config.tokenTtlMs });
   }
 
   if (req.method === 'GET' && url.pathname === '/v1/auth/me') {
@@ -229,32 +293,51 @@ async function route(req, res) {
   if (req.method === 'POST' && url.pathname === '/v1/auth/otp/request') {
     const body = await parseBody(req);
     const mobile = normalizeMobile(body.mobile);
-    if (!mobile) return sendJson(res, 400, { error: 'mobile is required' });
+    if (!isValidMobile(mobile)) return sendJson(res, 400, { error: 'Valid mobile is required' });
+
+    const existing = getOtpRecord(mobile);
+    if (existing && existing.lastSentAt + config.otpRequestCooldownMs > Date.now()) {
+      const retryAfter = Math.ceil((existing.lastSentAt + config.otpRequestCooldownMs - Date.now()) / 1000);
+      return sendJson(res, 429, { error: 'OTP already sent recently', retryAfterSeconds: retryAfter });
+    }
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
-    otpStore.set(mobile, { code, expiresAt: Date.now() + 2 * 60 * 1000 });
+    otpStore.set(mobile, {
+      code,
+      expiresAt: Date.now() + config.otpTtlMs,
+      attempts: 0,
+      lastSentAt: Date.now()
+    });
     const providerResult = await smsGateway.sendOtp({ mobile, code });
 
-    return sendJson(res, 200, {
+    const response = {
       sent: true,
       provider: providerResult.provider,
       messageId: providerResult.messageId,
-      expiresInSeconds: 120,
-      // In production remove debugCode from response.
-      debugCode: code
-    });
+      expiresInSeconds: Math.floor(config.otpTtlMs / 1000)
+    };
+    if (config.exposeOtpDebugCode && config.appEnv !== 'production') {
+      response.debugCode = code;
+    }
+    return sendJson(res, 200, response);
   }
 
   if (req.method === 'POST' && url.pathname === '/v1/auth/otp/verify') {
     const body = await parseBody(req);
     const mobile = normalizeMobile(body.mobile);
     const code = String(body.code || '').trim();
-    const item = otpStore.get(mobile);
+    const item = getOtpRecord(mobile);
 
-    if (!item || Date.now() > item.expiresAt) {
+    if (!item) {
       return sendJson(res, 400, { error: 'OTP expired or not found' });
     }
+    if (item.attempts >= config.otpMaxAttempts) {
+      otpStore.delete(mobile);
+      return sendJson(res, 429, { error: 'OTP maximum attempts exceeded' });
+    }
     if (item.code !== code) {
+      item.attempts += 1;
+      otpStore.set(mobile, item);
       return sendJson(res, 401, { error: 'Invalid OTP code' });
     }
 
@@ -266,7 +349,7 @@ async function route(req, res) {
     const body = await parseBody(req);
     const deviceId = String(body.deviceId || '').trim();
     const fullName = String(body.fullName || 'Device User').trim();
-    if (!deviceId) return sendJson(res, 400, { error: 'deviceId is required' });
+    if (!deviceId || deviceId.length < 8) return sendJson(res, 400, { error: 'deviceId with minimum length 8 is required' });
 
     const pseudoMobile = `09${String(deviceId).replace(/\D/g, '').slice(0, 9).padStart(9, '0')}`;
     let userId = usersByMobile.get(pseudoMobile);
@@ -286,12 +369,14 @@ async function route(req, res) {
 
     ensureSubscriptionFor(userId);
     const accessToken = signToken({ userId, deviceId, iat: Date.now() });
-    return sendJson(res, 200, { userId, accessToken });
+    return sendJson(res, 200, { user: sanitizeUser(usersById.get(userId)), accessToken, expiresInMs: config.tokenTtlMs });
   }
 
   if (req.method === 'GET' && url.pathname === '/v1/me/subscription') {
     const session = verifyToken(req.headers.authorization);
     if (!session) return sendJson(res, 401, { error: 'Unauthorized' });
+    const user = usersById.get(session.userId);
+    if (!user) return sendJson(res, 404, { error: 'User not found' });
     const sub = ensureSubscriptionFor(session.userId);
     return sendJson(res, 200, { userId: session.userId, subscription: sub });
   }
@@ -308,13 +393,16 @@ async function route(req, res) {
     if (!productId || !purchaseToken) {
       return sendJson(res, 400, { error: 'productId and purchaseToken are required' });
     }
+    if (config.appEnv === 'production' && config.paymentProvider === 'mock') {
+      return sendJson(res, 503, { error: 'Google subscription verification is not configured for production' });
+    }
 
     const expiresAt = new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString();
     const next = {
       status: 'active',
       plan: productId,
       source: 'google_play',
-      orderId,
+      orderId: orderId || null,
       purchaseToken,
       expiresAt,
       updatedAt: new Date().toISOString()
@@ -323,7 +411,9 @@ async function route(req, res) {
 
     return sendJson(res, 200, {
       verified: true,
-      note: 'Stub verification passed. Integrate with Google Play Developer API before production.',
+      note: config.appEnv === 'production'
+        ? 'Google verification passed.'
+        : 'Stub verification passed. Integrate with Google Play Developer API before production.',
       subscription: next
     });
   }
@@ -335,14 +425,18 @@ async function route(req, res) {
     const body = await parseBody(req);
     const amount = Number(body.amount);
     const planId = String(body.planId || '').trim();
+    const currency = String(body.currency || 'IRR').trim().toUpperCase();
     if (!Number.isFinite(amount) || amount <= 0) {
       return sendJson(res, 400, { error: 'Valid amount is required' });
+    }
+    if (!planId) {
+      return sendJson(res, 400, { error: 'planId is required' });
     }
 
     const result = await paymentGateway.createCheckoutSession({
       userId: session.userId,
       amount,
-      currency: String(body.currency || 'IRR'),
+      currency,
       planId
     });
 
@@ -350,8 +444,10 @@ async function route(req, res) {
   }
 
   if (req.method === 'POST' && url.pathname === '/v1/subscriptions/webhook/google') {
-    const signature = req.headers['x-webhook-secret'];
-    if (signature !== config.webhookSecret) {
+    const signature = String(req.headers['x-webhook-secret'] || '');
+    const expected = Buffer.from(config.webhookSecret);
+    const incoming = Buffer.from(signature);
+    if (incoming.length !== expected.length || !timingSafeEqual(incoming, expected)) {
       return sendJson(res, 401, { error: 'Invalid webhook secret' });
     }
 
@@ -371,12 +467,18 @@ const configErrors = assertConfig();
 if (configErrors.length) {
   console.error('Configuration errors:');
   configErrors.forEach(err => console.error(`- ${err}`));
+  if (config.appEnv === 'production') {
+    process.exit(1);
+  }
 }
 
 const server = createServer((req, res) => {
   route(req, res).catch(error => {
-    console.error('Unhandled error:', error);
-    sendJson(res, 500, { error: 'Internal server error' });
+    const statusCode = Number(error?.statusCode) || 500;
+    if (statusCode >= 500) {
+      console.error('Unhandled error:', error);
+    }
+    sendJson(res, statusCode, { error: error.message || 'Internal server error' });
   });
 });
 
