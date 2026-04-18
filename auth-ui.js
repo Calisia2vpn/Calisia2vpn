@@ -4,7 +4,7 @@
   const USER_KEY = 'currentUser';
 
   function apiBase() {
-    return localStorage.getItem(API_BASE_KEY) || 'http://localhost:8080';
+    return window.__APP_CONFIG?.API_BASE_URL || localStorage.getItem(API_BASE_KEY) || '/api';
   }
 
   function setMessage(text, type = '') {
@@ -37,6 +37,39 @@
   function persistAuth(payload) {
     localStorage.setItem(TOKEN_KEY, payload.accessToken);
     if (payload.user) localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
+  }
+
+  function parseJwtPayload(value) {
+    try {
+      const body = String(value || '').split('.')[0];
+      const base64 = body.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      return JSON.parse(atob(padded));
+    } catch {
+      return null;
+    }
+  }
+
+  async function validateCurrentSession() {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) return false;
+    const payload = parseJwtPayload(token);
+    if (!payload || (payload.exp && Date.now() > Number(payload.exp))) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return false;
+    }
+    try {
+      const res = await fetch(`${apiBase()}/v1/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('invalid');
+      return true;
+    } catch {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return false;
+    }
   }
 
   async function onRegister(event) {
@@ -82,9 +115,8 @@
     setMessage('آدرس API ذخیره شد ✅', 'success');
   }
 
-  window.addEventListener('load', () => {
-    if (localStorage.getItem(TOKEN_KEY)) {
-      // already logged in
+  window.addEventListener('load', async () => {
+    if (await validateCurrentSession()) {
       window.location.href = 'index.html';
       return;
     }

@@ -20,6 +20,7 @@ This backend is now ready for **initial signup/login** and prepared for future o
 
 ### System
 - `GET /health`
+- `GET /v1/meta`
 
 ## Gateway architecture (future-proof)
 
@@ -43,6 +44,10 @@ cp .env.example .env
 npm start
 ```
 
+## Hosting-ready API base
+
+Frontend now reads API base from `runtime-config.js` (defaults to `/api`), which is ideal behind nginx reverse proxy in production.
+
 ## Production tasks still required
 
 1. Replace custom token signer with proper JWT (RS256) + refresh tokens.
@@ -51,3 +56,8 @@ npm start
 4. Integrate real payment provider + callback signature verification.
 5. Integrate Google Play verification + RTDN idempotent processing.
 6. Add rate limiting, audit logs, monitoring, and alerting.
+
+## Update notes (v0.3.0)
+
+- Access tokens now carry an expiry (`exp`) and are rejected after expiration.
+- Added `GET /v1/meta` for app/version/feature capability checks from clients.

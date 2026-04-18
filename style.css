@@ -1184,6 +1184,22 @@ body[data-theme='dark'] .lang-btn {
     color: #7debe0;
 }
 
+body.lang-en {
+    direction: ltr;
+    text-align: left;
+}
+
+body.lang-en .nav-sidebar {
+    right: auto;
+    left: -280px;
+    border-left: none;
+    border-right: 1px solid var(--border);
+}
+
+body.lang-en .nav-sidebar.open {
+    left: 0;
+}
+
 .assistant-btn {
     border: none;
     border-radius: 12px;
