@@ -1,0 +1,22 @@
+{
+  "name": "Calisia Dashboard",
+  "short_name": "Calisia",
+  "lang": "fa-IR",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#d7f7f2",
+  "theme_color": "#0f766e",
+  "description": "داشبورد شخصی روزانه با ماژول‌های برنامه‌ریزی، سلامت، مالی و اهداف.",
+  "categories": ["productivity", "lifestyle", "health"],
+  "icons": [
+    {
+      "src": "icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+version: '3.9'
+services:
+  api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: calisia_api
+    env_file:
+      - ../backend/.env
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16
+    container_name: calisia_postgres
+    environment:
+      POSTGRES_DB: calisia
+      POSTGRES_USER: calisia
+      POSTGRES_PASSWORD: calisia_dev_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: calisia_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
