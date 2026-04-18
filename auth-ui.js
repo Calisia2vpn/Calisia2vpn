@@ -2,6 +2,7 @@
   const API_BASE_KEY = 'apiBaseUrl';
   const TOKEN_KEY = 'accessToken';
   const USER_KEY = 'currentUser';
+  const GUEST_KEY = 'guestMode';
 
   function apiBase() {
     return window.__APP_CONFIG?.API_BASE_URL || localStorage.getItem(API_BASE_KEY) || '/api';
@@ -35,6 +36,7 @@
   }
 
   function persistAuth(payload) {
+    localStorage.removeItem(GUEST_KEY);
     localStorage.setItem(TOKEN_KEY, payload.accessToken);
     if (payload.user) localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
   }
@@ -115,7 +117,18 @@
     setMessage('آدرس API ذخیره شد ✅', 'success');
   }
 
+  function onSkipAuth() {
+    localStorage.setItem(GUEST_KEY, '1');
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    window.location.href = 'index.html';
+  }
+
   window.addEventListener('load', async () => {
+    if (localStorage.getItem(GUEST_KEY) === '1') {
+      window.location.href = 'index.html';
+      return;
+    }
     if (await validateCurrentSession()) {
       window.location.href = 'index.html';
       return;
@@ -126,5 +139,6 @@
     document.getElementById('registerForm')?.addEventListener('submit', onRegister);
     document.getElementById('loginForm')?.addEventListener('submit', onLogin);
     document.getElementById('apiHintLink')?.addEventListener('click', onApiHint);
+    document.getElementById('skipAuthBtn')?.addEventListener('click', onSkipAuth);
   });
 })();

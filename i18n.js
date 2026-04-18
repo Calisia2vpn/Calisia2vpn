@@ -72,7 +72,8 @@
     'شماره موبایل یا ایمیل': 'Mobile or Email',
     'بازگشت به داشبورد': 'Back to Dashboard',
     'تنظیم آدرس API': 'Set API Base URL',
-    'خروج از حساب': 'Logout'
+    'خروج از حساب': 'Logout',
+    'فعلاً رد کن و مهمان وارد شو': 'Skip for now and continue as guest'
   };
 
   const faPhraseReplace = [
