@@ -8,6 +8,7 @@ const motivationQuotes = [
 
 const today = new Date();
 const dashboardData = window.DashboardData || null;
+const AI_SYSTEM_DISABLED = window.DISABLE_AI_SYSTEM === true;
 
 const weekDates = Array.from({ length: 7 }).map((_, index) => {
     const date = new Date();
@@ -1356,6 +1357,7 @@ function collectLocalAiSignals({ tasks, habits, dietLog, exercises }) {
 }
 
 function renderLocalAiPhone(signals) {
+    if (AI_SYSTEM_DISABLED) return;
     const widget = document.getElementById('aiPhoneWidget');
     const body = document.getElementById('aiPhoneBody');
     const status = document.getElementById('aiPhoneStatus');
@@ -1418,6 +1420,10 @@ function renderLocalAiPhone(signals) {
 function renderSmartModules() {
     const host = document.getElementById('smartModulesGrid');
     if (!host) return;
+    if (AI_SYSTEM_DISABLED) {
+        host.innerHTML = '';
+        return;
+    }
     const { tasks, habits, dietLog, goals, assets, exercises, socialMessages } = readLifeSyncArrays();
     const signals = collectLocalAiSignals({ tasks, habits, dietLog, exercises });
     const activeGoals = goals.filter(goal => (goal.status || 'active') === 'active');
@@ -1683,6 +1689,13 @@ function bindOptimizationButton() {
     const btn = document.getElementById('optimizationBtn');
     const panel = document.getElementById('optimizationPanel');
     if (!btn || !panel || btn.dataset.bound) return;
+    if (AI_SYSTEM_DISABLED) {
+        btn.disabled = true;
+        btn.textContent = 'بهینگی موقتاً غیرفعال است';
+        panel.classList.remove('visible');
+        panel.innerHTML = '';
+        return;
+    }
     btn.addEventListener('click', () => {
         const { summary, suggestions } = buildOptimizationAdvice();
         panel.innerHTML = `
@@ -1781,6 +1794,11 @@ function renderLifeSyncInsights() {
 
 
 function initAgenticAssistant() {
+    if (AI_SYSTEM_DISABLED) {
+        const mount = document.getElementById('agentAssistantPanel');
+        if (mount) mount.innerHTML = '';
+        return;
+    }
     const mount = document.getElementById('agentAssistantPanel');
     if (!mount || !window.AgenticAssistantKernel) return;
 
@@ -1902,6 +1920,7 @@ function initAgenticAssistant() {
 }
 
 function initializeUserOnboarding() {
+    if (AI_SYSTEM_DISABLED) return;
     const overlay = document.getElementById('onboardingOverlay');
     if (!overlay) return;
     const PROFILE_KEY = 'userProfile';
