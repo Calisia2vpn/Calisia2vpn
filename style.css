@@ -1139,6 +1139,51 @@ body[data-theme='dark'] textarea {
     background: rgba(255, 255, 255, 0.72);
 }
 
+/* Global language switcher */
+.lang-switcher {
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 1200;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(15, 118, 110, 0.2);
+    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.lang-btn {
+    min-width: 40px;
+    min-height: 34px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #0f766e;
+    background: transparent;
+}
+
+.lang-btn.active {
+    color: #ffffff;
+    background: linear-gradient(135deg, #0f766e, #14b8a6);
+    box-shadow: 0 6px 16px rgba(15, 118, 110, 0.3);
+}
+
+body[data-theme='dark'] .lang-switcher {
+    background: rgba(4, 34, 33, 0.82);
+    border-color: rgba(94, 234, 212, 0.32);
+}
+
+body[data-theme='dark'] .lang-btn {
+    color: #7debe0;
+}
+
 .assistant-btn {
     border: none;
     border-radius: 12px;
