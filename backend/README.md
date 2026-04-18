@@ -1,14 +1,39 @@
-# Backend Scaffold for Android Subscription Launch
+# Backend Scaffold for Android Subscription + Auth Launch
 
-This folder provides the minimum backend skeleton needed to move from a local-only web app to an Android app with paid subscriptions.
+This backend is now ready for **initial signup/login** and prepared for future online release with pluggable SMS and payment gateways.
 
-## What is included
+## Available endpoints
 
-- `POST /v1/auth/device` device-based sign-in (stub)
-- `GET /v1/me/subscription` subscription status for current user
-- `POST /v1/subscriptions/verify/google` purchase verification endpoint (stub; must integrate Google Play Developer API)
-- `POST /v1/subscriptions/webhook/google` webhook receiver for RTDN/PubSub push events (stub)
-- `GET /health` health endpoint for uptime checks
+### Auth
+- `POST /v1/auth/register`
+- `POST /v1/auth/login`
+- `GET /v1/auth/me`
+- `POST /v1/auth/otp/request`
+- `POST /v1/auth/otp/verify`
+- `POST /v1/auth/device`
+
+### Subscription/Payments
+- `GET /v1/me/subscription`
+- `POST /v1/subscriptions/verify/google`
+- `POST /v1/payments/checkout`
+- `POST /v1/subscriptions/webhook/google`
+
+### System
+- `GET /health`
+
+## Gateway architecture (future-proof)
+
+- SMS adapter: `src/gateways/sms.js`
+- Payment adapter: `src/gateways/payment.js`
+
+Both are provider-based so later you can plug real gateways (e.g. Kavenegar/Twilio for SMS, Zarinpal/Stripe for payments) without rewriting auth/subscription flows.
+
+Configure providers via env:
+
+```env
+SMS_PROVIDER=mock
+PAYMENT_PROVIDER=mock
+```
 
 ## Quick start
 
@@ -18,16 +43,11 @@ cp .env.example .env
 npm start
 ```
 
-Server starts on `http://localhost:8080` by default.
-
 ## Production tasks still required
 
-1. Replace token signer with real JWT (RS256).
-2. Add PostgreSQL + migration layer.
-3. Add Redis for idempotency/event processing.
-4. Verify Google purchases via Android Publisher API.
-5. Verify RTDN signatures and implement idempotent webhook processor.
-6. Add rate limiting, audit logs, and abuse controls.
-7. Add monitoring (Sentry + Prometheus/Grafana + uptime).
-
-See `ANDROID_PRODUCTION_INFRA_FA.md` at repo root for a full launch checklist.
+1. Replace custom token signer with proper JWT (RS256) + refresh tokens.
+2. Move from in-memory stores to PostgreSQL + migrations.
+3. Integrate real SMS provider and remove OTP debug codes from responses.
+4. Integrate real payment provider + callback signature verification.
+5. Integrate Google Play verification + RTDN idempotent processing.
+6. Add rate limiting, audit logs, monitoring, and alerting.

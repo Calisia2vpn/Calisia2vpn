@@ -7,7 +7,9 @@ export const config = {
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
   googlePackageName: process.env.GOOGLE_PACKAGE_NAME || 'com.example.calisia2vpn',
   googlePubSubTopic: process.env.GOOGLE_PUBSUB_TOPIC || 'projects/example/topics/google-rtdn',
-  webhookSecret: process.env.WEBHOOK_SECRET || 'dev-webhook-secret'
+  webhookSecret: process.env.WEBHOOK_SECRET || 'dev-webhook-secret',
+  smsProvider: process.env.SMS_PROVIDER || 'mock',
+  paymentProvider: process.env.PAYMENT_PROVIDER || 'mock'
 };
 
 export function assertConfig() {
