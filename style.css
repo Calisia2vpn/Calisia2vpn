@@ -941,6 +941,141 @@ body[data-theme='dark'] .event-modal {
     }
 }
 
+/* ========= Global UX Upgrade (All Modules) ========= */
+.toolbar,
+.filters-bar,
+.controls-row,
+.summary-panel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.toolbar,
+.task-form,
+.goals-header,
+.card-box,
+.panel,
+.container,
+.modal,
+.event-modal {
+    border-radius: 18px !important;
+}
+
+.card-box,
+.goal-card,
+.tasks-section,
+.plan-list,
+.stat-card,
+.module-card,
+.calendar-event,
+.snapshot-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+}
+
+.card-box:hover,
+.goal-card:hover,
+.tasks-section:hover,
+.plan-list:hover,
+.stat-card:hover,
+.module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(8, 96, 90, 0.1) !important;
+    border-color: rgba(15, 118, 110, 0.22) !important;
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-muted,
+.btn-add,
+.btn-modal,
+.btn-blue,
+.btn-green,
+.btn-danger,
+.button-accent,
+.button-outline,
+.hero-action {
+    min-height: 42px !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em;
+}
+
+.btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.btn-muted:hover,
+.btn-add:hover,
+.btn-modal:hover,
+.btn-blue:hover,
+.btn-green:hover,
+.btn-danger:hover,
+.button-accent:hover,
+.button-outline:hover,
+.hero-action:hover {
+    transform: translateY(-1px);
+}
+
+input,
+select,
+textarea {
+    border: 1px solid rgba(15, 118, 110, 0.2) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(47, 109, 107, 0.7);
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    overflow: hidden;
+    border-radius: 14px;
+}
+
+th,
+td {
+    padding: 10px 12px;
+}
+
+tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+body[data-theme='dark'] input,
+body[data-theme='dark'] select,
+body[data-theme='dark'] textarea {
+    background: rgba(4, 34, 33, 0.74) !important;
+    border-color: rgba(94, 234, 212, 0.24) !important;
+    color: #d9fffb !important;
+}
+
+@media (max-width: 900px) {
+    .toolbar,
+    .filters-bar,
+    .controls-row {
+        gap: 8px;
+    }
+
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .btn-muted,
+    .btn-add,
+    .btn-modal,
+    .btn-blue,
+    .btn-green,
+    .btn-danger {
+        width: 100%;
+    }
+}
+
 /* Agentic Assistant (Gemini-ready) */
 .agent-assistant-card {
     background: var(--surface-strong);
