@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0f766e">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
+    <title>ورود / ثبت‌نام</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .auth-shell { max-width: 520px; margin: 48px auto; padding: 18px; }
+        .auth-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 20px; box-shadow: var(--shadow); }
+        .auth-title { margin: 0 0 8px; font-size: 26px; }
+        .auth-subtitle { margin: 0 0 18px; color: var(--text-muted); }
+        .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
+        .auth-tab { border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,0.65); padding: 10px; font-weight: 700; cursor: pointer; }
+        .auth-tab.active { background: linear-gradient(135deg, #0f766e, #14b8a6); color: #fff; border-color: transparent; }
+        .auth-form { display: none; gap: 10px; }
+        .auth-form.active { display: grid; }
+        .auth-form label { font-size: 13px; color: var(--text-muted); }
+        .auth-form input { width: 100%; }
+        .auth-submit { margin-top: 6px; }
+        .auth-message { min-height: 24px; margin-top: 10px; font-size: 13px; }
+        .auth-message.error { color: #b42318; }
+        .auth-message.success { color: #0f766e; }
+        .auth-links { margin-top: 14px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+    <div class="auth-shell">
+        <div class="auth-card">
+            <h1 class="auth-title">ورود و ثبت‌نام</h1>
+            <p class="auth-subtitle">برای شروع، حساب بساز یا وارد شو.</p>
+
+            <div class="auth-tabs">
+                <button type="button" id="tabLogin" class="auth-tab active">ورود</button>
+                <button type="button" id="tabRegister" class="auth-tab">ثبت‌نام</button>
+            </div>
+
+            <form id="loginForm" class="auth-form active">
+                <label>شماره موبایل یا ایمیل
+                    <input type="text" id="loginInput" placeholder="مثال: 0912xxxxxxx یا email@site.com" required>
+                </label>
+                <label>رمز عبور
+                    <input type="password" id="loginPassword" placeholder="رمز عبور" required>
+                </label>
+                <button type="submit" class="btn btn-primary auth-submit">ورود</button>
+            </form>
+
+            <form id="registerForm" class="auth-form">
+                <label>نام و نام خانوادگی
+                    <input type="text" id="regName" placeholder="مثال: علی رضایی" required>
+                </label>
+                <label>شماره موبایل
+                    <input type="text" id="regMobile" placeholder="مثال: 0912xxxxxxx" required>
+                </label>
+                <label>ایمیل (اختیاری)
+                    <input type="email" id="regEmail" placeholder="email@site.com">
+                </label>
+                <label>رمز عبور
+                    <input type="password" id="regPassword" placeholder="حداقل ۶ کاراکتر" required>
+                </label>
+                <button type="submit" class="btn btn-primary auth-submit">ثبت‌نام</button>
+            </form>
+
+            <div id="authMessage" class="auth-message"></div>
+            <div class="auth-links">
+                <a href="index.html">بازگشت به داشبورد</a>
+                <a href="#" id="apiHintLink">تنظیم آدرس API</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="auth-ui.js"></script>
+    <script src="pwa-register.js"></script>
+</body>
+</html>

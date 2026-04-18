@@ -1,9 +1,44 @@
 import { createServer } from 'node:http';
-import { randomUUID, createHmac } from 'node:crypto';
+import { randomUUID, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { config, assertConfig } from './config.js';
+import { createSmsGateway } from './gateways/sms.js';
+import { createPaymentGateway } from './gateways/payment.js';
 
-const users = new Map();
+const usersById = new Map();
+const usersByMobile = new Map();
+const usersByEmail = new Map();
 const subscriptions = new Map();
+const otpStore = new Map();
+
+const smsGateway = createSmsGateway(config.smsProvider);
+const paymentGateway = createPaymentGateway(config.paymentProvider);
+
+function normalizeMobile(value) {
+  return String(value || '').replace(/\s+/g, '').replace(/^\+?98/, '0').trim();
+}
+
+function normalizeEmail(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function hashPassword(password) {
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+function verifyPassword(password, stored) {
+  const [salt, hash] = String(stored || '').split(':');
+  if (!salt || !hash) return false;
+  const incoming = scryptSync(password, salt, 64);
+  const saved = Buffer.from(hash, 'hex');
+  if (incoming.length !== saved.length) return false;
+  return timingSafeEqual(incoming, saved);
+}
+
+function validatePassword(password) {
+  return typeof password === 'string' && password.length >= 6;
+}
 
 function sendJson(res, status, data) {
   const payload = JSON.stringify(data);

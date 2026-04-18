@@ -1904,11 +1904,29 @@
                 <span>🏠</span>
                 <span>خانه داشبورد</span>
             </a>
+            <button class="nav-tool-btn" type="button" onclick="window.logoutUser && window.logoutUser()">
+                <span>🚪</span>
+                <span>خروج از حساب</span>
+            </button>
         </div>
     </div>
 
     <div class="nav-overlay" id="navOverlay" onclick="toggleNav(false)"></div>
     <button class="nav-toggle" onclick="toggleNav(true)" title="منو">☰</button>
+
+    <div class="home-topbar">
+        <div class="home-topbar-brand">
+            <span>⚡</span>
+            <strong>Calisia Command Center</strong>
+            <span class="home-topbar-status">
+                <span class="home-status-pill">Live Dashboard</span>
+            </span>
+        </div>
+        <div class="home-topbar-actions">
+            <a href="auth.html" class="home-chip-btn">ورود/ثبت‌نام</a>
+            <button class="home-chip-btn" type="button" onclick="window.logoutUser && window.logoutUser()">خروج</button>
+        </div>
+    </div>
 
     <div class="page-shell">
         <header class="hero-header dashboard-hero">
@@ -1970,6 +1988,13 @@
         </header>
 
         <main>
+            <section class="quick-launcher" aria-label="پرش سریع">
+                <a href="#todaySection">امروز</a>
+                <a href="#modulesSection">ماژول‌ها</a>
+                <a href="#lifeSyncSection">هم‌افزایی</a>
+                <a href="#smartSection">هوشمند</a>
+                <a href="#timerSection">ابزار زمان</a>
+            </section>
             <section class="home-glance-strip" aria-label="خلاصه سریع وضعیت امروز">
                 <article class="glance-card">
                     <strong>تسک‌ها</strong>
@@ -2023,7 +2048,7 @@
                 </article>
             </section>
 
-            <div class="dashboard-grid">
+            <div class="dashboard-grid" id="timerSection">
                 <article class="dashboard-card dashboard-card--wide">
                     <div class="card-header-accent">
                         <span class="card-icon">⏱️</span>
@@ -2103,14 +2128,14 @@
                 </div>
             </section>
 
-            <section class="section-frame" style="margin-top: 22px;">
+            <section class="section-frame" style="margin-top: 22px;" id="lifeSyncSection">
                 <div class="section-title">هم‌افزایی ماژول‌ها</div>
                 <p class="section-subtitle">تحولات زندگی‌ات به هم وصل هستند؛ این کارت‌ها اثر متقابل بخش‌ها را هر روز نشان می‌دهند.</p>
                 <div id="lifeSyncList" class="life-sync-grid"></div>
                 <div id="lifeSyncMeter" class="life-sync-meter">در حال محاسبه وضعیت یکپارچه...</div>
             </section>
 
-            <section class="section-frame" style="margin-top: 22px;">
+            <section class="section-frame" style="margin-top: 22px;" id="smartSection">
                 <div class="section-title">ماژول‌های هوشمند جدید</div>
                 <p class="section-subtitle">نسخه‌ی AI: تشخیص تضاد، پیش‌بینی ریسک و پیشنهاد اقدام برای همه‌ی بخش‌ها.</p>
                 <div class="optimization-toolbar">
@@ -2122,7 +2147,7 @@
                 <div id="agentAssistantPanel" style="margin-top: 16px;"></div>
             </section>
 
-            <section class="section-frame" style="margin-top: 22px;">
+            <section class="section-frame" style="margin-top: 22px;" id="modulesSection">
                 <div class="section-title">همه ماژول‌ها</div>
                 <p class="section-subtitle">همه‌ی بخش‌ها یکجا جمع شده‌اند تا لازم نباشد دنبالش بگردی.</p>
                 <div class="module-hub-grid">
