@@ -4,7 +4,7 @@
   const USER_KEY = 'currentUser';
 
   function apiBase() {
-    return localStorage.getItem(API_BASE_KEY) || 'http://localhost:8080';
+    return window.__APP_CONFIG?.API_BASE_URL || localStorage.getItem(API_BASE_KEY) || '/api';
   }
 
   function setMessage(text, type = '') {

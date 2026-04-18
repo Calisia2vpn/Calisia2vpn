@@ -44,6 +44,10 @@ cp .env.example .env
 npm start
 ```
 
+## Hosting-ready API base
+
+Frontend now reads API base from `runtime-config.js` (defaults to `/api`), which is ideal behind nginx reverse proxy in production.
+
 ## Production tasks still required
 
 1. Replace custom token signer with proper JWT (RS256) + refresh tokens.

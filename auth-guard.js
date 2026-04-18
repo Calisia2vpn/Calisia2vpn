@@ -3,7 +3,7 @@
   const API_BASE_KEY = 'apiBaseUrl';
   const PUBLIC_PAGES = new Set(['auth.html']);
   const page = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
-  const apiBase = localStorage.getItem(API_BASE_KEY) || 'http://localhost:8080';
+  const apiBase = window.__APP_CONFIG?.API_BASE_URL || localStorage.getItem(API_BASE_KEY) || '/api';
 
   if (PUBLIC_PAGES.has(page)) return;
 
