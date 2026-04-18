@@ -1,0 +1,182 @@
+openapi: 3.0.3
+info:
+  title: Calisia Android Subscription API
+  version: 0.2.0
+servers:
+  - url: https://api.example.com
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+
+  /v1/meta:
+    get:
+      summary: API metadata/version and enabled features
+      responses:
+        '200':
+          description: Metadata payload
+
+  /v1/auth/register:
+    post:
+      summary: Register user with mobile/password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fullName, mobile, password]
+              properties:
+                fullName: { type: string }
+                mobile: { type: string }
+                email: { type: string }
+                password: { type: string }
+      responses:
+        '201':
+          description: Registered
+
+  /v1/auth/login:
+    post:
+      summary: Login by mobile or email + password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [login, password]
+              properties:
+                login: { type: string }
+                password: { type: string }
+      responses:
+        '200':
+          description: Logged in
+
+  /v1/auth/me:
+    get:
+      summary: Get current authenticated user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+
+  /v1/auth/otp/request:
+    post:
+      summary: Request OTP code (via pluggable SMS gateway)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile]
+              properties:
+                mobile: { type: string }
+      responses:
+        '200':
+          description: OTP sent
+
+  /v1/auth/otp/verify:
+    post:
+      summary: Verify OTP code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mobile, code]
+              properties:
+                mobile: { type: string }
+                code: { type: string }
+      responses:
+        '200':
+          description: OTP verified
+
+  /v1/auth/device:
+    post:
+      summary: Sign in with device id fallback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceId]
+              properties:
+                deviceId: { type: string }
+                fullName: { type: string }
+      responses:
+        '200':
+          description: Signed in
+
+  /v1/me/subscription:
+    get:
+      summary: Get current user subscription
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Subscription payload
+
+  /v1/subscriptions/verify/google:
+    post:
+      summary: Verify google purchase token (stub)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId, purchaseToken]
+              properties:
+                productId: { type: string }
+                purchaseToken: { type: string }
+                orderId: { type: string }
+      responses:
+        '200':
+          description: Verification result
+
+  /v1/payments/checkout:
+    post:
+      summary: Create payment checkout session (pluggable payment gateway)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount]
+              properties:
+                amount: { type: number }
+                currency: { type: string }
+                planId: { type: string }
+      responses:
+        '200':
+          description: Checkout session
+
+  /v1/subscriptions/webhook/google:
+    post:
+      summary: Receive RTDN webhook
+      parameters:
+        - in: header
+          name: x-webhook-secret
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Accepted
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
