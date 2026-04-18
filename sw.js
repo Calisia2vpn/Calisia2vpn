@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'calisia-pwa-v1';
+const CACHE_VERSION = 'calisia-pwa-v3';
 const OFFLINE_URL = './index.html';
 
 const CORE_ASSETS = [

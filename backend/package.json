@@ -1,6 +1,6 @@
 {
   "name": "calisia2vpn-backend",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Backend scaffold for Android launch (auth + subscription validation + webhooks)",
   "type": "module",

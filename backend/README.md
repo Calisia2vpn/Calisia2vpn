@@ -20,6 +20,7 @@ This backend is now ready for **initial signup/login** and prepared for future o
 
 ### System
 - `GET /health`
+- `GET /v1/meta`
 
 ## Gateway architecture (future-proof)
 
@@ -51,3 +52,8 @@ npm start
 4. Integrate real payment provider + callback signature verification.
 5. Integrate Google Play verification + RTDN idempotent processing.
 6. Add rate limiting, audit logs, monitoring, and alerting.
+
+## Update notes (v0.3.0)
+
+- Access tokens now carry an expiry (`exp`) and are rejected after expiration.
+- Added `GET /v1/meta` for app/version/feature capability checks from clients.

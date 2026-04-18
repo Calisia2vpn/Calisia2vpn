@@ -13,11 +13,28 @@
     return;
   }
 
+  function parseJwtPayload(value) {
+    try {
+      const body = value.split('.')[0];
+      const base64 = body.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      return JSON.parse(atob(padded));
+    } catch {
+      return null;
+    }
+  }
+
   window.logoutUser = function logoutUser() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('currentUser');
     window.location.href = 'auth.html';
   };
+
+  const payload = parseJwtPayload(token);
+  if (!payload || (payload.exp && Date.now() > Number(payload.exp))) {
+    window.logoutUser();
+    return;
+  }
 
   fetch(`${apiBase}/v1/auth/me`, {
     headers: { Authorization: `Bearer ${token}` }

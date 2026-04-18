@@ -75,7 +75,13 @@ function parseBody(req) {
 }
 
 function signToken(payload) {
-  const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const now = Date.now();
+  const normalizedPayload = {
+    ...payload,
+    iat: payload.iat || now,
+    exp: payload.exp || (now + 24 * 60 * 60 * 1000)
+  };
+  const body = Buffer.from(JSON.stringify(normalizedPayload)).toString('base64url');
   const sig = createHmac('sha256', config.jwtSecret).update(body).digest('base64url');
   return `${body}.${sig}`;
 }
@@ -87,7 +93,9 @@ function verifyToken(authHeader = '') {
   const expected = createHmac('sha256', config.jwtSecret).update(body).digest('base64url');
   if (sig !== expected) return null;
   try {
-    return JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    const parsed = JSON.parse(Buffer.from(body, 'base64url').toString('utf8'));
+    if (parsed.exp && Date.now() > Number(parsed.exp)) return null;
+    return parsed;
   } catch {
     return null;
   }
@@ -137,10 +145,26 @@ async function route(req, res) {
     return sendJson(res, 200, {
       ok: true,
       service: 'calisia2vpn-backend',
+      version: '0.3.0',
       env: config.appEnv,
       now: new Date().toISOString(),
       smsProvider: config.smsProvider,
       paymentProvider: config.paymentProvider
+    });
+  }
+
+  if (req.method === 'GET' && url.pathname === '/v1/meta') {
+    return sendJson(res, 200, {
+      app: 'Calisia API',
+      version: '0.3.0',
+      env: config.appEnv,
+      serverTime: new Date().toISOString(),
+      features: {
+        auth: true,
+        otp: true,
+        paymentsCheckout: true,
+        googleSubscriptionVerify: true
+      }
     });
   }
 

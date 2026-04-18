@@ -39,9 +39,26 @@
     if (payload.user) localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
   }
 
+  function parseJwtPayload(value) {
+    try {
+      const body = String(value || '').split('.')[0];
+      const base64 = body.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      return JSON.parse(atob(padded));
+    } catch {
+      return null;
+    }
+  }
+
   async function validateCurrentSession() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return false;
+    const payload = parseJwtPayload(token);
+    if (!payload || (payload.exp && Date.now() > Number(payload.exp))) {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(USER_KEY);
+      return false;
+    }
     try {
       const res = await fetch(`${apiBase()}/v1/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
