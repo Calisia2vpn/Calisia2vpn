@@ -10,7 +10,7 @@
     <title>داشبورد روزانه | MyDashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Lalezar&amp;family=Vazirmatn:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="jalaali.min.js"></script>
     <style>
@@ -56,6 +56,7 @@
             --border: rgba(148, 163, 184, 0.16);
             --text: #ecf2f8;
             --text-muted: #99a8b8;
+            color-scheme: dark;
             background:
                 radial-gradient(circle at top right, rgba(196, 139, 50, 0.12), transparent 24%),
                 radial-gradient(circle at bottom left, rgba(15, 118, 110, 0.12), transparent 24%),
@@ -1713,19 +1714,30 @@
         }
 
         /* UX بازطراحی‌شده صفحه‌ی اول (جمع‌وجور + حرفه‌ای + کامل) */
+        body.minimal-home main {
+            display: grid;
+            gap: 12px;
+        }
+
         body.minimal-home .page-shell {
             max-width: 1180px;
-            padding-top: 20px;
-            padding-bottom: 56px;
+            padding-top: 16px;
+            padding-bottom: 48px;
         }
 
         body.minimal-home .dashboard-hero {
             grid-template-columns: minmax(0, 1.1fr) minmax(320px, 420px);
-            gap: 18px;
-            padding: 24px;
+            gap: 16px;
+            padding: 22px;
             border-radius: 26px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             box-shadow: 0 16px 50px rgba(15, 23, 42, 0.1);
+        }
+
+        body.minimal-home .hero-copy {
+            display: grid;
+            gap: 10px;
+            align-content: start;
         }
 
         body.minimal-home .hero-header h1 {
@@ -1750,6 +1762,26 @@
             gap: 10px;
         }
 
+        body.minimal-home .hero-corner-cell,
+        body.minimal-home .hero-corner-prayer,
+        body.minimal-home .hero-corner-bottom {
+            padding: 18px;
+        }
+
+        body.minimal-home .hero-corner-prayer-head {
+            margin-bottom: 12px;
+        }
+
+        body.minimal-home .hero-prayer-pills,
+        body.minimal-home .hero-shortcuts {
+            gap: 8px;
+        }
+
+        body.minimal-home .hero-prayer-pill {
+            min-height: 60px;
+            padding: 10px 12px;
+        }
+
         body.minimal-home .hero-action,
         body.minimal-home .button-accent,
         body.minimal-home .button-outline,
@@ -1762,11 +1794,11 @@
         body.minimal-home .idea-grid,
         body.minimal-home .dashboard-grid,
         body.minimal-home .plans-grid {
-            gap: 14px;
+            gap: 12px;
         }
 
         body.minimal-home .home-glance-strip {
-            margin-bottom: 14px;
+            margin-bottom: 0;
             gap: 10px;
         }
 
@@ -1777,9 +1809,9 @@
         }
 
         body.minimal-home .section-frame {
-            margin-top: 14px !important;
+            margin-top: 0 !important;
             border-radius: 18px;
-            padding: 18px 16px;
+            padding: 16px;
             box-shadow: 0 12px 34px rgba(15, 23, 42, 0.07);
         }
 
@@ -1807,8 +1839,56 @@
             line-height: 1.8;
         }
 
+        body.minimal-home .quick-launcher,
+        body.minimal-home .idea-grid,
+        body.minimal-home .dashboard-grid {
+            margin-bottom: 0;
+        }
+
+        body.minimal-home .dashboard-grid,
+        body.minimal-home .time-tools-grid {
+            gap: 12px;
+        }
+
+        body.minimal-home .time-tools-grid,
+        body.minimal-home .calendar-card-body,
+        body.minimal-home .module-hub-grid,
+        body.minimal-home .life-sync-grid {
+            margin-top: 14px;
+        }
+
+        body.minimal-home .time-tool-panel,
+        body.minimal-home .plan-list,
+        body.minimal-home .idea-card {
+            padding: 16px;
+        }
+
+        body.minimal-home .plans-grid {
+            margin-top: 14px;
+        }
+
+        body.minimal-home .goal-focus-wrap {
+            margin-top: 14px;
+            padding: 18px;
+        }
+
+        body.minimal-home .goal-focus-list {
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        body.minimal-home .goal-focus-item,
+        body.minimal-home .life-sync-card {
+            padding: 14px;
+        }
+
+        body.minimal-home .life-sync-meter {
+            margin-top: 12px;
+            padding: 12px 14px;
+        }
+
         body.minimal-home .module-hub-grid {
-            gap: 8px;
+            gap: 10px;
             grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
         }
 
@@ -1828,6 +1908,16 @@
             height: 50px;
             bottom: 18px;
             left: 18px;
+        }
+
+        body.minimal-home .home-topbar {
+            margin-bottom: 10px;
+            padding: 9px 12px;
+        }
+
+        body.minimal-home .quick-launcher {
+            padding: 8px;
+            gap: 6px;
         }
 
         body.minimal-home :is(button, a, input, select, textarea):focus-visible {
@@ -1936,6 +2026,777 @@
             border-color: var(--accent);
         }
 
+        body[data-theme='dark'] .dashboard-hero {
+            background:
+                radial-gradient(circle at 88% 18%, rgba(56, 189, 248, 0.14), transparent 26%),
+                radial-gradient(circle at 14% 82%, rgba(45, 212, 191, 0.14), transparent 24%),
+                linear-gradient(180deg, rgba(8, 28, 37, 0.94), rgba(7, 20, 30, 0.92));
+            border-color: rgba(94, 234, 212, 0.14);
+            box-shadow: 0 24px 60px rgba(2, 8, 23, 0.34);
+        }
+
+        body[data-theme='dark'] .hero-header h1 {
+            color: #f8fafc;
+        }
+
+        body[data-theme='dark'] .hero-subtitle {
+            color: rgba(226, 232, 240, 0.78);
+        }
+
+        body[data-theme='dark'] .home-topbar,
+        body[data-theme='dark'] .quick-launcher {
+            background: rgba(8, 28, 37, 0.78);
+            border-color: rgba(94, 234, 212, 0.14);
+            box-shadow: 0 16px 32px rgba(2, 8, 23, 0.24);
+        }
+
+        body[data-theme='dark'] .home-status-pill {
+            background: rgba(45, 212, 191, 0.12);
+            border-color: rgba(94, 234, 212, 0.22);
+            color: #8ef3e5;
+        }
+
+        body[data-theme='dark'] .home-chip-btn,
+        body[data-theme='dark'] .quick-launcher a,
+        body[data-theme='dark'] .calendar-nav-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(148, 163, 184, 0.18);
+            color: #eef7ff;
+        }
+
+        body[data-theme='dark'] .home-chip-btn:hover,
+        body[data-theme='dark'] .quick-launcher a:hover,
+        body[data-theme='dark'] .calendar-nav-btn:hover {
+            background: rgba(45, 212, 191, 0.14);
+            border-color: rgba(94, 234, 212, 0.24);
+            color: #8ef3e5;
+        }
+
+        body[data-theme='dark'] .glance-card,
+        body[data-theme='dark'] .idea-card,
+        body[data-theme='dark'] .time-tool-panel,
+        body[data-theme='dark'] .module-hub-card,
+        body[data-theme='dark'] .life-sync-card {
+            background: linear-gradient(180deg, rgba(10, 29, 41, 0.92), rgba(8, 22, 31, 0.88));
+            border-color: rgba(148, 163, 184, 0.16);
+            box-shadow: 0 16px 32px rgba(2, 8, 23, 0.22);
+        }
+
+        body[data-theme='dark'] .glance-card strong,
+        body[data-theme='dark'] .idea-subtitle,
+        body[data-theme='dark'] .calendar-event span,
+        body[data-theme='dark'] .life-sync-card p,
+        body[data-theme='dark'] .goal-focus-wrap .section-subtitle {
+            color: rgba(226, 232, 240, 0.72);
+        }
+
+        body[data-theme='dark'] .idea-result {
+            background: rgba(45, 212, 191, 0.08);
+            border-color: rgba(94, 234, 212, 0.24);
+            color: #e7fbf7;
+        }
+
+        body[data-theme='dark'] .time-tool-status {
+            background: rgba(45, 212, 191, 0.1);
+            color: #7cead8;
+        }
+
+        body[data-theme='dark'] .module-hub-card:hover {
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.94), rgba(14, 116, 144, 0.92));
+            box-shadow: 0 20px 36px rgba(6, 78, 101, 0.28);
+        }
+
+        body[data-theme='dark'] .module-hub-icon {
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        body[data-theme='dark'] .life-sync-meter {
+            background: linear-gradient(135deg, rgba(13, 148, 136, 0.14), rgba(14, 116, 144, 0.14));
+            border-color: rgba(94, 234, 212, 0.24);
+            color: #eef7ff;
+        }
+
+        body[data-theme='dark'] .goal-focus-wrap {
+            background: linear-gradient(145deg, rgba(8, 94, 90, 0.94), rgba(12, 126, 116, 0.9));
+            box-shadow: 0 24px 44px rgba(2, 8, 23, 0.28);
+        }
+
+        body[data-theme='dark'] .button-outline {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: rgba(148, 163, 184, 0.18) !important;
+            color: #f8fafc !important;
+        }
+
+        body[data-theme='dark'] .button-outline:hover {
+            background: rgba(45, 212, 191, 0.12);
+            border-color: rgba(94, 234, 212, 0.24) !important;
+            color: #8ef3e5 !important;
+        }
+
+        body.minimal-home {
+            background:
+                radial-gradient(circle at 12% 14%, rgba(56, 189, 248, 0.16), transparent 18%),
+                radial-gradient(circle at 86% 10%, rgba(14, 165, 233, 0.18), transparent 19%),
+                radial-gradient(circle at 82% 84%, rgba(15, 118, 110, 0.12), transparent 22%),
+                linear-gradient(180deg, #f7fbff 0%, #edf5ff 42%, #f5f8ff 100%);
+        }
+
+        body.minimal-home::before {
+            background-image:
+                linear-gradient(90deg, transparent 28px, rgba(59, 130, 246, 0.08) 28px, rgba(59, 130, 246, 0.08) 29px, transparent 29px),
+                linear-gradient(transparent 28px, rgba(15, 118, 110, 0.07) 28px, rgba(15, 118, 110, 0.07) 29px, transparent 29px),
+                radial-gradient(circle at 16% 18%, rgba(56, 189, 248, 0.12), transparent 18%),
+                radial-gradient(circle at 78% 72%, rgba(14, 165, 233, 0.08), transparent 20%);
+            background-size: 136px 136px, 136px 136px, auto, auto;
+            opacity: 0.45;
+        }
+
+        body.minimal-home .page-shell {
+            max-width: 1280px;
+            padding: 36px 22px 90px;
+        }
+
+        body.minimal-home .home-topbar {
+            top: 18px;
+            max-width: 1280px;
+            padding: 14px 18px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            box-shadow: 0 24px 50px rgba(15, 23, 42, 0.09);
+            backdrop-filter: blur(18px);
+        }
+
+        .home-premium-hero {
+            position: relative;
+            grid-template-columns: minmax(0, 1.12fr) minmax(340px, 430px);
+            gap: 28px;
+            padding: 34px;
+            border-radius: 40px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(239, 247, 255, 0.76)),
+                radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 22%);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 34px 84px rgba(15, 23, 42, 0.12);
+        }
+
+        .home-premium-hero::before {
+            background:
+                radial-gradient(circle at 14% 18%, rgba(45, 212, 191, 0.16), transparent 24%),
+                radial-gradient(circle at 86% 86%, rgba(59, 130, 246, 0.12), transparent 26%);
+        }
+
+        .home-premium-hero::after {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            pointer-events: none;
+        }
+
+        .hero-copy--premium {
+            display: grid;
+            gap: 20px;
+            align-content: start;
+            max-width: 100%;
+        }
+
+        .hero-kicker-row,
+        .hero-deck-header,
+        .overview-panel-head,
+        .section-heading-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .hero-live-dot,
+        .panel-badge,
+        .hero-deck-chip,
+        .inline-link-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 36px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(14, 165, 233, 0.16);
+            background: rgba(14, 165, 233, 0.08);
+            color: #075985;
+            font-size: 12px;
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        .hero-live-dot {
+            min-height: 34px;
+            background: rgba(15, 118, 110, 0.08);
+            border-color: rgba(15, 118, 110, 0.14);
+            color: #0f766e;
+        }
+
+        .home-premium-hero .hero-header h1,
+        .home-premium-hero h1 {
+            margin: 0;
+            font-family: 'Lalezar', 'Vazirmatn', sans-serif !important;
+            font-size: clamp(54px, 8vw, 92px);
+            line-height: 0.92;
+            letter-spacing: -0.02em;
+            color: #081a2b;
+        }
+
+        .hero-headline-accent {
+            display: block;
+            margin-top: 10px;
+            color: #0f766e;
+            text-shadow: 0 10px 30px rgba(15, 118, 110, 0.16);
+        }
+
+        .home-premium-hero .hero-subtitle {
+            max-width: 640px;
+            font-size: 17px;
+            line-height: 2;
+            color: #38506a;
+        }
+
+        .hero-quote-strip--premium {
+            margin: 0;
+            padding: 20px 22px;
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.74), rgba(224, 242, 254, 0.52));
+            border: 1px solid rgba(148, 163, 184, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+        }
+
+        .hero-quote-strip--premium #dailyQuote {
+            font-size: 15px;
+            line-height: 2;
+            color: var(--text);
+        }
+
+        .hero-signal-row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .hero-signal-card,
+        .weekly-stat-card {
+            padding: 16px 18px;
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 16px 30px rgba(15, 23, 42, 0.06);
+        }
+
+        .hero-signal-card span,
+        .weekly-stat-card span,
+        .panel-eyebrow {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #5b728d;
+        }
+
+        .hero-signal-card strong,
+        .weekly-stat-card strong {
+            display: block;
+            font-size: 24px;
+            line-height: 1.5;
+            color: #081a2b;
+        }
+
+        .hero-command-deck {
+            display: grid;
+            gap: 18px;
+            align-content: start;
+            padding: 22px;
+            border-radius: 30px;
+            background:
+                linear-gradient(180deg, rgba(7, 26, 43, 0.94), rgba(7, 37, 57, 0.9)),
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.14), transparent 34%);
+            color: #f2f9ff;
+            border: 1px solid rgba(125, 211, 252, 0.1);
+            box-shadow: 0 34px 60px rgba(8, 15, 32, 0.28);
+        }
+
+        .hero-deck-header {
+            padding-bottom: 2px;
+        }
+
+        .hero-deck-kicker {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: rgba(186, 230, 253, 0.72);
+        }
+
+        .hero-deck-chip {
+            color: #dff7ff;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(186, 230, 253, 0.14);
+        }
+
+        .hero-command-deck .hero-corner-top {
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .hero-command-deck .hero-corner-cell,
+        .hero-command-deck .hero-corner-prayer,
+        .hero-command-deck .hero-corner-bottom {
+            min-height: auto;
+            padding: 18px;
+            border-radius: 22px;
+            border: 1px solid rgba(186, 230, 253, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .hero-command-deck .hero-corner-cell--time {
+            border-left: 1px solid rgba(186, 230, 253, 0.1);
+        }
+
+        .hero-command-deck .hero-corner-prayer {
+            grid-column: 1 / -1;
+        }
+
+        .hero-command-deck .hero-corner-kicker,
+        .hero-command-deck .hero-corner-bottom-label,
+        .hero-command-deck .hero-next-prayer-time {
+            color: #7dd3fc;
+        }
+
+        .hero-command-deck .hero-corner-value--clock,
+        .hero-command-deck .hero-corner-value--date,
+        .hero-command-deck .hero-next-prayer-label,
+        .hero-command-deck .hero-prayer-pill strong,
+        .hero-command-deck .hero-shortcut {
+            color: #f8fcff;
+        }
+
+        .hero-command-deck .hero-corner-sub,
+        .hero-command-deck .hero-prayer-pill span {
+            color: rgba(226, 232, 240, 0.72);
+        }
+
+        .hero-command-deck .hero-prayer-pills {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .hero-command-deck .hero-prayer-pill,
+        .hero-command-deck .hero-shortcut {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(186, 230, 253, 0.1);
+        }
+
+        .hero-command-deck .hero-shortcuts {
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .hero-command-deck .hero-shortcut:hover {
+            background: rgba(45, 212, 191, 0.12);
+            color: #8ef3e5;
+            border-color: rgba(94, 234, 212, 0.22);
+            box-shadow: 0 16px 28px rgba(13, 148, 136, 0.14);
+        }
+
+        .home-main {
+            display: grid;
+            gap: 24px;
+            margin-top: 26px;
+        }
+
+        .overview-board,
+        .content-cockpit,
+        .insight-layout {
+            display: grid;
+            gap: 22px;
+        }
+
+        .overview-board {
+            grid-template-columns: minmax(0, 1.16fr) minmax(320px, 0.84fr);
+        }
+
+        .content-cockpit {
+            grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+            align-items: start;
+        }
+
+        .insight-layout {
+            grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+        }
+
+        .overview-panel,
+        .section-frame {
+            padding: 24px;
+            border-radius: 30px;
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 24px 54px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(18px);
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 26px;
+            font-weight: 900;
+            color: #081a2b;
+        }
+
+        .home-glance-strip--premium,
+        .weekly-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .home-glance-strip--premium {
+            margin-bottom: 16px;
+        }
+
+        .home-glance-strip--premium .glance-card {
+            min-height: 112px;
+            padding: 18px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(237, 247, 255, 0.6));
+            box-shadow: none;
+        }
+
+        .pulse-footer {
+            display: grid;
+            gap: 14px;
+        }
+
+        .pulse-mood {
+            display: grid;
+            gap: 10px;
+        }
+
+        .pulse-mood-label {
+            font-size: 13px;
+            font-weight: 800;
+            color: #38506a;
+        }
+
+        .overview-note {
+            margin: 0;
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.08), rgba(14, 165, 233, 0.08));
+            border: 1px dashed rgba(14, 165, 233, 0.18);
+            color: #0f2f4a;
+            font-size: 13px;
+            line-height: 1.9;
+        }
+
+        .weekly-stat-card strong {
+            font-size: clamp(28px, 3vw, 38px);
+            font-variant-numeric: tabular-nums;
+            font-family: 'Vazirmatn', monospace;
+        }
+
+        .section-heading-row {
+            margin-bottom: 18px;
+        }
+
+        .dashboard-grid--premium {
+            grid-template-columns: minmax(0, 1.16fr) minmax(320px, 0.84fr);
+            align-items: start;
+            margin-bottom: 0;
+        }
+
+        .dashboard-grid--premium .dashboard-card--wide {
+            grid-column: auto;
+        }
+
+        .dashboard-grid--premium .dashboard-card,
+        .dashboard-grid--premium .plan-list,
+        .content-cockpit .goal-focus-wrap {
+            background: rgba(255, 255, 255, 0.72);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 24px 54px rgba(15, 23, 42, 0.08);
+            backdrop-filter: blur(18px);
+        }
+
+        .dashboard-grid--premium .dashboard-card {
+            border-radius: 30px;
+            padding: 24px;
+        }
+
+        .content-cockpit .goal-focus-wrap {
+            margin-top: 0;
+            padding: 24px;
+            min-height: 100%;
+            background:
+                linear-gradient(180deg, rgba(7, 26, 43, 0.96), rgba(9, 44, 66, 0.92)),
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.12), transparent 28%);
+            border-color: rgba(125, 211, 252, 0.1);
+            box-shadow: 0 28px 60px rgba(8, 15, 32, 0.24);
+        }
+
+        .content-cockpit .goal-focus-wrap .list-title {
+            color: #eff8ff;
+        }
+
+        .content-cockpit .goal-focus-wrap .section-subtitle,
+        .content-cockpit .goal-focus-status {
+            color: rgba(226, 232, 240, 0.72);
+        }
+
+        .content-cockpit .goal-focus-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(186, 230, 253, 0.12);
+        }
+
+        .content-cockpit .goal-focus-head {
+            color: #f8fcff;
+        }
+
+        .content-cockpit .goal-focus-progress-track {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(186, 230, 253, 0.12);
+        }
+
+        .content-cockpit .goal-focus-progress-fill {
+            background: linear-gradient(90deg, #7dd3fc, #5eead4);
+        }
+
+        .content-cockpit .goal-mini-btn {
+            color: #dff7ff;
+            border-color: rgba(186, 230, 253, 0.18);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .content-cockpit .goal-mini-btn:hover {
+            background: rgba(45, 212, 191, 0.12);
+        }
+
+        .plans-grid {
+            gap: 16px;
+            margin-top: 0;
+        }
+
+        .plan-list {
+            padding: 22px;
+            border-radius: 24px;
+        }
+
+        .plan-item {
+            min-height: 72px;
+            padding: 16px 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .plan-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 16px 26px rgba(15, 23, 42, 0.08);
+        }
+
+        .module-hub-grid {
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .module-hub-card {
+            min-height: 108px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(232, 242, 255, 0.66));
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.08);
+        }
+
+        .module-hub-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            background: linear-gradient(135deg, #081a2b, #0f766e);
+            box-shadow: 0 26px 40px rgba(8, 26, 43, 0.22);
+        }
+
+        .module-hub-card:hover .module-hub-icon {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .module-hub-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(15, 118, 110, 0.1));
+        }
+
+        .life-sync-grid {
+            gap: 12px;
+        }
+
+        .life-sync-card {
+            padding: 18px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(237, 247, 255, 0.62));
+            box-shadow: 0 18px 34px rgba(15, 23, 42, 0.07);
+        }
+
+        .life-sync-meter {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.1), rgba(14, 165, 233, 0.12));
+            border-color: rgba(14, 165, 233, 0.18);
+        }
+
+        body[data-theme='dark'].minimal-home {
+            background:
+                radial-gradient(circle at 15% 18%, rgba(45, 212, 191, 0.12), transparent 18%),
+                radial-gradient(circle at 82% 10%, rgba(59, 130, 246, 0.14), transparent 20%),
+                linear-gradient(180deg, #07111b 0%, #081520 44%, #091827 100%);
+        }
+
+        body[data-theme='dark'].minimal-home::before {
+            opacity: 0.22;
+        }
+
+        body[data-theme='dark'] .home-premium-hero,
+        body[data-theme='dark'] .overview-panel,
+        body[data-theme='dark'] .section-frame,
+        body[data-theme='dark'] .dashboard-grid--premium .dashboard-card,
+        body[data-theme='dark'] .dashboard-grid--premium .plan-list {
+            background: linear-gradient(180deg, rgba(8, 20, 31, 0.92), rgba(9, 26, 40, 0.88));
+            border-color: rgba(148, 163, 184, 0.14);
+            box-shadow: 0 28px 54px rgba(2, 8, 23, 0.24);
+        }
+
+        body[data-theme='dark'] .home-premium-hero h1,
+        body[data-theme='dark'] .panel-title,
+        body[data-theme='dark'] .hero-signal-card strong,
+        body[data-theme='dark'] .weekly-stat-card strong,
+        body[data-theme='dark'] .card-title-main,
+        body[data-theme='dark'] .section-title,
+        body[data-theme='dark'] .plan-item,
+        body[data-theme='dark'] .module-hub-card,
+        body[data-theme='dark'] .life-sync-card strong {
+            color: #f4fbff;
+        }
+
+        body[data-theme='dark'] .hero-subtitle,
+        body[data-theme='dark'] .section-subtitle,
+        body[data-theme='dark'] .glance-card strong,
+        body[data-theme='dark'] .glance-card p,
+        body[data-theme='dark'] .overview-note,
+        body[data-theme='dark'] .life-sync-card p,
+        body[data-theme='dark'] .panel-eyebrow,
+        body[data-theme='dark'] .hero-signal-card span,
+        body[data-theme='dark'] .weekly-stat-card span {
+            color: rgba(226, 232, 240, 0.74);
+        }
+
+        body[data-theme='dark'] .hero-quote-strip--premium,
+        body[data-theme='dark'] .hero-signal-card,
+        body[data-theme='dark'] .weekly-stat-card,
+        body[data-theme='dark'] .home-glance-strip--premium .glance-card,
+        body[data-theme='dark'] .plan-item,
+        body[data-theme='dark'] .module-hub-card,
+        body[data-theme='dark'] .life-sync-card {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(148, 163, 184, 0.14);
+        }
+
+        body[data-theme='dark'] .overview-note,
+        body[data-theme='dark'] .life-sync-meter {
+            background: linear-gradient(135deg, rgba(15, 118, 110, 0.14), rgba(14, 165, 233, 0.12));
+            border-color: rgba(94, 234, 212, 0.22);
+            color: #e8f7ff;
+        }
+
+        body[data-theme='dark'] .hero-live-dot,
+        body[data-theme='dark'] .panel-badge,
+        body[data-theme='dark'] .inline-link-chip {
+            background: rgba(45, 212, 191, 0.1);
+            border-color: rgba(94, 234, 212, 0.18);
+            color: #8ef3e5;
+        }
+
+        body[data-theme='dark'] .module-hub-icon {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(45, 212, 191, 0.08));
+        }
+
+        @media (max-width: 1180px) {
+            .home-premium-hero,
+            .overview-board,
+            .content-cockpit,
+            .insight-layout,
+            .dashboard-grid--premium {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-command-deck .hero-shortcuts {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 900px) {
+            body.minimal-home .page-shell {
+                padding-inline: 16px;
+            }
+
+            .home-premium-hero {
+                padding: 24px;
+            }
+
+            .hero-signal-row,
+            .home-glance-strip--premium,
+            .weekly-grid,
+            .plans-grid,
+            .time-tools-grid,
+            .life-sync-grid,
+            .module-hub-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-command-deck .hero-corner-top,
+            .hero-command-deck .hero-prayer-pills,
+            .hero-command-deck .hero-shortcuts {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 640px) {
+            .home-premium-hero h1 {
+                font-size: clamp(42px, 13vw, 64px);
+            }
+
+            .overview-panel,
+            .section-frame,
+            .dashboard-grid--premium .dashboard-card,
+            .dashboard-grid--premium .plan-list,
+            .content-cockpit .goal-focus-wrap {
+                padding: 18px;
+                border-radius: 24px;
+            }
+
+            .hero-command-deck .hero-corner-top,
+            .hero-command-deck .hero-prayer-pills,
+            .hero-command-deck .hero-shortcuts {
+                grid-template-columns: 1fr;
+            }
+
+            .mood-actions,
+            .timer-presets,
+            .timer-actions {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .module-hub-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
         @media (max-width: 840px) {
             .home-topbar {
                 top: 6px;
@@ -2008,7 +2869,7 @@
                 <span>🏠</span>
                 <span>خانه داشبورد</span>
             </a>
-            <button class="nav-tool-btn" type="button" onclick="window.logoutUser && window.logoutUser()">
+            <button class="nav-tool-btn" type="button" onclick="window.logoutUser &amp;&amp; window.logoutUser()">
                 <span>🚪</span>
                 <span>خروج از حساب</span>
             </button>
@@ -2030,16 +2891,43 @@
     </div>
 
     <div class="page-shell">
-        <header class="hero-header dashboard-hero dashboard-hero--simple">
-            <div class="hero-copy">
-                <span class="hero-label">داشبورد روزانه</span>
-                <h1>همه‌چیز مهمِ امروز</h1>
-                <p class="hero-subtitle">نسخه خانه ساده‌تر و جمع‌وجورتر شد.</p>
+        <header class="hero-header dashboard-hero dashboard-hero--simple home-premium-hero">
+            <div class="hero-copy hero-copy--premium">
+                <div class="hero-kicker-row">
+                    <span class="hero-label">خانه‌ی هوشمند Calisia</span>
+                    <span class="hero-live-dot">Focused Today</span>
+                </div>
+                <h1>
+                    صفحه‌ای که شلوغ نیست،
+                    <span class="hero-headline-accent">ولی همه‌چیز را در مشتت می‌گذارد</span>
+                </h1>
+                <p class="hero-subtitle">چیدمان جدید، تصمیم‌گیری را از همان چند ثانیه اول راحت می‌کند: اولویت‌ها، نبض روز، ابزار تمرکز و ورودی سریع به همه ماژول‌ها بدون حشو و بدون گم شدن بین کارت‌های اضافه.</p>
                 <div class="hero-actions">
-                    <button class="hero-action button-accent" type="button" onclick="scrollToTodayPlans()">برنامه‌ی امروز</button>
+                    <button class="hero-action button-accent" type="button" onclick="scrollToTodayPlans()">ورود به اولویت‌های امروز</button>
+                    <a href="#focusStudio" class="hero-action button-outline">استودیو تمرکز</a>
+                </div>
+                <div class="hero-quote-strip hero-quote-strip--premium">
+                    <span class="hero-quote-label">الهام روز</span>
+                    <p id="dailyQuote">در حال بارگذاری نقل‌قول روز...</p>
+                    <p id="quoteAuthor" class="quote-author">...</p>
+                </div>
+                <div class="hero-signal-row" aria-label="سیگنال‌های سریع امروز">
+                    <article class="hero-signal-card">
+                        <span>سوخت امروز</span>
+                        <strong id="snapshotCalories">در حال بارگذاری...</strong>
+                    </article>
+                    <article class="hero-signal-card">
+                        <span>حال شروع</span>
+                        <strong id="snapshotMood">در حال بارگذاری...</strong>
+                    </article>
                 </div>
             </div>
-            <div class="hero-corner-card">
+
+            <div class="hero-corner-card hero-command-deck">
+                <div class="hero-deck-header">
+                    <span class="hero-deck-kicker">Command Deck</span>
+                    <span class="hero-deck-chip">امروز</span>
+                </div>
                 <div class="hero-corner-top">
                     <div class="hero-corner-cell hero-corner-cell--time">
                         <span class="hero-corner-kicker">وقت جاری</span>
@@ -2068,56 +2956,124 @@
                     </div>
                 </div>
                 <div class="hero-corner-bottom">
+                    <span class="hero-corner-bottom-label">ورود سریع</span>
                     <div class="hero-shortcuts hero-shortcuts--corner">
                         <a href="tasks.html" class="hero-shortcut">📝 تسک‌ها</a>
                         <a href="habits.html" class="hero-shortcut">🌿 عادت‌ها</a>
                         <a href="calendar.html" class="hero-shortcut">📅 تقویم</a>
+                        <a href="goals.html" class="hero-shortcut">🎯 اهداف</a>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main>
-            <section class="quick-launcher" aria-label="پرش سریع">
-                <a href="#todaySection">امروز</a>
-                <a href="#modulesSection">ماژول‌ها</a>
-                <a href="#lifeSyncSection">هم‌افزایی</a>
-                <a href="#timerSection">ابزار زمان</a>
-            </section>
-            <section class="home-glance-strip" aria-label="خلاصه سریع وضعیت امروز">
-                <article class="glance-card">
-                    <strong>تسک‌ها</strong>
-                    <p id="glanceTasks">در حال بارگذاری...</p>
+        <main class="home-main">
+            <section class="overview-board" aria-label="نبض کلی امروز">
+                <article class="overview-panel overview-panel--glance">
+                    <div class="overview-panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Pulse</span>
+                            <h2 class="panel-title">نبض روز</h2>
+                        </div>
+                        <span class="panel-badge">تصمیم‌گیری سریع</span>
+                    </div>
+                    <div class="home-glance-strip home-glance-strip--premium">
+                        <article class="glance-card">
+                            <strong>تسک‌ها</strong>
+                            <p id="glanceTasks">در حال بارگذاری...</p>
+                        </article>
+                        <article class="glance-card">
+                            <strong>رویدادها</strong>
+                            <p id="glanceEvents">در حال بارگذاری...</p>
+                        </article>
+                        <article class="glance-card">
+                            <strong>عادت‌ها</strong>
+                            <p id="glanceHabits">در حال بارگذاری...</p>
+                        </article>
+                        <article class="glance-card">
+                            <strong>تمرکز روی هدف</strong>
+                            <p id="glanceFocus">در حال بارگذاری...</p>
+                        </article>
+                    </div>
+                    <div class="pulse-footer">
+                        <div class="pulse-mood">
+                            <span class="pulse-mood-label">شروع امروزت چه حسی دارد؟</span>
+                            <div class="mood-actions" id="moodActions" aria-label="انتخاب حال و هوای امروز">
+                                <button class="mood-btn" data-mood="awful" type="button" aria-label="خیلی سخت">😵</button>
+                                <button class="mood-btn" data-mood="low" type="button" aria-label="کم‌انرژی">😕</button>
+                                <button class="mood-btn" data-mood="ok" type="button" aria-label="متعادل">🙂</button>
+                                <button class="mood-btn" data-mood="good" type="button" aria-label="خوب">😌</button>
+                                <button class="mood-btn" data-mood="great" type="button" aria-label="عالی">🚀</button>
+                            </div>
+                        </div>
+                        <p id="moodHint" class="overview-note">حالت امروز را انتخاب کن تا یک پیشنهاد کوتاه و کاربردی بگیری.</p>
+                    </div>
                 </article>
-                <article class="glance-card">
-                    <strong>رویدادها</strong>
-                    <p id="glanceEvents">در حال بارگذاری...</p>
-                </article>
-                <article class="glance-card">
-                    <strong>عادت‌ها</strong>
-                    <p id="glanceHabits">در حال بارگذاری...</p>
-                </article>
-                <article class="glance-card">
-                    <strong>تمرکز روی هدف</strong>
-                    <p id="glanceFocus">در حال بارگذاری...</p>
+
+                <article class="overview-panel overview-panel--weekly">
+                    <div class="overview-panel-head">
+                        <div>
+                            <span class="panel-eyebrow">Momentum</span>
+                            <h2 class="panel-title">شتاب هفتگی</h2>
+                        </div>
+                        <span class="panel-badge">۷ روز اخیر</span>
+                    </div>
+                    <div class="weekly-grid">
+                        <article class="weekly-stat-card">
+                            <span>تسک انجام‌شده</span>
+                            <strong id="weeklyTasks">۰</strong>
+                        </article>
+                        <article class="weekly-stat-card">
+                            <span>ثبت عادت</span>
+                            <strong id="weeklyHabits">۰</strong>
+                        </article>
+                        <article class="weekly-stat-card">
+                            <span>کالری هفتگی</span>
+                            <strong id="weeklyCalories">۰</strong>
+                        </article>
+                        <article class="weekly-stat-card">
+                            <span>رویدادها</span>
+                            <strong id="weeklyEvents">۰</strong>
+                        </article>
+                    </div>
                 </article>
             </section>
 
-            <section class="idea-grid" aria-label="ابزارهای خلاقانه روزانه">
-                <article class="idea-card">
-                    <div class="idea-title">وضعیت امروز</div>
-                    <p class="idea-subtitle">خلاصه‌ای کوتاه از وضعیت روز برای شروع سریع.</p>
-                    <p id="moodHint" class="idea-result">خانه مینیمال شد و ابزارهای اضافه حذف شدند.</p>
-                </article>
+            <section class="content-cockpit" id="todaySection">
+                <section class="section-frame">
+                    <div class="section-heading-row">
+                        <div>
+                            <div class="section-title">اولویت‌های امروز</div>
+                            <p class="section-subtitle">فقط همان چیزهایی که همین حالا باید ببینی؛ بدون حواس‌پرتی و بدون کارت‌های اضافی.</p>
+                        </div>
+                        <a href="tasks.html" class="inline-link-chip">مدیریت تسک‌ها</a>
+                    </div>
+                    <div class="plans-grid">
+                        <div class="plan-list">
+                            <div class="list-title">اولویت‌ها و عقب‌مانده‌ها</div>
+                            <div id="priorityTasksList"></div>
+                        </div>
+                        <div class="plan-list">
+                            <div class="list-title">رویدادهای امروز</div>
+                            <div id="todayProgramsList"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <aside class="goal-focus-wrap">
+                    <div class="list-title">اهداف بزرگ من</div>
+                    <p class="section-subtitle">درصد پیشرفت را همین‌جا ثبت کن تا هر بار که وارد خانه می‌شوی، جهت حرکتت جلوی چشمت باشد.</p>
+                    <div id="goalFocusList" class="goal-focus-list"></div>
+                </aside>
             </section>
 
-            <div class="dashboard-grid" id="timerSection">
+            <div class="dashboard-grid dashboard-grid--premium" id="focusStudio">
                 <article class="dashboard-card dashboard-card--wide">
                     <div class="card-header-accent">
                         <span class="card-icon">⏱️</span>
-                        <div class="card-title-main">ابزار زمان</div>
+                        <div class="card-title-main">استودیو زمان و تمرکز</div>
                     </div>
-                    <p class="section-subtitle">هم تایمر تمرکز را داشته باش، هم استاپ‌واچ را کنار دستت.</p>
+                    <p class="section-subtitle">هم تایمر تمرکز را داشته باش، هم استاپ‌واچ را کنار دستت؛ با دکمه‌های واضح و فاصله‌گذاری تمیزتر.</p>
                     <div class="time-tools-grid">
                         <div class="time-tool-panel">
                             <div class="time-panel-header">
@@ -2155,7 +3111,7 @@
                 <article class="dashboard-card">
                     <div class="card-header-accent">
                         <span class="card-icon">📅</span>
-                        <div class="card-title-main">تقویم</div>
+                        <div class="card-title-main">تقویم جمع‌وجور</div>
                     </div>
                     <div class="calendar-toolbar">
                         <button class="calendar-nav-btn" type="button" onclick="shiftMiniCalendarMonth(-1)">ماه قبل</button>
@@ -2166,55 +3122,45 @@
                         <div class="mini-calendar" id="miniCalendar"></div>
                         <div class="calendar-events"></div>
                     </div>
-                    <button class="button-outline" type="button" onclick="goToCalendarPage()" style="width: 100%; margin-top: 16px;">تقویم کامل</button>
+                    <button class="button-outline" type="button" onclick="goToCalendarPage()" style="width: 100%; margin-top: 16px;">باز کردن تقویم کامل</button>
                 </article>
-
             </div>
 
-            <section class="section-frame" id="todaySection">
-                <div class="section-title">امروز</div>
-                <p class="section-subtitle">فقط همان چیزهایی که الان برای تصمیم گرفتن لازم داری.</p>
-                <div class="plans-grid">
-                    <div class="plan-list">
-                        <div class="list-title">اولویت‌ها و عقب‌مانده‌ها</div>
-                        <div id="priorityTasksList"></div>
+            <div class="insight-layout">
+                <section class="section-frame" id="lifeSyncSection">
+                    <div class="section-heading-row">
+                        <div>
+                            <div class="section-title">هم‌افزایی ماژول‌ها</div>
+                            <p class="section-subtitle">به‌جای چند کارت پراکنده، اینجا اثر متقابل تسک، عادت، تغذیه، تمرین و دارایی را در یک نمای منسجم می‌بینی.</p>
+                        </div>
+                        <span class="panel-badge">Unified View</span>
                     </div>
-                    <div class="plan-list">
-                        <div class="list-title">رویدادهای امروز</div>
-                        <div id="todayProgramsList"></div>
+                    <div id="lifeSyncList" class="life-sync-grid"></div>
+                    <div id="lifeSyncMeter" class="life-sync-meter">در حال محاسبه وضعیت یکپارچه...</div>
+                </section>
+
+                <section class="section-frame" id="modulesSection">
+                    <div class="section-heading-row">
+                        <div>
+                            <div class="section-title">هاب ماژول‌ها</div>
+                            <p class="section-subtitle">ورودی تمام ابزارها در یک گرید تمیز و سریع؛ بدون منوگردی و بدون شلوغیِ بالای صفحه.</p>
+                        </div>
+                        <a href="calendar.html" class="inline-link-chip">نمای کامل</a>
                     </div>
-                </div>
-                <div class="goal-focus-wrap">
-                    <div class="list-title">اهداف بزرگ من</div>
-                    <p class="section-subtitle">درصد پیشرفت را همین‌جا ثبت کن تا همیشه جلوی چشم باشد.</p>
-                    <div id="goalFocusList" class="goal-focus-list"></div>
-                </div>
-            </section>
-
-            <section class="section-frame" style="margin-top: 22px;" id="lifeSyncSection">
-                <div class="section-title">هم‌افزایی ماژول‌ها</div>
-                <p class="section-subtitle">تحولات زندگی‌ات به هم وصل هستند؛ این کارت‌ها اثر متقابل بخش‌ها را هر روز نشان می‌دهند.</p>
-                <div id="lifeSyncList" class="life-sync-grid"></div>
-                <div id="lifeSyncMeter" class="life-sync-meter">در حال محاسبه وضعیت یکپارچه...</div>
-            </section>
-
-
-            <section class="section-frame" style="margin-top: 22px;" id="modulesSection">
-                <div class="section-title">همه ماژول‌ها</div>
-                <p class="section-subtitle">همه‌ی بخش‌ها یکجا جمع شده‌اند تا لازم نباشد دنبالش بگردی.</p>
-                <div class="module-hub-grid">
-                    <a href="tasks.html" class="module-hub-card"><div class="module-hub-icon">📝</div><span>تسک‌ها</span></a>
-                    <a href="habits.html" class="module-hub-card"><div class="module-hub-icon">🌿</div><span>عادت‌ها</span></a>
-                    <a href="calendar.html" class="module-hub-card"><div class="module-hub-icon">📅</div><span>تقویم</span></a>
-                    <a href="goals.html" class="module-hub-card"><div class="module-hub-icon">🎯</div><span>اهداف</span></a>
-                    <a href="notes.html" class="module-hub-card"><div class="module-hub-icon">✍️</div><span>یادداشت‌ها</span></a>
-                    <a href="meditation.html" class="module-hub-card"><div class="module-hub-icon">🧘</div><span>مدیتیشن</span></a>
-                    <a href="finance.html" class="module-hub-card"><div class="module-hub-icon">💰</div><span>دارایی</span></a>
-                    <a href="diet.html" class="module-hub-card"><div class="module-hub-icon">🍎</div><span>تغذیه</span></a>
-                    <a href="fitness.html" class="module-hub-card"><div class="module-hub-icon">💪</div><span>جسم‌پرداز</span></a>
-                    <a href="social.html" class="module-hub-card"><div class="module-hub-icon">👥</div><span>روابط</span></a>
-                </div>
-            </section>
+                    <div class="module-hub-grid">
+                        <a href="tasks.html" class="module-hub-card"><div class="module-hub-icon">📝</div><span>تسک‌ها</span></a>
+                        <a href="habits.html" class="module-hub-card"><div class="module-hub-icon">🌿</div><span>عادت‌ها</span></a>
+                        <a href="calendar.html" class="module-hub-card"><div class="module-hub-icon">📅</div><span>تقویم</span></a>
+                        <a href="goals.html" class="module-hub-card"><div class="module-hub-icon">🎯</div><span>اهداف</span></a>
+                        <a href="notes.html" class="module-hub-card"><div class="module-hub-icon">✍️</div><span>یادداشت‌ها</span></a>
+                        <a href="meditation.html" class="module-hub-card"><div class="module-hub-icon">🧘</div><span>مدیتیشن</span></a>
+                        <a href="finance.html" class="module-hub-card"><div class="module-hub-icon">💰</div><span>دارایی</span></a>
+                        <a href="diet.html" class="module-hub-card"><div class="module-hub-icon">🍎</div><span>تغذیه</span></a>
+                        <a href="fitness.html" class="module-hub-card"><div class="module-hub-icon">💪</div><span>جسم‌پرداز</span></a>
+                        <a href="social.html" class="module-hub-card"><div class="module-hub-icon">👥</div><span>روابط</span></a>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 

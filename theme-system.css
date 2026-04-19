@@ -1,0 +1,326 @@
+:root {
+    --calisia-dark-bg:
+        radial-gradient(circle at top left, rgba(45, 212, 191, 0.14), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.12), transparent 24%),
+        linear-gradient(180deg, #062b2a 0%, #0a3a37 54%, #041b20 100%);
+    --calisia-dark-surface: linear-gradient(145deg, rgba(10, 39, 49, 0.94), rgba(8, 26, 35, 0.9));
+    --calisia-dark-surface-strong: linear-gradient(145deg, rgba(7, 49, 57, 0.96), rgba(7, 28, 39, 0.92));
+    --calisia-dark-soft: rgba(255, 255, 255, 0.04);
+    --calisia-dark-border: rgba(94, 234, 212, 0.18);
+    --calisia-dark-text: #eef7ff;
+    --calisia-dark-muted: rgba(226, 232, 240, 0.72);
+    --calisia-dark-accent: #9ff8ea;
+    --calisia-dark-shadow: 0 18px 40px rgba(2, 8, 23, 0.24);
+    --calisia-light-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(233, 248, 245, 0.9));
+    --calisia-light-border: rgba(15, 118, 110, 0.16);
+    --calisia-light-shadow: 0 18px 36px rgba(8, 96, 90, 0.12);
+}
+
+html[data-theme='dark'] {
+    color-scheme: dark;
+}
+
+html[data-theme='light'] {
+    color-scheme: light;
+}
+
+body[data-theme='dark'] {
+    --text-dark: var(--calisia-dark-text) !important;
+    --text-gray: var(--calisia-dark-muted) !important;
+    --warm-cream: #0b2027 !important;
+    --light-teal: rgba(45, 212, 191, 0.08) !important;
+    --soft-gray: rgba(255, 255, 255, 0.06) !important;
+    --border-light: var(--calisia-dark-border) !important;
+    --glass-bg: rgba(255, 255, 255, 0.04) !important;
+    --glass-border: var(--calisia-dark-border) !important;
+    --shadow-light: rgba(2, 8, 23, 0.18) !important;
+    --shadow-medium: rgba(2, 8, 23, 0.24) !important;
+    --shadow-dark: rgba(2, 8, 23, 0.32) !important;
+}
+
+body:not(.meditation-page)[data-theme='dark'] {
+    background: var(--calisia-dark-bg) !important;
+    color: var(--calisia-dark-text) !important;
+}
+
+body:not(.meditation-page)[data-theme='dark']::before {
+    opacity: 0.42 !important;
+}
+
+body[data-theme='dark'] :is(
+    .auth-panel,
+    .auth-card,
+    .top-bar,
+    .calendar-grid,
+    .sidebar,
+    .sidebar-card,
+    .panel,
+    .stats-box,
+    .today-agenda,
+    .today-agenda-item,
+    .main-content,
+    .date-picker-panel,
+    .modal-content,
+    .diet-container,
+    .summary-panel,
+    .card-box,
+    .meal-section,
+    .stat-box,
+    .chart-container,
+    .finance-header,
+    .asset-card,
+    .charts-section,
+    .summary-section,
+    .summary-item,
+    .currency-option,
+    .fitness-header,
+    .form-section,
+    .card,
+    .exercise-item,
+    .goals-header,
+    .goal-card,
+    .actions-section,
+    .add-goal-form,
+    .stat-card,
+    .date-picker-content,
+    .social-header,
+    .profile-card,
+    .profile-feed,
+    .chat-sidebar,
+    .chat-main,
+    .group-card,
+    .leaderboard,
+    .achievements,
+    .notes-header,
+    .filters-bar,
+    .search-box,
+    .note-card,
+    .password-form,
+    .habit-card,
+    .today-section,
+    .achievement-box,
+    .reminders-box,
+    .report-header,
+    .report-section
+) {
+    background: var(--calisia-dark-surface) !important;
+    border-color: var(--calisia-dark-border) !important;
+    box-shadow: var(--calisia-dark-shadow) !important;
+    color: var(--calisia-dark-text) !important;
+}
+
+body[data-theme='dark'] :is(
+    .auth-panel,
+    .finance-header,
+    .fitness-header,
+    .goals-header,
+    .social-header,
+    .notes-header,
+    .report-header,
+    .top-bar
+) {
+    background: var(--calisia-dark-surface-strong) !important;
+}
+
+body[data-theme='dark'] :is(
+    .auth-subtitle,
+    .auth-point,
+    .header-subtitle,
+    .header p,
+    .today-agenda-time,
+    .event-time,
+    .stat-label,
+    .stat-box-title,
+    .stat-box-title small,
+    .food-name,
+    .summary-item,
+    .summary-item p,
+    .search-box input,
+    .note-meta,
+    .note-recipient,
+    .habit-category,
+    .today-item-info p,
+    .leaderboard-score,
+    .achievement-desc,
+    .report-section p,
+    .comparison-subtitle,
+    .summary-stat-label,
+    .section-subtitle,
+    .meditation-desc,
+    .breathing-instruction,
+    .music-title,
+    .music-btn,
+    .back-link,
+    .auth-links a
+) {
+    color: var(--calisia-dark-muted) !important;
+}
+
+body[data-theme='dark'] :is(
+    .auth-title,
+    .header h1,
+    .header-title,
+    .auth-kicker,
+    .notes-header .header-title,
+    .top-bar h1,
+    .stat-number,
+    .stat-value,
+    .achievement-value,
+    .note-title,
+    .habit-title h3,
+    .today-item h3,
+    .leaderboard-name,
+    .summary-stat-value,
+    .modal-title,
+    .finance-header h1,
+    .fitness-header h1,
+    .goals-header h1,
+    .social-header h1,
+    .report-header h1,
+    .report-header h2,
+    .meditation-title,
+    .timer-display,
+    .modal-description,
+    .reportTime,
+    .reportDate
+) {
+    color: var(--calisia-dark-text) !important;
+}
+
+body[data-theme='dark'] :is(
+    input,
+    textarea,
+    select,
+    .input-box,
+    .form-input,
+    .form-select,
+    .form-textarea,
+    .jalaali-input,
+    .password-input,
+    .chat-input input,
+    .search-box input,
+    .auth-form input
+) {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: var(--calisia-dark-border) !important;
+    color: var(--calisia-dark-text) !important;
+    box-shadow: none !important;
+}
+
+body[data-theme='dark'] :is(input, textarea, select)::placeholder {
+    color: rgba(226, 232, 240, 0.48) !important;
+}
+
+body[data-theme='dark'] :is(
+    .auth-tab:not(.active),
+    .auth-skip-btn,
+    .view-btn:not(.active),
+    .nav-btn:not(.active),
+    .nav-btn--ghost,
+    .category-tag,
+    .filter-tag,
+    .filter-btn,
+    .note-action-btn,
+    .music-btn,
+    .timer-btn,
+    .back-link,
+    .recurring-badge,
+    .streak-badge,
+    .tick-btn:not(.done),
+    .btn-secondary,
+    .btn-toggle
+) {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: var(--calisia-dark-border) !important;
+    color: var(--calisia-dark-text) !important;
+}
+
+body[data-theme='dark'] :is(
+    .day-cell:not(.today):not(.selected),
+    .week-cell:not(.today),
+    .month-day:not(.today):not(.active),
+    .date-picker-day:not(.today):not(.selected),
+    .cal-day:not(.done),
+    .calendar-day:not(.today):not(.selected),
+    .calendar-empty,
+    .event-item,
+    .food-item,
+    .installment-item,
+    .leaderboard-item,
+    .achievement-item,
+    .group-card,
+    .note-card,
+    .today-item,
+    .reminder-item
+) {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: var(--calisia-dark-border) !important;
+    color: var(--calisia-dark-text) !important;
+}
+
+body[data-theme='dark'] .auth-message.success {
+    color: var(--calisia-dark-accent) !important;
+}
+
+body[data-theme='dark'] .auth-message.error {
+    color: #ff9c9c !important;
+}
+
+body[data-theme='dark'] :is(.back-link:hover, .auth-links a:hover) {
+    color: var(--calisia-dark-accent) !important;
+}
+
+body[data-theme='dark'] canvas {
+    filter: saturate(0.92) brightness(0.94);
+}
+
+body.meditation-page[data-theme='light'] {
+    background: linear-gradient(135deg, #eefaf7 0%, #dff3ff 52%, #f7fbff 100%) !important;
+    color: #16324a !important;
+}
+
+body.meditation-page[data-theme='light']::before {
+    opacity: 0.72 !important;
+}
+
+body.meditation-page[data-theme='light'] :is(
+    .meditation-card,
+    .music-player,
+    .stat-card,
+    .modal-content,
+    .timer-section,
+    .music-section
+) {
+    background: var(--calisia-light-bg) !important;
+    border-color: var(--calisia-light-border) !important;
+    box-shadow: var(--calisia-light-shadow) !important;
+    color: #16324a !important;
+}
+
+body.meditation-page[data-theme='light'] :is(
+    .header,
+    .meditation-title,
+    .timer-display,
+    .stat-value,
+    .music-title,
+    .modal-title,
+    .back-link
+) {
+    color: #0a5c56 !important;
+}
+
+body.meditation-page[data-theme='light'] :is(
+    .meditation-desc,
+    .stat-label,
+    .modal-description,
+    .breathing-instruction,
+    .music-btn,
+    .breathing-text
+) {
+    color: #3d6471 !important;
+}
+
+body.meditation-page[data-theme='light'] :is(.music-btn, .timer-btn) {
+    background: rgba(15, 118, 110, 0.08) !important;
+    border-color: rgba(15, 118, 110, 0.16) !important;
+}

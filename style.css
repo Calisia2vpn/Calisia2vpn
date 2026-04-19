@@ -463,6 +463,23 @@ body[data-theme='dark'] .event-modal {
     color: #0a5c56 !important;
 }
 
+body[data-theme='dark'] .btn-secondary,
+body[data-theme='dark'] .button-outline,
+body[data-theme='dark'] .hero-action.button-outline {
+    border-color: rgba(94, 234, 212, 0.22) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #e6faf6 !important;
+}
+
+body[data-theme='dark'] .stat-value,
+body[data-theme='dark'] .section-title,
+body[data-theme='dark'] .card-title-main,
+body[data-theme='dark'] .goal-title,
+body[data-theme='dark'] .header h1,
+body[data-theme='dark'] .goals-header h1 {
+    color: #f2fffc !important;
+}
+
 .progress-fill,
 .progress-bar > div,
 .goal-focus-progress-fill {
@@ -473,6 +490,14 @@ body[data-theme='dark'] .event-modal {
     background: transparent;
     color: var(--ink);
     border: 1px solid rgba(47, 39, 34, 0.12);
+}
+
+body[data-theme='dark'] .button-outline:hover,
+body[data-theme='dark'] .hero-action.button-outline:hover,
+body[data-theme='dark'] .btn-secondary:hover {
+    background: rgba(94, 234, 212, 0.12) !important;
+    border-color: rgba(94, 234, 212, 0.28) !important;
+    color: #9ff8ea !important;
 }
 
 .hero-panel {

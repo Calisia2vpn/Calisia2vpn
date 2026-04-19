@@ -20,6 +20,11 @@ const body = document.body;
 
 function setTheme(theme) {
     body.setAttribute('data-theme', theme);
+    document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
+    const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeColorMeta) {
+        themeColorMeta.setAttribute('content', theme === 'dark' ? '#081b24' : '#0f766e');
+    }
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
         themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
