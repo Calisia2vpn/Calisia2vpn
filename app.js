@@ -18,6 +18,14 @@ const weekDates = Array.from({ length: 7 }).map((_, index) => {
 
 const body = document.body;
 
+function getUiLanguage() {
+    if (typeof window.getCurrentLanguage === 'function') {
+        return window.getCurrentLanguage();
+    }
+    const saved = localStorage.getItem('preferredLanguage');
+    return saved === 'fa' ? 'fa' : 'en';
+}
+
 function setTheme(theme) {
     body.setAttribute('data-theme', theme);
     document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
@@ -43,21 +51,40 @@ function toggleTheme() {
 function updateHeaderClock() {
     const now = new Date();
     const jDate = jalaali.toJalaali(now);
-    const monthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
-    const weekdayNames = ['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه','شنبه'];
-    const dayName = weekdayNames[now.getDay()];
+    const monthNamesFa = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
+    const monthNamesEn = ['Farvardin','Ordibehesht','Khordad','Tir','Mordad','Shahrivar','Mehr','Aban','Azar','Dey','Bahman','Esfand'];
+    const weekdayNamesFa = ['یکشنبه','دوشنبه','سه‌شنبه','چهارشنبه','پنج‌شنبه','جمعه','شنبه'];
+    const locale = getUiLanguage() === 'fa' ? 'fa-IR' : 'en-US';
 
-    document.getElementById('headerDate').textContent = `${dayName} ${formatFaPlain(jDate.jd)} ${monthNames[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
-    document.getElementById('headerClock').textContent = now.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    if (getUiLanguage() === 'fa') {
+        const dayName = weekdayNamesFa[now.getDay()];
+        document.getElementById('headerDate').textContent = `${dayName} ${formatFaPlain(jDate.jd)} ${monthNamesFa[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
+    } else {
+        document.getElementById('headerDate').textContent = new Intl.DateTimeFormat('en-US', {
+            weekday: 'long',
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+        }).format(now);
+    }
+
+    document.getElementById('headerClock').textContent = now.toLocaleTimeString(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
 
     const secondaryDate = document.getElementById('headerDateSecondary');
     if (secondaryDate) {
-        const gregorianText = new Intl.DateTimeFormat('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        }).format(now);
-        secondaryDate.textContent = gregorianText;
+        if (getUiLanguage() === 'fa') {
+            secondaryDate.textContent = new Intl.DateTimeFormat('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }).format(now);
+        } else {
+            secondaryDate.textContent = `${formatFaPlain(jDate.jd)} ${monthNamesEn[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
+        }
     }
 }
 
@@ -72,8 +99,7 @@ function pickDailyQuote() {
 }
 
 function formatFa(value) {
-    // Format number as Persian with proper numeral shaping
-    return new Intl.NumberFormat('fa-IR', {
+    return new Intl.NumberFormat(getUiLanguage() === 'fa' ? 'fa-IR' : 'en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
         useGrouping: true
@@ -81,7 +107,7 @@ function formatFa(value) {
 }
 
 function formatFaPlain(value) {
-    return new Intl.NumberFormat('fa-IR', {
+    return new Intl.NumberFormat(getUiLanguage() === 'fa' ? 'fa-IR' : 'en-US', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
         useGrouping: false
@@ -89,6 +115,9 @@ function formatFaPlain(value) {
 }
 
 function formatFaText(value) {
+    if (getUiLanguage() !== 'fa') {
+        return String(value).replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)));
+    }
     return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
 }
 
@@ -377,6 +406,13 @@ function readDashboardTasks() {
 function formatFaJalaaliFromGregorian(dateLike) {
     const date = new Date(dateLike);
     if (Number.isNaN(date.getTime())) return '';
+    if (getUiLanguage() !== 'fa') {
+        return new Intl.DateTimeFormat('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }).format(date);
+    }
     const jDate = jalaali.toJalaali(date);
     const monthNames = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
     return `${formatFaPlain(jDate.jd)} ${monthNames[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
@@ -1810,13 +1846,12 @@ function initAgenticAssistant() {
         <section class="agent-assistant-card" aria-live="polite">
             <div class="agent-assistant-head">
                 <h3>🧠 سایه‌یار AURA</h3>
-                <span id="assistantConnectionBadge" class="assistant-badge">Gemini: تنظیم نشده</span>
+                <span id="assistantConnectionBadge" class="assistant-badge">AI Coach: backend</span>
             </div>
-            <p class="assistant-hint">نمونه: «تسک شبکه اجتماعی ۲ ساعت اضافه کن» (اگه کم‌اثر باشه رد می‌کنم) یا «برنامه امروز»</p>
+            <p class="assistant-hint">نمونه: «برای امروزم یک برنامه تمرکز بچین» یا «چی را حذف کنم که روزم سبک‌تر شود؟»</p>
             <div class="assistant-config-row">
-                <input id="assistantApiKey" type="password" class="assistant-input" placeholder="Gemini API Key">
-                <input id="assistantModel" type="text" class="assistant-input" value="gemini-2.5-flash" placeholder="Model">
-                <button id="assistantSaveConfig" type="button" class="assistant-btn secondary">ثبت تنظیمات</button>
+                <input id="assistantModel" type="text" class="assistant-input" value="gemini-3.1-pro-preview" placeholder="Model">
+                <button id="assistantSaveConfig" type="button" class="assistant-btn secondary">ذخیره مدل</button>
             </div>
             <div class="assistant-chat-log" id="assistantChatLog"></div>
             <div class="assistant-action-row">
@@ -1854,7 +1889,6 @@ function initAgenticAssistant() {
     });
     kernel.hooks = hooks;
 
-    const apiKeyInput = document.getElementById('assistantApiKey');
     const modelInput = document.getElementById('assistantModel');
     const saveBtn = document.getElementById('assistantSaveConfig');
     const runBtn = document.getElementById('assistantRun');
@@ -1873,11 +1907,11 @@ function initAgenticAssistant() {
 
     function refreshStatus() {
         const settings = kernel.getSettings();
-        const connected = Boolean(settings.apiKey);
-        badge.textContent = connected
-            ? `Gemini: ${settings.model || 'active'}`
+        const remoteMode = settings.provider !== 'local';
+        badge.textContent = remoteMode
+            ? `AI Coach: ${settings.model || 'backend'}`
             : 'حالت داخلی: فعال';
-        badge.classList.toggle('connected', connected);
+        badge.classList.toggle('connected', remoteMode);
     }
 
     const history = kernel.getHistory();
@@ -1885,13 +1919,11 @@ function initAgenticAssistant() {
 
     saveBtn.addEventListener('click', () => {
         kernel.configureProvider({
-            provider: apiKeyInput.value.trim() ? 'gemini' : 'local',
-            apiKey: apiKeyInput.value.trim(),
-            model: modelInput.value.trim() || 'gemini-2.5-flash'
+            provider: 'gapgpt',
+            model: modelInput.value.trim() || 'gemini-3.1-pro-preview'
         });
-        apiKeyInput.value = '';
         refreshStatus();
-        appendChat('assistant', 'تنظیمات ذخیره شد. بدون API هم حالت داخلی در دسترس است.');
+        appendChat('assistant', 'مدل دستیار ذخیره شد. کلید API از سمت سرور استفاده می‌شود.');
     });
 
     runBtn.addEventListener('click', async () => {
@@ -1935,7 +1967,25 @@ function initializeUserOnboarding() {
     const skipBtn = document.getElementById('onboardingSkip');
     if (!submitBtn || !skipBtn) return;
 
+    function skipAndClose() {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify({
+            skipped: true,
+            createdAt: new Date().toISOString()
+        }));
+        overlay.classList.remove('visible');
+    }
+
     overlay.classList.add('visible');
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay) {
+            skipAndClose();
+        }
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && overlay.classList.contains('visible')) {
+            skipAndClose();
+        }
+    });
 
     function collectProfile() {
         return {
@@ -2002,11 +2052,7 @@ function initializeUserOnboarding() {
     });
 
     skipBtn.addEventListener('click', () => {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify({
-            skipped: true,
-            createdAt: new Date().toISOString()
-        }));
-        overlay.classList.remove('visible');
+        skipAndClose();
     });
 }
 
@@ -2088,6 +2134,24 @@ window.addEventListener('storage', event => {
     renderLifeSyncInsights();
     if (document.getElementById('miniCalendar')) {
         renderMiniCalendar();
+    }
+});
+
+window.addEventListener('languagechange', () => {
+    if (document.getElementById('headerDate')) {
+        updateHeaderClock();
+    }
+    if (document.getElementById('timerDisplay') || document.getElementById('stopwatchDisplay') || document.getElementById('miniCalendar')) {
+        loadDashboardSnapshot();
+        renderTodaySchedule();
+        renderGoalFocus();
+        renderHomeGlanceStrip();
+        renderTodayPrayerTimes();
+        loadWeeklyStats();
+        renderLifeSyncInsights();
+        if (document.getElementById('miniCalendar')) {
+            renderMiniCalendar();
+        }
     }
 });
 

@@ -3,6 +3,7 @@ import { randomUUID, createHmac, randomBytes, scryptSync, timingSafeEqual } from
 import { config, assertConfig } from './config.js';
 import { createSmsGateway } from './gateways/sms.js';
 import { createPaymentGateway } from './gateways/payment.js';
+import { createMemoryRateLimiter, requestPersonalCoachReply } from './ai.js';
 
 const usersById = new Map();
 const usersByMobile = new Map();
@@ -13,6 +14,10 @@ const loginAttempts = new Map();
 
 const smsGateway = createSmsGateway(config.smsProvider);
 const paymentGateway = createPaymentGateway(config.paymentProvider);
+const aiRateLimiter = createMemoryRateLimiter({
+  windowMs: config.aiRateLimitWindowMs,
+  maxRequests: config.aiRateLimitMax
+});
 
 function normalizeMobile(value) {
   const digits = String(value || '').replace(/\D+/g, '');
@@ -87,6 +92,11 @@ function parseBody(req) {
     });
     req.on('error', reject);
   });
+}
+
+function getClientIdentifier(req) {
+  const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  return forwarded || req.socket?.remoteAddress || 'unknown';
 }
 
 function signToken(payload) {
@@ -199,26 +209,72 @@ async function route(req, res) {
     return sendJson(res, 200, {
       ok: true,
       service: 'calisia2vpn-backend',
-      version: '0.4.0',
+      version: '0.5.0',
       env: config.appEnv,
       now: new Date().toISOString(),
       smsProvider: config.smsProvider,
-      paymentProvider: config.paymentProvider
+      paymentProvider: config.paymentProvider,
+      aiProvider: config.gapgptApiKey ? 'gapgpt' : 'disabled'
     });
   }
 
   if (req.method === 'GET' && url.pathname === '/v1/meta') {
     return sendJson(res, 200, {
       app: 'Calisia API',
-      version: '0.4.0',
+      version: '0.5.0',
       env: config.appEnv,
       serverTime: new Date().toISOString(),
       features: {
         auth: true,
         otp: true,
         paymentsCheckout: true,
-        googleSubscriptionVerify: true
+        googleSubscriptionVerify: true,
+        personalCoachAi: Boolean(config.gapgptApiKey)
       }
+    });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/v1/ai/chat') {
+    const limiter = aiRateLimiter(getClientIdentifier(req));
+    if (!limiter.allowed) {
+      return sendJson(res, 429, {
+        error: 'AI chat rate limit exceeded',
+        retryAfterSeconds: limiter.retryAfterSeconds
+      });
+    }
+
+    const body = await parseBody(req);
+    const message = String(body.message || '').trim();
+    const language = body.language === 'en' ? 'en' : 'fa';
+    const profile = body.profile ?? null;
+    const context = body.context ?? null;
+    const history = Array.isArray(body.history) ? body.history : [];
+    const requestedModel = String(body.model || config.gapgptModel || '').trim();
+
+    if (!message) {
+      return sendJson(res, 400, { error: 'message is required' });
+    }
+    if (message.length > 4000) {
+      return sendJson(res, 400, { error: 'message is too long' });
+    }
+
+    const reply = await requestPersonalCoachReply({
+      apiKey: config.gapgptApiKey,
+      baseUrl: config.gapgptBaseUrl,
+      model: requestedModel || config.gapgptModel,
+      timeoutMs: config.aiRequestTimeoutMs,
+      message,
+      profile,
+      context,
+      history,
+      language
+    });
+
+    return sendJson(res, 200, {
+      ok: true,
+      provider: 'gapgpt',
+      model: requestedModel || config.gapgptModel,
+      reply
     });
   }
 

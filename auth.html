@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#0f766e">
+    <script src="language-sync.js"></script>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/app-icon.svg" type="image/svg+xml">
-    <title>ورود / ثبت‌نام</title>
+    <title>Login / Sign Up</title>
     <script src="theme-sync.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
@@ -83,62 +84,64 @@
         <div class="auth-layout">
             <section class="auth-panel">
                 <span class="auth-kicker">Calisia</span>
-                <h1 class="auth-title">ورود ساده و سریع، بدون شلوغی اضافه</h1>
-                <p class="auth-subtitle">صفحه ورود و ثبت‌نام بازطراحی شد تا فرم‌ها ساده‌تر، واضح‌تر و بدون تداخل باشند.</p>
+                <h1 class="auth-title">Simple, fast access without extra clutter</h1>
+                <p class="auth-subtitle">The login and sign-up flow is redesigned to be cleaner, clearer, and easier to use.</p>
                 <div class="auth-points">
-                    <div class="auth-point">ثبت‌نام فقط با اطلاعات ضروری انجام می‌شود.</div>
-                    <div class="auth-point">نسخه انگلیسی و فارسی روی همین ساختار مشترک اجرا می‌شوند.</div>
-                    <div class="auth-point">اگر فعلاً نمی‌خواهی وارد شوی، می‌توانی به‌صورت مهمان ادامه بدهی.</div>
+                    <div class="auth-point">Sign-up only asks for the essential information.</div>
+                    <div class="auth-point">Both English and Persian run on the same consistent structure.</div>
+                    <div class="auth-point">You can continue as a guest if you do not want to sign in now.</div>
                 </div>
             </section>
 
             <div class="auth-card">
-                <h2 class="auth-title" style="font-size:28px; margin-bottom:8px;">ورود و ثبت‌نام</h2>
-                <p class="auth-subtitle" style="margin-bottom:18px;">برای شروع، حساب بساز یا وارد شو.</p>
+                <h2 class="auth-title" style="font-size:28px; margin-bottom:8px;">Login & Sign Up</h2>
+                <p class="auth-subtitle" style="margin-bottom:18px;">Create an account or log in to get started.</p>
 
                 <div class="auth-tabs">
-                    <button type="button" id="tabLogin" class="auth-tab active">ورود</button>
-                    <button type="button" id="tabRegister" class="auth-tab">ثبت‌نام</button>
+                    <button type="button" id="tabLogin" class="auth-tab active">Login</button>
+                    <button type="button" id="tabRegister" class="auth-tab">Sign Up</button>
                 </div>
 
                 <form id="loginForm" class="auth-form active" novalidate>
-                    <label>شماره موبایل یا ایمیل
-                        <input type="text" id="loginInput" placeholder="0912xxxxxxx یا email@site.com" autocomplete="username" required>
+                    <label>Mobile Number or Email
+                        <input type="text" id="loginInput" placeholder="0912xxxxxxx or email@site.com" autocomplete="username" required>
                     </label>
-                    <label>رمز عبور
-                        <input type="password" id="loginPassword" placeholder="رمز عبور" autocomplete="current-password" required>
+                    <label>Password
+                        <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
                     </label>
-                    <button type="submit" class="btn btn-primary auth-submit">ورود</button>
+                    <button type="submit" class="btn btn-primary auth-submit">Login</button>
                 </form>
 
                 <form id="registerForm" class="auth-form" novalidate>
-                    <label>نام و نام خانوادگی
-                        <input type="text" id="regName" placeholder="مثال: علی رضایی" autocomplete="name" required>
+                    <label>Full Name
+                        <input type="text" id="regName" placeholder="Example: Ali Rezaei" autocomplete="name" required>
                     </label>
-                    <label>شماره موبایل
-                        <input type="tel" id="regMobile" placeholder="مثال: 0912xxxxxxx" inputmode="numeric" autocomplete="tel" required>
+                    <label>Mobile Number
+                        <input type="tel" id="regMobile" placeholder="Example: 0912xxxxxxx" inputmode="numeric" autocomplete="tel" required>
                     </label>
-                    <label>ایمیل (اختیاری)
+                    <label>Email (Optional)
                         <input type="email" id="regEmail" placeholder="email@site.com" autocomplete="email">
                     </label>
-                    <label>رمز عبور
-                        <input type="password" id="regPassword" placeholder="حداقل ۸ کاراکتر" autocomplete="new-password" required>
+                    <label>Password
+                        <input type="password" id="regPassword" placeholder="At least 8 characters" autocomplete="new-password" required>
                     </label>
-                    <button type="submit" class="btn btn-primary auth-submit">ثبت‌نام</button>
+                    <button type="submit" class="btn btn-primary auth-submit">Sign Up</button>
                 </form>
 
                 <div id="authMessage" class="auth-message"></div>
-                <button id="skipAuthBtn" type="button" class="auth-skip-btn">فعلاً رد کن و مهمان وارد شو</button>
+                <button id="skipAuthBtn" type="button" class="auth-skip-btn">Skip for now and continue as guest</button>
                 <div class="auth-links">
-                    <a href="index.html">بازگشت به داشبورد</a>
-                    <a href="#" id="apiHintLink">تنظیم آدرس API</a>
+                    <a href="index.html">Back to Dashboard</a>
+                    <a href="#" id="apiHintLink">Set API Address</a>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="runtime-config.js"></script>
+    <script src="i18n-data.js"></script>
     <script src="i18n.js"></script>
+    <script src="assistant-engine.js"></script>
     <script src="auth-ui.js"></script>
     <script src="pwa-register.js"></script>
 </body>

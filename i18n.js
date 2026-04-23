@@ -1,30 +1,24 @@
 (() => {
   const STORAGE_KEY = 'preferredLanguage';
-  const defaultLanguage = 'fa';
+  const defaultLanguage = 'en';
   const textSourceMap = new WeakMap();
   const attrSourceMap = new WeakMap();
+  const titleSource = { value: document.title };
+  const translationCache = new Map();
   let isApplyingLanguage = false;
   let observerDebounceTimer = null;
+  let suppressMutationUntil = 0;
 
-  const translations = {
+  const customTranslations = {
     'ورود': 'Login',
     'ثبت‌نام': 'Sign Up',
+    'ورود / ثبت‌نام': 'Login / Sign Up',
     'ورود و ثبت‌نام': 'Login & Sign Up',
-    'برای شروع، حساب بساز یا وارد شو.': 'Create an account or log in to start.',
-    'ورود ساده و سریع، بدون شلوغی اضافه': 'Simple and fast access, without clutter.',
-    'صفحه ورود و ثبت‌نام بازطراحی شد تا فرم‌ها ساده‌تر، واضح‌تر و بدون تداخل باشند.': 'The auth page is redesigned to make forms simpler, clearer, and conflict-free.',
-    'ثبت‌نام فقط با اطلاعات ضروری انجام می‌شود.': 'Sign up only asks for essential information.',
-    'نسخه انگلیسی و فارسی روی همین ساختار مشترک اجرا می‌شوند.': 'Persian and English now share the same stable layout.',
-    'اگر فعلاً نمی‌خواهی وارد شوی، می‌توانی به‌صورت مهمان ادامه بدهی.': 'If you do not want to sign in yet, you can continue as a guest.',
-    'نام و نام خانوادگی': 'Full Name',
-    'شماره موبایل': 'Mobile Number',
-    'ایمیل (اختیاری)': 'Email (Optional)',
-    'رمز عبور': 'Password',
-    'شماره موبایل یا ایمیل': 'Mobile Number or Email',
     'بازگشت به داشبورد': 'Back to Dashboard',
-    'تنظیم آدرس API': 'Set API URL',
-    'فعلاً رد کن و مهمان وارد شو': 'Skip for now and continue as guest',
     'خانه داشبورد': 'Dashboard Home',
+    'خروج از حساب': 'Log Out',
+    'تم تاریک': 'Dark Mode',
+    'تم روشن': 'Light Mode',
     'تسک‌ها': 'Tasks',
     'عادت‌ها': 'Habits',
     'تقویم': 'Calendar',
@@ -35,54 +29,68 @@
     'تغذیه': 'Nutrition',
     'جسم‌پرداز': 'Fitness',
     'روابط': 'Social',
-    'خروج از حساب': 'Logout',
-    'داشبورد روزانه': 'Daily Dashboard',
-    'همه‌چیز مهمِ امروز، یکجا': 'Everything important today, in one place.',
-    'نسخه فارسی سبک‌تر شد تا بدون تداخل و شلوغی، سریع به مسیرهای اصلی برسی.': 'The Persian homepage is now lighter so you can reach key paths faster with less visual noise.',
-    'برنامه‌ی امروز': 'Today Plan',
-    'تقویم کامل': 'Full Calendar',
-    'وقت جاری': 'Current Time',
-    'روز و تاریخ': 'Date',
-    'تقویم امروز': 'Today Calendar',
     'اوقات شرعی': 'Prayer Times',
     'نماز بعدی': 'Next Prayer',
-    'مسیرهای سریع': 'Quick Links',
-    'فقط سه مسیر ضروری نگه داشته شد تا خانه ساده‌تر بماند.': 'Only three essential shortcuts remain to keep the homepage simple.',
     'امروز': 'Today',
-    'ماژول‌ها': 'Modules',
-    'هم‌افزایی': 'Overview',
-    'ابزار زمان': 'Time Tools',
-    'خلاصه سریع وضعیت امروز': 'Quick Overview',
-    'رویدادها': 'Events',
-    'تمرکز روی هدف': 'Goal Focus',
-    'در حال بارگذاری...': 'Loading...',
-    'همه ماژول‌ها': 'All Modules',
-    'همه‌ی بخش‌ها یکجا جمع شده‌اند تا لازم نباشد دنبالش بگردی.': 'All sections are gathered here so you can access them quickly.',
-    'داشبورد': 'Dashboard',
-    'تم تاریک': 'Dark Mode',
-    'تم روشن': 'Light Mode',
-    'منو': 'Menu',
-    'بستن': 'Close',
-    'شروع': 'Start',
-    'بازنشانی': 'Reset',
     'ذخیره': 'Save',
-    'انصراف': 'Cancel',
-    'افزودن': 'Add'
+    'لغو': 'Cancel',
+    'بازنشانی': 'Reset',
+    'شروع': 'Start',
+    'در حال بارگذاری...': 'Loading...',
+    'تومان': 'Toman'
   };
 
-  const enToFa = Object.fromEntries(Object.entries(translations).map(([fa, en]) => [en, fa]));
-  const monthMap = {
-    'فروردین': 'Farvardin', 'اردیبهشت': 'Ordibehesht', 'خرداد': 'Khordad', 'تیر': 'Tir',
-    'مرداد': 'Mordad', 'شهریور': 'Shahrivar', 'مهر': 'Mehr', 'آبان': 'Aban',
-    'آذر': 'Azar', 'دی': 'Dey', 'بهمن': 'Bahman', 'اسفند': 'Esfand'
+  const translations = {
+    ...(window.I18N_FA_TO_EN || {}),
+    ...customTranslations
   };
-  const dayMap = {
-    'شنبه': 'Saturday', 'یکشنبه': 'Sunday', 'دوشنبه': 'Monday', 'سه‌شنبه': 'Tuesday',
-    'چهارشنبه': 'Wednesday', 'پنج‌شنبه': 'Thursday', 'جمعه': 'Friday'
+
+  const enToFa = Object.fromEntries(
+    Object.entries(translations).map(([fa, en]) => [en, fa])
+  );
+
+  const faMonthMap = {
+    'فروردین': 'Farvardin',
+    'اردیبهشت': 'Ordibehesht',
+    'خرداد': 'Khordad',
+    'تیر': 'Tir',
+    'مرداد': 'Mordad',
+    'شهریور': 'Shahrivar',
+    'مهر': 'Mehr',
+    'آبان': 'Aban',
+    'آذر': 'Azar',
+    'دی': 'Dey',
+    'بهمن': 'Bahman',
+    'اسفند': 'Esfand'
   };
+
+  const faDayMap = {
+    'شنبه': 'Saturday',
+    'یکشنبه': 'Sunday',
+    'دوشنبه': 'Monday',
+    'سه‌شنبه': 'Tuesday',
+    'چهارشنبه': 'Wednesday',
+    'پنج‌شنبه': 'Thursday',
+    'جمعه': 'Friday'
+  };
+
+  const enMonthMap = Object.fromEntries(Object.entries(faMonthMap).map(([fa, en]) => [en, fa]));
+  const enDayMap = Object.fromEntries(Object.entries(faDayMap).map(([fa, en]) => [en, fa]));
+
+  const faKeys = Object.keys(translations).sort((a, b) => b.length - a.length);
+  const enKeys = Object.keys(enToFa).sort((a, b) => b.length - a.length);
+  const faMonthKeys = Object.keys(faMonthMap).sort((a, b) => b.length - a.length);
+  const faDayKeys = Object.keys(faDayMap).sort((a, b) => b.length - a.length);
+  const enMonthKeys = Object.keys(enMonthMap).sort((a, b) => b.length - a.length);
+  const enDayKeys = Object.keys(enDayMap).sort((a, b) => b.length - a.length);
 
   function getCurrentLanguage() {
-    const lang = localStorage.getItem(STORAGE_KEY);
+    let lang = defaultLanguage;
+    try {
+      lang = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      lang = defaultLanguage;
+    }
     return lang === 'en' || lang === 'fa' ? lang : defaultLanguage;
   }
 
@@ -95,29 +103,60 @@
       attrSourceMap.set(element, {
         placeholder: element.getAttribute('placeholder'),
         title: element.getAttribute('title'),
-        ariaLabel: element.getAttribute('aria-label')
+        ariaLabel: element.getAttribute('aria-label'),
+        value: element.getAttribute('value')
       });
     }
   }
 
-  function translateText(value, targetLang) {
-    const input = String(value || '').trim();
-    if (!input) return value;
-    if (targetLang === 'en') {
-      if (translations[input]) return translations[input];
-      let out = String(value);
-      Object.entries(monthMap).forEach(([fa, en]) => { out = out.split(fa).join(en); });
-      Object.entries(dayMap).forEach(([fa, en]) => { out = out.split(fa).join(en); });
-      out = out.replace(/[۰-۹]/g, d => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
-      return out;
+  function replaceFromMap(text, map, keys) {
+    let out = String(text);
+    for (const key of keys) {
+      if (!out.includes(key)) continue;
+      out = out.split(key).join(map[key]);
     }
-    return enToFa[input] || value;
+    return out;
+  }
+
+  function translateDigitsToEnglish(text) {
+    return String(text).replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)));
+  }
+
+  function translateDigitsToPersian(text) {
+    return String(text).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
+  }
+
+  function translateText(value, targetLang) {
+    const raw = String(value ?? '');
+    if (!raw.trim()) return raw;
+
+    const cacheKey = `${targetLang}::${raw}`;
+    if (translationCache.has(cacheKey)) return translationCache.get(cacheKey);
+
+    let out = raw;
+
+    if (targetLang === 'en') {
+      out = replaceFromMap(out, faMonthMap, faMonthKeys);
+      out = replaceFromMap(out, faDayMap, faDayKeys);
+      out = replaceFromMap(out, translations, faKeys);
+      out = translateDigitsToEnglish(out);
+      out = out.replace(/٪/g, '%');
+    } else {
+      out = replaceFromMap(out, enMonthMap, enMonthKeys);
+      out = replaceFromMap(out, enDayMap, enDayKeys);
+      out = replaceFromMap(out, enToFa, enKeys);
+      out = translateDigitsToPersian(out);
+      out = out.replace(/(?<=\d)%/g, '٪');
+    }
+
+    translationCache.set(cacheKey, out);
+    return out;
   }
 
   function shouldTranslateTextNode(node) {
     const parent = node.parentElement;
     if (!parent) return false;
-    if (parent.closest('script, style')) return false;
+    if (parent.closest('script, style, code, pre')) return false;
     return Boolean(node.nodeValue && node.nodeValue.trim());
   }
 
@@ -129,25 +168,50 @@
       if (!shouldTranslateTextNode(node)) return;
       rememberOriginalText(node);
       const original = textSourceMap.get(node);
-      node.nodeValue = targetLang === 'fa' ? original : translateText(original, 'en');
+      const nextValue = targetLang === 'fa' ? original : translateText(original, 'en');
+      if (node.nodeValue !== nextValue) {
+        node.nodeValue = nextValue;
+      }
     });
   }
 
   function translateAttributes(targetLang) {
-    document.querySelectorAll('[placeholder], [title], [aria-label]').forEach(element => {
+    document.querySelectorAll('[placeholder], [title], [aria-label], input[value], button[value]').forEach(element => {
       rememberOriginalAttributes(element);
       const original = attrSourceMap.get(element);
-      [['placeholder', original.placeholder], ['title', original.title], ['aria-label', original.ariaLabel]].forEach(([attr, value]) => {
+      [
+        ['placeholder', original.placeholder],
+        ['title', original.title],
+        ['aria-label', original.ariaLabel],
+        ['value', original.value]
+      ].forEach(([attr, value]) => {
         if (!value) return;
-        element.setAttribute(attr, targetLang === 'fa' ? value : translateText(value, 'en'));
+        const nextValue = targetLang === 'fa' ? value : translateText(value, 'en');
+        if (element.getAttribute(attr) !== nextValue) {
+          element.setAttribute(attr, nextValue);
+        }
       });
     });
   }
 
+  function translateDocumentTitle(targetLang) {
+    if (!titleSource.value) titleSource.value = document.title;
+    const nextTitle = targetLang === 'fa' ? titleSource.value : translateText(titleSource.value, 'en');
+    if (document.title !== nextTitle) {
+      document.title = nextTitle;
+    }
+  }
+
   function updateDocumentLanguage(targetLang) {
+    if (typeof window.applyLanguageChrome === 'function') {
+      window.applyLanguageChrome(targetLang, false);
+      return;
+    }
+
     document.documentElement.lang = targetLang;
     document.documentElement.dir = targetLang === 'fa' ? 'rtl' : 'ltr';
     document.body.classList.toggle('lang-en', targetLang === 'en');
+    document.body.classList.toggle('lang-fa', targetLang === 'fa');
   }
 
   function updateSwitcher(targetLang) {
@@ -156,17 +220,26 @@
     if (!faBtn || !enBtn) return;
     faBtn.classList.toggle('active', targetLang === 'fa');
     enBtn.classList.toggle('active', targetLang === 'en');
+    faBtn.setAttribute('aria-pressed', String(targetLang === 'fa'));
+    enBtn.setAttribute('aria-pressed', String(targetLang === 'en'));
   }
 
   function applyLanguage(targetLang) {
     if (isApplyingLanguage) return;
     isApplyingLanguage = true;
-    localStorage.setItem(STORAGE_KEY, targetLang);
+    suppressMutationUntil = Date.now() + 300;
+    try {
+      localStorage.setItem(STORAGE_KEY, targetLang);
+    } catch {
+      // Ignore storage write failures (e.g. restricted webviews).
+    }
     updateDocumentLanguage(targetLang);
+    translateDocumentTitle(targetLang);
     translatePageText(targetLang);
     translateAttributes(targetLang);
     updateSwitcher(targetLang);
     isApplyingLanguage = false;
+    window.dispatchEvent(new CustomEvent('languagechange', { detail: { language: targetLang } }));
   }
 
   function mountSwitcher() {
@@ -174,7 +247,10 @@
     const wrap = document.createElement('div');
     wrap.id = 'langSwitcher';
     wrap.className = 'lang-switcher';
-    wrap.innerHTML = '<button id="langFaBtn" type="button" class="lang-btn">FA</button><button id="langEnBtn" type="button" class="lang-btn">EN</button>';
+    wrap.innerHTML = `
+      <button id="langFaBtn" type="button" class="lang-btn" aria-label="Switch to Persian">FA</button>
+      <button id="langEnBtn" type="button" class="lang-btn" aria-label="Switch to English">EN</button>
+    `;
     document.body.appendChild(wrap);
     document.getElementById('langFaBtn')?.addEventListener('click', () => applyLanguage('fa'));
     document.getElementById('langEnBtn')?.addEventListener('click', () => applyLanguage('en'));
@@ -182,14 +258,26 @@
 
   function observeMutations() {
     const observer = new MutationObserver(() => {
+      if (Date.now() < suppressMutationUntil || isApplyingLanguage) return;
       if (observerDebounceTimer) clearTimeout(observerDebounceTimer);
-      observerDebounceTimer = setTimeout(() => applyLanguage(getCurrentLanguage()), 60);
+      observerDebounceTimer = setTimeout(() => applyLanguage(getCurrentLanguage()), 80);
     });
     observer.observe(document.body, { childList: true, subtree: true });
+
+    const titleNode = document.querySelector('title');
+    if (titleNode) {
+      const titleObserver = new MutationObserver(() => {
+        if (isApplyingLanguage) return;
+        titleSource.value = titleNode.textContent || document.title;
+        applyLanguage(getCurrentLanguage());
+      });
+      titleObserver.observe(titleNode, { childList: true, subtree: true, characterData: true });
+    }
   }
 
   window.applyLanguage = applyLanguage;
   window.getCurrentLanguage = getCurrentLanguage;
+  window.translateUiText = translateText;
 
   window.addEventListener('DOMContentLoaded', () => {
     mountSwitcher();

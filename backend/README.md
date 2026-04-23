@@ -21,6 +21,7 @@ This backend is suitable for local development and integration testing. It is no
 ### System
 - `GET /health`
 - `GET /v1/meta`
+- `POST /v1/ai/chat`
 
 ## What was hardened
 
@@ -43,6 +44,7 @@ Configure providers via env:
 ```env
 SMS_PROVIDER=mock
 PAYMENT_PROVIDER=mock
+GAPGPT_API_KEY=REPLACE_WITH_SERVER_SIDE_SECRET
 ```
 
 ## Quick start
@@ -68,7 +70,20 @@ OTP_REQUEST_COOLDOWN_MS=60000
 EXPOSE_OTP_DEBUG_CODE=false
 SMS_PROVIDER=mock
 PAYMENT_PROVIDER=mock
+GAPGPT_API_KEY=REPLACE_WITH_SERVER_SIDE_SECRET
+GAPGPT_BASE_URL=https://api.gapgpt.app/v1/chat/completions
+GAPGPT_MODEL=gemini-3.1-pro-preview
+AI_REQUEST_TIMEOUT_MS=45000
+AI_RATE_LIMIT_WINDOW_MS=600000
+AI_RATE_LIMIT_MAX=30
 ```
+
+## AI coach integration
+
+- The frontend assistant now calls `POST /v1/ai/chat`.
+- The backend forwards requests to GapGPT using an OpenAI-compatible `chat/completions` payload.
+- Keep `GAPGPT_API_KEY` only on the server. Do not hardcode it in browser-side JavaScript.
+- A lightweight in-memory rate limit is included to reduce abuse on public deployments.
 
 ## Production blockers still remaining
 
@@ -80,8 +95,9 @@ PAYMENT_PROVIDER=mock
 6. Add structured logging, monitoring, backups, and alerting.
 7. Add automated tests before launch.
 
-## Update notes (v0.4.0)
+## Update notes (v0.5.0)
 
 - Hardened auth, OTP, and config validation.
 - Startup now aborts on unsafe production configuration.
 - Mock-only behavior is clearer and safer for deployment review.
+- Added a server-side AI coach route backed by GapGPT.

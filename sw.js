@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'calisia-pwa-v4';
+const CACHE_VERSION = 'calisia-pwa-v5';
 const OFFLINE_URL = './index.html';
 
 const CORE_ASSETS = [
@@ -18,6 +18,8 @@ const CORE_ASSETS = [
   './stats.html',
   './style.css',
   './runtime-config.js',
+  './language-sync.js',
+  './i18n-data.js',
   './app.js',
   './auth-ui.js',
   './auth-guard.js',

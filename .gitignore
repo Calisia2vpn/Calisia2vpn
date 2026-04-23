@@ -1,0 +1,5 @@
+backend/.env
+backend/.env.local
+backend/.env.production.local
+backend/node_modules/
+.i18n-cache.json

@@ -1214,7 +1214,47 @@ body.lang-en {
     text-align: left;
 }
 
+html[dir='ltr'] body {
+    direction: ltr;
+    text-align: left;
+}
+
+body.lang-en,
+body.lang-en *,
+html[dir='ltr'] body,
+html[dir='ltr'] body * {
+    font-family: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif !important;
+}
+
+body.lang-en h1,
+body.lang-en h2,
+body.lang-en h3,
+body.lang-en h4,
+body.lang-en h5,
+body.lang-en h6,
+html[dir='ltr'] body h1,
+html[dir='ltr'] body h2,
+html[dir='ltr'] body h3,
+html[dir='ltr'] body h4,
+html[dir='ltr'] body h5,
+html[dir='ltr'] body h6 {
+    letter-spacing: -0.02em;
+}
+
+body.lang-en .lang-switcher,
+html[dir='ltr'] .lang-switcher {
+    left: auto;
+    right: 14px;
+}
+
 body.lang-en .nav-sidebar {
+    right: auto;
+    left: -280px;
+    border-left: none;
+    border-right: 1px solid var(--border);
+}
+
+html[dir='ltr'] .nav-sidebar {
     right: auto;
     left: -280px;
     border-left: none;
@@ -1223,6 +1263,20 @@ body.lang-en .nav-sidebar {
 
 body.lang-en .nav-sidebar.open {
     left: 0;
+}
+
+html[dir='ltr'] .nav-sidebar.open {
+    left: 0;
+}
+
+body.lang-en input,
+body.lang-en textarea,
+body.lang-en select,
+html[dir='ltr'] input,
+html[dir='ltr'] textarea,
+html[dir='ltr'] select {
+    direction: ltr;
+    text-align: left;
 }
 
 .assistant-btn {

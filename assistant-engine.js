@@ -12,12 +12,29 @@
     const LOW_VALUE_PATTERNS = [/اسکرول/, /شبکه اجتماعی/, /بی‌هدف/, /تفریح طولانی/, /چک کردن( مداوم)? پیام/, /بدون اولویت/, /general/i];
     const HIGH_VALUE_PATTERNS = [/ورزش/, /مطالعه/, /زبان/, /درآمد/, /پروژه/, /نماز/, /خواب/, /health/i, /focus/i];
     const DEFAULT_SETTINGS = {
-        provider: 'local',
-        model: 'gemini-2.5-flash',
-        apiKey: '',
-        endpoint: 'https://generativelanguage.googleapis.com/v1beta/models',
+        provider: 'gapgpt',
+        model: 'gemini-3.1-pro-preview',
         temperature: 0.4
     };
+
+    function currentLanguage() {
+        return localStorage.getItem('preferredLanguage') === 'en' ? 'en' : 'fa';
+    }
+
+    function t(fa, en) {
+        return currentLanguage() === 'en' ? en : fa;
+    }
+
+    function apiBase() {
+        return window.__APP_CONFIG?.API_BASE_URL || '/api';
+    }
+
+    function localizeForUi(text) {
+        if (typeof window.translateUiText === 'function') {
+            return window.translateUiText(text, currentLanguage());
+        }
+        return text;
+    }
 
     function parseJson(raw, fallback) {
         try {
@@ -71,7 +88,15 @@
             this.hooks = options.hooks || {};
             this.onDataChanged = options.onDataChanged || null;
             const stored = parseJson(localStorage.getItem(SETTINGS_KEY) || '{}', {});
+            delete stored.apiKey;
+            delete stored.endpoint;
             this.settings = { ...DEFAULT_SETTINGS, ...stored };
+            if (!this.settings.provider || this.settings.provider === 'local' || this.settings.provider === 'gemini') {
+                this.settings.provider = DEFAULT_SETTINGS.provider;
+            }
+            if (!this.settings.model) {
+                this.settings.model = DEFAULT_SETTINGS.model;
+            }
             this.monitorIntervalMs = 60 * 1000;
             this.autonomyIntervalMs = 5 * 60 * 1000;
             this._intervalId = null;
@@ -83,8 +108,6 @@
             const next = {
                 provider: input.provider || this.settings.provider || DEFAULT_SETTINGS.provider,
                 model: input.model || this.settings.model || DEFAULT_SETTINGS.model,
-                apiKey: input.apiKey || this.settings.apiKey || DEFAULT_SETTINGS.apiKey,
-                endpoint: input.endpoint || this.settings.endpoint || DEFAULT_SETTINGS.endpoint,
                 temperature: Number.isFinite(Number(input.temperature)) ? Number(input.temperature) : (this.settings.temperature ?? DEFAULT_SETTINGS.temperature)
             };
             this.settings = { ...this.settings, ...next };
@@ -348,41 +371,45 @@
             ].join('\n');
         }
 
-        async askGemini(message) {
-            if (!this.settings.apiKey) {
-                return 'برای استفاده از Gemini باید API Key را در پنل دستیار وارد کنید. تا آن زمان از تحلیل داخلی استفاده می‌کنم.';
-            }
+        async askPersonalCoach(message) {
             const model = this.settings.model || DEFAULT_SETTINGS.model;
-            const endpointRoot = (this.settings.endpoint || DEFAULT_SETTINGS.endpoint).replace(/\/+$/, '');
-            const url = `${endpointRoot}/${model}:generateContent?key=${encodeURIComponent(this.settings.apiKey || '')}`;
             const context = typeof this.hooks.buildContext === 'function' ? this.hooks.buildContext() : this.getLocalSignalsFallback();
             const profile = this.getUserProfile();
-            const payload = {
-                contents: [{
-                    role: 'user',
-                    parts: [{ text: `UserProfile: ${JSON.stringify(profile)}\nContext: ${JSON.stringify(context)}\n\nUser: ${message}` }]
-                }],
-                generationConfig: {
-                    temperature: this.settings.temperature ?? DEFAULT_SETTINGS.temperature
-                }
-            };
+            const history = this.getHistory().slice(-8);
 
             let response;
             try {
-                response = await fetch(url, {
+                response = await fetch(`${apiBase()}/v1/ai/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({
+                        model,
+                        message,
+                        profile,
+                        context,
+                        history,
+                        language: currentLanguage()
+                    })
                 });
             } catch {
-                return 'اتصال به Gemini در دسترس نیست. پاسخ داخلی را امتحان کنید.';
+                return `${t('اتصال به چت‌بات هوش مصنوعی در دسترس نیست.', 'The AI coach is unavailable right now.')}\n\n${localizeForUi(this.suggestFromSignals())}`;
             }
             if (!response.ok) {
-                const errText = await response.text();
-                return `اتصال Gemini خطا داد (${response.status}). ${errText.slice(0, 180)}.`;
+                const errorPayload = await response.json().catch(() => null);
+                if (response.status === 503) {
+                    return t(
+                        'چت‌بات هنوز روی سرور تنظیم نشده است. متغیر `GAPGPT_API_KEY` را در بک‌اند ست کنید.',
+                        'The AI coach is not configured on the server yet. Set `GAPGPT_API_KEY` on the backend.'
+                    );
+                }
+                const details = String(errorPayload?.error || '').slice(0, 180);
+                return t(
+                    `اتصال دستیار خطا داد (${response.status}). ${details || 'لطفاً دوباره امتحان کنید.'}`,
+                    `The AI coach returned an error (${response.status}). ${details || 'Please try again.'}`
+                );
             }
             const data = await response.json();
-            return data?.candidates?.[0]?.content?.parts?.[0]?.text || 'پاسخی از Gemini دریافت نشد.';
+            return data?.reply || t('پاسخی از مدل دریافت نشد.', 'The AI provider returned an empty response.');
         }
 
         parseCommand(message) {
@@ -481,7 +508,7 @@
             } else if (command.type === 'insight:warnings' || command.type === 'insight:signals') {
                 reply = this.suggestFromSignals();
             } else {
-                reply = await this.askGemini(command.payload.message);
+                reply = await this.askPersonalCoach(command.payload.message);
             }
 
             this.pushHistory({ role: 'user', text: message });
@@ -603,7 +630,7 @@
                 <button type="button" id="assistantFab" class="assistant-fab" aria-label="باز کردن دستیار">🤖</button>
                 <div id="assistantPanel" class="assistant-panel" aria-live="polite">
                     <div class="assistant-panel-head">
-                        <strong>${ASSISTANT_NAME} • Gemini 3 Pro</strong>
+                        <strong>${ASSISTANT_NAME} • AI Personal Coach</strong>
                         <button id="assistantClose" type="button">×</button>
                     </div>
                     <div id="assistantFeed" class="assistant-feed"></div>
@@ -638,7 +665,10 @@
             const history = this.kernel.getHistory().slice(-12);
             history.forEach(item => this.append(item.role, item.text));
             if (!history.length) {
-                this.append('assistant', `سلام 👋 من ${ASSISTANT_NAME} هستم؛ مثل سایه کنارت می‌مونم. هر چیز کم‌اثر رو بهت می‌گم حذف کنی تا زودتر نتیجه بگیری.`);
+                this.append('assistant', t(
+                    `سلام 👋 من ${ASSISTANT_NAME} هستم؛ مربی هوش مصنوعی مدیریت فردی‌ات. اگر بخواهی، با هم اولویت‌های امروز، عادت‌ها، انرژی و برنامه تمرکزت را جمع‌وجور می‌کنیم.`,
+                    `Hi 👋 I'm ${ASSISTANT_NAME}, your AI coach for personal management. I can help you tighten today's priorities, habits, energy, and focus plan.`
+                ));
             }
         }
 
@@ -745,12 +775,16 @@
 
     function autoInitAssistant() {
         if (window.__globalAgentAssistantMounted) return;
+        const page = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        const isAuthPage = page === 'auth.html';
         const kernel = new AgenticAssistantKernel();
         kernel.startMonitoring();
         const widget = new FloatingAssistantWidget(kernel);
-        const pulseBar = new DailyPulseBar(kernel);
         widget.mount();
-        pulseBar.mount();
+        if (!isAuthPage) {
+            const pulseBar = new DailyPulseBar(kernel);
+            pulseBar.mount();
+        }
         window.agenticAssistant = kernel;
         window.__globalAgentAssistantMounted = true;
     }

@@ -10,6 +10,12 @@ export const config = {
   webhookSecret: process.env.WEBHOOK_SECRET || 'dev-webhook-secret',
   smsProvider: process.env.SMS_PROVIDER || 'mock',
   paymentProvider: process.env.PAYMENT_PROVIDER || 'mock',
+  gapgptApiKey: process.env.GAPGPT_API_KEY || '',
+  gapgptBaseUrl: process.env.GAPGPT_BASE_URL || 'https://api.gapgpt.app/v1/chat/completions',
+  gapgptModel: process.env.GAPGPT_MODEL || 'gemini-3.1-pro-preview',
+  aiRequestTimeoutMs: Number(process.env.AI_REQUEST_TIMEOUT_MS || 45_000),
+  aiRateLimitWindowMs: Number(process.env.AI_RATE_LIMIT_WINDOW_MS || 10 * 60 * 1000),
+  aiRateLimitMax: Number(process.env.AI_RATE_LIMIT_MAX || 30),
   tokenTtlMs: Number(process.env.TOKEN_TTL_MS || 24 * 60 * 60 * 1000),
   otpTtlMs: Number(process.env.OTP_TTL_MS || 2 * 60 * 1000),
   otpMaxAttempts: Number(process.env.OTP_MAX_ATTEMPTS || 5),
@@ -44,6 +50,15 @@ export function assertConfig() {
   }
   if (!Number.isFinite(config.otpRequestCooldownMs) || config.otpRequestCooldownMs < 0) {
     errors.push('OTP_REQUEST_COOLDOWN_MS must be a non-negative number.');
+  }
+  if (!Number.isFinite(config.aiRequestTimeoutMs) || config.aiRequestTimeoutMs < 5_000) {
+    errors.push('AI_REQUEST_TIMEOUT_MS must be at least 5000.');
+  }
+  if (!Number.isFinite(config.aiRateLimitWindowMs) || config.aiRateLimitWindowMs < 60_000) {
+    errors.push('AI_RATE_LIMIT_WINDOW_MS must be at least 60000.');
+  }
+  if (!Number.isInteger(config.aiRateLimitMax) || config.aiRateLimitMax < 1) {
+    errors.push('AI_RATE_LIMIT_MAX must be an integer >= 1.');
   }
   if (isProduction && config.jwtSecret === 'dev-secret-change-me') {
     errors.push('JWT_SECRET cannot use the development default in production.');
