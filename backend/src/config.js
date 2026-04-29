@@ -20,6 +20,13 @@ export const config = {
   otpTtlMs: Number(process.env.OTP_TTL_MS || 2 * 60 * 1000),
   otpMaxAttempts: Number(process.env.OTP_MAX_ATTEMPTS || 5),
   otpRequestCooldownMs: Number(process.env.OTP_REQUEST_COOLDOWN_MS || 60 * 1000),
+  requestBodyLimitBytes: Number(process.env.REQUEST_BODY_LIMIT_BYTES || 1_000_000),
+  generalRateLimitWindowMs: Number(process.env.GENERAL_RATE_LIMIT_WINDOW_MS || 60 * 1000),
+  generalRateLimitMax: Number(process.env.GENERAL_RATE_LIMIT_MAX || 120),
+  allowedOrigins: String(process.env.ALLOWED_ORIGINS || '*')
+    .split(',')
+    .map(origin => origin.trim())
+    .filter(Boolean),
   exposeOtpDebugCode: process.env.EXPOSE_OTP_DEBUG_CODE === 'true'
 };
 
@@ -59,6 +66,18 @@ export function assertConfig() {
   }
   if (!Number.isInteger(config.aiRateLimitMax) || config.aiRateLimitMax < 1) {
     errors.push('AI_RATE_LIMIT_MAX must be an integer >= 1.');
+  }
+  if (!Number.isFinite(config.requestBodyLimitBytes) || config.requestBodyLimitBytes < 1024) {
+    errors.push('REQUEST_BODY_LIMIT_BYTES must be at least 1024.');
+  }
+  if (!Number.isFinite(config.generalRateLimitWindowMs) || config.generalRateLimitWindowMs < 1000) {
+    errors.push('GENERAL_RATE_LIMIT_WINDOW_MS must be at least 1000.');
+  }
+  if (!Number.isInteger(config.generalRateLimitMax) || config.generalRateLimitMax < 1) {
+    errors.push('GENERAL_RATE_LIMIT_MAX must be an integer >= 1.');
+  }
+  if (isProduction && config.allowedOrigins.includes('*')) {
+    errors.push('ALLOWED_ORIGINS cannot be * in production.');
   }
   if (isProduction && config.jwtSecret === 'dev-secret-change-me') {
     errors.push('JWT_SECRET cannot use the development default in production.');
