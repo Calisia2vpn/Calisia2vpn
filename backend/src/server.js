@@ -1,5 +1,5 @@
 import { createServer } from 'node:http';
-import { randomUUID, createHmac, randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomUUID, createHmac, randomBytes, randomInt, scryptSync, timingSafeEqual } from 'node:crypto';
 import { config, assertConfig } from './config.js';
 import { createSmsGateway } from './gateways/sms.js';
 import { createPaymentGateway } from './gateways/payment.js';
@@ -41,6 +41,13 @@ function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function normalizeLoginKey(value) {
+  const raw = String(value || '').trim();
+  const mobile = normalizeMobile(raw);
+  if (isValidMobile(mobile)) return `mobile:${mobile}`;
+  return `email:${normalizeEmail(raw)}`;
+}
+
 function hashPassword(password) {
   const salt = randomBytes(16).toString('hex');
   const hash = scryptSync(password, salt, 64).toString('hex');
@@ -74,6 +81,13 @@ function sendJson(res, status, data) {
 
 function parseBody(req) {
   return new Promise((resolve, reject) => {
+    const contentType = String(req.headers['content-type'] || '').toLowerCase();
+    if (req.method !== 'GET' && contentType && !contentType.includes('application/json')) {
+      reject(Object.assign(new Error('Content-Type must be application/json'), { statusCode: 415 }));
+      req.resume();
+      return;
+    }
+
     let raw = '';
     req.on('data', chunk => {
       raw += chunk;
@@ -85,7 +99,12 @@ function parseBody(req) {
     req.on('end', () => {
       if (!raw) return resolve({});
       try {
-        resolve(JSON.parse(raw));
+        const parsed = JSON.parse(raw);
+        if (!parsed || Array.isArray(parsed) || typeof parsed !== 'object') {
+          reject(Object.assign(new Error('JSON body must be an object'), { statusCode: 400 }));
+          return;
+        }
+        resolve(parsed);
       } catch {
         reject(Object.assign(new Error('Invalid JSON body'), { statusCode: 400 }));
       }
@@ -117,8 +136,14 @@ function verifyToken(authHeader = '') {
   const [body, sig] = token.split('.');
   if (!body || !sig) return null;
 
+  let actual;
+  try {
+    actual = Buffer.from(sig, 'base64url');
+  } catch {
+    return null;
+  }
+
   const expected = createHmac('sha256', config.jwtSecret).update(body).digest();
-  const actual = Buffer.from(sig, 'base64url');
   if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) {
     return null;
   }
@@ -173,8 +198,9 @@ function getOtpRecord(mobile) {
 function recordLoginFailure(key) {
   const now = Date.now();
   const current = loginAttempts.get(key) || { count: 0, blockedUntil: 0 };
-  const count = current.blockedUntil > now ? current.count : current.count + 1;
-  const blockedUntil = count >= 5 ? now + 10 * 60 * 1000 : current.blockedUntil;
+  const stillBlocked = current.blockedUntil > now;
+  const count = stillBlocked ? current.count : current.count + 1;
+  const blockedUntil = count >= 5 ? now + 10 * 60 * 1000 : 0;
   loginAttempts.set(key, { count, blockedUntil });
 }
 
@@ -209,7 +235,7 @@ async function route(req, res) {
     return sendJson(res, 200, {
       ok: true,
       service: 'calisia2vpn-backend',
-      version: '0.5.0',
+      version: '0.5.1',
       env: config.appEnv,
       now: new Date().toISOString(),
       smsProvider: config.smsProvider,
@@ -221,7 +247,7 @@ async function route(req, res) {
   if (req.method === 'GET' && url.pathname === '/v1/meta') {
     return sendJson(res, 200, {
       app: 'Calisia API',
-      version: '0.5.0',
+      version: '0.5.1',
       env: config.appEnv,
       serverTime: new Date().toISOString(),
       features: {
@@ -322,18 +348,19 @@ async function route(req, res) {
     const password = String(body.password || '');
     if (!login || !password) return sendJson(res, 400, { error: 'login and password are required' });
 
-    const throttle = ensureLoginAllowed(login);
+    const loginKey = normalizeLoginKey(login);
+    const throttle = ensureLoginAllowed(loginKey);
     if (!throttle.allowed) {
       return sendJson(res, 429, { error: 'Too many failed login attempts', retryAfterSeconds: throttle.retryAfter });
     }
 
     const user = resolveUserByLogin(login);
     if (!user || !verifyPassword(password, user.passwordHash)) {
-      recordLoginFailure(login);
+      recordLoginFailure(loginKey);
       return sendJson(res, 401, { error: 'Invalid credentials' });
     }
 
-    clearLoginFailures(login);
+    clearLoginFailures(loginKey);
     const accessToken = signToken({ userId: user.id, iat: Date.now() });
     return sendJson(res, 200, { user: sanitizeUser(user), accessToken, expiresInMs: config.tokenTtlMs });
   }
@@ -357,7 +384,7 @@ async function route(req, res) {
       return sendJson(res, 429, { error: 'OTP already sent recently', retryAfterSeconds: retryAfter });
     }
 
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code = String(randomInt(100000, 1000000));
     otpStore.set(mobile, {
       code,
       expiresAt: Date.now() + config.otpTtlMs,
@@ -384,6 +411,9 @@ async function route(req, res) {
     const code = String(body.code || '').trim();
     const item = getOtpRecord(mobile);
 
+    if (!isValidMobile(mobile) || !/^\d{6}$/.test(code)) {
+      return sendJson(res, 400, { error: 'Valid mobile and 6-digit code are required' });
+    }
     if (!item) {
       return sendJson(res, 400, { error: 'OTP expired or not found' });
     }
