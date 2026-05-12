@@ -2730,6 +2730,258 @@
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.12), rgba(45, 212, 191, 0.08));
         }
 
+        /* Polished landing experience */
+        body.minimal-home {
+            --luxury-ink: #061b2c;
+            --luxury-muted: #476179;
+            --luxury-card: rgba(255, 255, 255, 0.78);
+            --luxury-card-strong: rgba(255, 255, 255, 0.9);
+            --luxury-border: rgba(15, 118, 110, 0.13);
+            --luxury-glow: 0 34px 90px rgba(8, 64, 91, 0.14);
+            background:
+                radial-gradient(circle at 11% 8%, rgba(45, 212, 191, 0.22), transparent 22%),
+                radial-gradient(circle at 90% 12%, rgba(125, 211, 252, 0.28), transparent 24%),
+                radial-gradient(circle at 72% 86%, rgba(16, 185, 129, 0.16), transparent 25%),
+                linear-gradient(145deg, #f8fdff 0%, #edf9f7 47%, #f7fbff 100%);
+            color: var(--luxury-ink);
+        }
+
+        body.minimal-home::before {
+            display: block;
+            background-image:
+                linear-gradient(90deg, transparent 34px, rgba(15, 118, 110, 0.055) 35px, transparent 36px),
+                linear-gradient(transparent 34px, rgba(14, 165, 233, 0.05) 35px, transparent 36px);
+            background-size: 140px 140px;
+            mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.72), transparent 82%);
+            opacity: 0.75;
+        }
+
+        body.minimal-home .page-shell {
+            max-width: 1240px;
+            padding-top: 18px;
+        }
+
+        body.minimal-home .home-topbar {
+            max-width: 1240px;
+            border-radius: 24px;
+            border-color: rgba(255, 255, 255, 0.72);
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(238, 252, 249, 0.74));
+            box-shadow: 0 18px 54px rgba(6, 33, 52, 0.1);
+        }
+
+        .home-topbar-brand::before {
+            content: '';
+            width: 34px;
+            height: 34px;
+            border-radius: 13px;
+            background:
+                radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.88), transparent 24%),
+                linear-gradient(135deg, #0f766e, #38bdf8);
+            box-shadow: 0 12px 24px rgba(14, 165, 233, 0.24);
+        }
+
+        .home-chip-btn {
+            border-radius: 999px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.72);
+        }
+
+        .home-chip-btn:hover {
+            transform: translateY(-2px);
+            border-color: rgba(15, 118, 110, 0.22);
+            box-shadow: 0 14px 28px rgba(15, 118, 110, 0.12);
+        }
+
+        .home-premium-hero {
+            isolation: isolate;
+            border-radius: 46px;
+            padding: clamp(26px, 4vw, 46px);
+            background:
+                linear-gradient(130deg, rgba(255, 255, 255, 0.92), rgba(230, 250, 246, 0.74) 48%, rgba(230, 245, 255, 0.72)),
+                radial-gradient(circle at 84% 20%, rgba(14, 165, 233, 0.18), transparent 28%);
+            border-color: rgba(255, 255, 255, 0.72);
+            box-shadow: var(--luxury-glow);
+        }
+
+        .home-premium-hero::before {
+            z-index: -1;
+            background:
+                radial-gradient(circle at 14% 18%, rgba(45, 212, 191, 0.28), transparent 24%),
+                radial-gradient(circle at 70% 76%, rgba(14, 165, 233, 0.18), transparent 30%),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.24), transparent 34%);
+        }
+
+        .home-premium-hero::after {
+            border-color: rgba(255, 255, 255, 0.7);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+        }
+
+        .hero-label,
+        .hero-live-dot,
+        .panel-badge,
+        .inline-link-chip {
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.54);
+        }
+
+        .home-premium-hero h1 {
+            max-width: 720px;
+            text-shadow: 0 16px 38px rgba(6, 27, 44, 0.09);
+        }
+
+        .hero-headline-accent {
+            background: linear-gradient(90deg, #0f766e, #0284c7 74%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .home-premium-hero .hero-subtitle {
+            color: var(--luxury-muted);
+        }
+
+        .button-accent {
+            background: linear-gradient(135deg, #0f766e, #0284c7);
+            box-shadow: 0 20px 42px rgba(2, 132, 199, 0.22);
+        }
+
+        .button-outline,
+        .hero-action.button-outline,
+        .inline-link-chip {
+            background: rgba(255, 255, 255, 0.68);
+            border-color: rgba(15, 118, 110, 0.14);
+        }
+
+        .button-outline:hover,
+        .hero-action.button-outline:hover,
+        .inline-link-chip:hover {
+            background: rgba(15, 118, 110, 0.1);
+            border-color: rgba(15, 118, 110, 0.24);
+            color: #0f766e;
+        }
+
+        .hero-quote-strip--premium,
+        .hero-signal-card,
+        .weekly-stat-card,
+        .overview-panel,
+        .section-frame,
+        .dashboard-grid--premium .dashboard-card,
+        .dashboard-grid--premium .plan-list {
+            border-color: var(--luxury-border);
+            background: var(--luxury-card);
+            box-shadow: 0 22px 54px rgba(6, 33, 52, 0.08);
+        }
+
+        .hero-command-deck,
+        .content-cockpit .goal-focus-wrap {
+            background:
+                radial-gradient(circle at 92% 8%, rgba(94, 234, 212, 0.2), transparent 28%),
+                radial-gradient(circle at 12% 92%, rgba(56, 189, 248, 0.13), transparent 28%),
+                linear-gradient(160deg, #061b2c 0%, #073447 54%, #06283a 100%);
+            box-shadow: 0 34px 74px rgba(6, 27, 44, 0.28);
+        }
+
+        .hero-command-deck .hero-corner-cell,
+        .hero-command-deck .hero-corner-prayer,
+        .hero-command-deck .hero-corner-bottom,
+        .content-cockpit .goal-focus-item {
+            background: rgba(255, 255, 255, 0.065);
+            border-color: rgba(186, 230, 253, 0.15);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        }
+
+        .home-glance-strip--premium .glance-card,
+        .plan-item,
+        .time-tool-panel,
+        .mini-calendar,
+        .calendar-event,
+        .module-hub-card,
+        .life-sync-card {
+            background: var(--luxury-card-strong);
+            border-color: rgba(15, 118, 110, 0.11);
+            box-shadow: 0 16px 34px rgba(6, 33, 52, 0.065);
+        }
+
+        .overview-panel:hover,
+        .section-frame:hover,
+        .dashboard-grid--premium .dashboard-card:hover,
+        .module-hub-card:hover,
+        .plan-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 28px 70px rgba(6, 33, 52, 0.12);
+        }
+
+        .overview-panel,
+        .section-frame,
+        .dashboard-grid--premium .dashboard-card,
+        .module-hub-card,
+        .plan-item {
+            transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+        }
+
+        .panel-title,
+        .section-title,
+        .card-title-main,
+        .list-title {
+            color: var(--luxury-ink);
+        }
+
+        .panel-eyebrow,
+        .hero-signal-card span,
+        .weekly-stat-card span,
+        .glance-card strong {
+            color: #64748b;
+        }
+
+        .module-hub-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-hub-card::after {
+            content: '';
+            position: absolute;
+            inset: auto 16px 10px;
+            height: 3px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #0f766e, #38bdf8);
+            transform: scaleX(0);
+            transform-origin: center;
+            transition: transform 0.22s ease;
+        }
+
+        .module-hub-card:hover::after {
+            transform: scaleX(1);
+        }
+
+        body[data-theme='dark'].minimal-home .home-topbar,
+        body[data-theme='dark'] .home-premium-hero,
+        body[data-theme='dark'] .overview-panel,
+        body[data-theme='dark'] .section-frame,
+        body[data-theme='dark'] .dashboard-grid--premium .dashboard-card,
+        body[data-theme='dark'] .dashboard-grid--premium .plan-list {
+            border-color: rgba(94, 234, 212, 0.15);
+            background:
+                linear-gradient(180deg, rgba(8, 24, 36, 0.9), rgba(8, 31, 43, 0.82));
+        }
+
+        body[data-theme='dark'].minimal-home::before {
+            display: block;
+            opacity: 0.2;
+        }
+
+        body[data-theme='dark'] .home-chip-btn:hover {
+            border-color: rgba(94, 234, 212, 0.28);
+            box-shadow: 0 14px 28px rgba(45, 212, 191, 0.08);
+        }
+
+        body[data-theme='dark'] .hero-headline-accent {
+            background: linear-gradient(90deg, #7dd3fc, #5eead4);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
         @media (max-width: 1180px) {
             .home-premium-hero,
             .overview-board,
@@ -2902,10 +3154,10 @@
                     <span class="hero-live-dot">Focused Today</span>
                 </div>
                 <h1>
-                    صفحه‌ای که شلوغ نیست،
-                    <span class="hero-headline-accent">ولی همه‌چیز را در مشتت می‌گذارد</span>
+                    روزت را مرتب، آرام و زیبا شروع کن
+                    <span class="hero-headline-accent">همه چیز درست جلوی چشمت است</span>
                 </h1>
-                <p class="hero-subtitle">چیدمان جدید، تصمیم‌گیری را از همان چند ثانیه اول راحت می‌کند: اولویت‌ها، نبض روز، ابزار تمرکز و ورودی سریع به همه ماژول‌ها بدون حشو و بدون گم شدن بین کارت‌های اضافه.</p>
+                <p class="hero-subtitle">خانه‌ی جدید Calisia مثل یک میز کار خلوت و هوشمند است: اولویت‌های امروز، تمرکز، تقویم، حال و انرژی و مسیر اهداف را در یک نمای چشم‌نواز و سریع کنار هم می‌گذارد.</p>
                 <div class="hero-actions">
                     <button class="hero-action button-accent" type="button" onclick="scrollToTodayPlans()">ورود به اولویت‌های امروز</button>
                     <a href="#focusStudio" class="hero-action button-outline">استودیو تمرکز</a>
