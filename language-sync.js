@@ -1,6 +1,6 @@
 (function () {
     var STORAGE_KEY = 'preferredLanguage';
-    var DEFAULT_LANGUAGE = 'en';
+    var DEFAULT_LANGUAGE = 'fa';
     var currentLanguage = DEFAULT_LANGUAGE;
 
     function readLanguage() {

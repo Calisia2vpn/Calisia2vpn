@@ -64,6 +64,24 @@ paths:
         '200':
           description: User profile
 
+  /v1/auth/refresh:
+    post:
+      summary: Issue a new access token using a refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: New access token
+        '401':
+          description: Invalid or unknown refresh token
+
   /v1/auth/otp/request:
     post:
       summary: Request OTP code (via pluggable SMS gateway)
