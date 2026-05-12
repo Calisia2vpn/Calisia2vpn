@@ -7,7 +7,7 @@ import { createMemoryRateLimiter, requestPersonalCoachReply } from './ai.js';
 import { query } from './db/index.js';
 import { createUser, findUserById, findUserByLogin, sanitizeUser } from './repositories/users.js';
 import { upsertOtp, getOtp, incrementOtpAttempts, deleteOtp } from './repositories/otps.js';
-import { createSession } from './repositories/sessions.js';
+import { createSession, findSessionByToken } from './repositories/sessions.js';
 
 const loginAttempts = new Map();
 const smsGateway = createSmsGateway(config.smsProvider);
@@ -43,6 +43,13 @@ function verifyPassword(password, stored) {
   return incoming.length === saved.length && timingSafeEqual(incoming, saved);
 }
 function validatePassword(password) { return typeof password === 'string' && password.length >= 8; }
+function constantTimeEqualString(a, b) {
+  const x = Buffer.from(String(a), 'utf8');
+  const y = Buffer.from(String(b), 'utf8');
+  if (x.length !== y.length) return false;
+  return timingSafeEqual(x, y);
+}
+const MAX_CHECKOUT_AMOUNT = 1e14;
 function getClientIdentifier(req) {
   const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
   return forwarded || req.socket?.remoteAddress || 'unknown';
@@ -182,6 +189,17 @@ async function route(req, res) {
     return sendJson(res, 200, { user: sanitizeUser(user), subscription: await ensureSubscriptionFor(user.id) });
   }
 
+  if (req.method === 'POST' && url.pathname === '/v1/auth/refresh') {
+    const body = await parseBody(req);
+    const refreshToken = String(body.refreshToken || '').trim();
+    if (!refreshToken) return sendJson(res, 400, { error: 'refreshToken is required' });
+    const row = await findSessionByToken(refreshToken);
+    if (!row) return sendJson(res, 401, { error: 'Invalid refresh token' });
+    const user = await findUserById(row.user_id);
+    if (!user) return sendJson(res, 401, { error: 'Invalid refresh token' });
+    return sendJson(res, 200, { accessToken: signToken({ userId: user.id }), expiresInMs: config.tokenTtlMs });
+  }
+
   if (req.method === 'POST' && url.pathname === '/v1/auth/otp/request') {
     const body = await parseBody(req);
     const mobile = normalizeMobile(body.mobile);
@@ -225,11 +243,27 @@ async function route(req, res) {
     return sendJson(res, 200, { verified: true, subscription: result.rows[0] });
   }
 
+  if (req.method === 'POST' && url.pathname === '/v1/subscriptions/webhook/google') {
+    const secret = String(req.headers['x-webhook-secret'] || '').trim();
+    if (!constantTimeEqualString(config.webhookSecret, secret)) return sendJson(res, 401, { error: 'Unauthorized' });
+    try {
+      await parseBody(req);
+    } catch (err) {
+      const code = Number(err?.statusCode) || 400;
+      return sendJson(res, code, { error: err.message || 'Bad request' });
+    }
+    return sendJson(res, 202, { accepted: true, note: 'stub: no subscription state updated' });
+  }
+
   if (req.method === 'POST' && url.pathname === '/v1/payments/checkout') {
     const session = verifyToken(req.headers.authorization);
     if (!session) return sendJson(res, 401, { error: 'Unauthorized' });
     const body = await parseBody(req);
-    const result = await paymentGateway.createCheckoutSession({ userId: session.userId, amount: Number(body.amount), currency: String(body.currency || 'IRR').toUpperCase(), planId: String(body.planId || '').trim() });
+    const amount = Number(body.amount);
+    if (!Number.isFinite(amount) || amount <= 0 || amount > MAX_CHECKOUT_AMOUNT) {
+      return sendJson(res, 400, { error: 'amount must be a finite number between 0 (exclusive) and the configured maximum' });
+    }
+    const result = await paymentGateway.createCheckoutSession({ userId: session.userId, amount, currency: String(body.currency || 'IRR').toUpperCase(), planId: String(body.planId || '').trim() });
     return sendJson(res, 200, result);
   }
 

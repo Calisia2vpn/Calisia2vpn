@@ -1,6 +1,7 @@
 (function () {
   const API_BASE_KEY = 'apiBaseUrl';
   const TOKEN_KEY = 'accessToken';
+  const REFRESH_KEY = 'refreshToken';
   const USER_KEY = 'currentUser';
   const GUEST_KEY = 'guestMode';
 
@@ -78,6 +79,7 @@
   function persistAuth(payload) {
     localStorage.removeItem(GUEST_KEY);
     localStorage.setItem(TOKEN_KEY, payload.accessToken);
+    if (payload.refreshToken) localStorage.setItem(REFRESH_KEY, payload.refreshToken);
     if (payload.user) localStorage.setItem(USER_KEY, JSON.stringify(payload.user));
   }
 
@@ -92,23 +94,45 @@
     }
   }
 
+  async function tryRefreshAccessToken() {
+    const refreshToken = localStorage.getItem(REFRESH_KEY);
+    if (!refreshToken) return null;
+    try {
+      const data = await callApi('/v1/auth/refresh', { refreshToken });
+      if (!data.accessToken) return null;
+      localStorage.setItem(TOKEN_KEY, data.accessToken);
+      return data.accessToken;
+    } catch {
+      return null;
+    }
+  }
+
   async function validateCurrentSession() {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) return false;
     const payload = parseJwtPayload(token);
     if (!payload || (payload.exp && Date.now() > Number(payload.exp))) {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
       localStorage.removeItem(USER_KEY);
       return false;
     }
     try {
-      const res = await fetch(`${apiBase()}/v1/auth/me`, {
+      let res = await fetch(`${apiBase()}/v1/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (res.status === 401) {
+        const next = await tryRefreshAccessToken();
+        if (!next) throw new Error('invalid');
+        res = await fetch(`${apiBase()}/v1/auth/me`, {
+          headers: { Authorization: `Bearer ${next}` }
+        });
+      }
       if (!res.ok) throw new Error('invalid');
       return true;
     } catch {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(REFRESH_KEY);
       localStorage.removeItem(USER_KEY);
       return false;
     }
@@ -179,6 +203,7 @@
   function onSkipAuth() {
     localStorage.setItem(GUEST_KEY, '1');
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
     localStorage.removeItem(USER_KEY);
     window.location.href = 'index.html';
   }
