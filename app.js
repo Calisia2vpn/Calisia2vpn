@@ -26,6 +26,14 @@ function getUiLanguage() {
     return saved === 'fa' ? 'fa' : 'en';
 }
 
+function themeToggleLabelFor(nextTheme) {
+    const fa = getUiLanguage() === 'fa';
+    if (nextTheme === 'dark') {
+        return fa ? 'تم تاریک' : 'Dark mode';
+    }
+    return fa ? 'تم روشن' : 'Light mode';
+}
+
 function setTheme(theme) {
     body.setAttribute('data-theme', theme);
     document.documentElement.style.colorScheme = theme === 'dark' ? 'dark' : 'light';
@@ -35,7 +43,8 @@ function setTheme(theme) {
     }
     const themeToggle = document.getElementById('themeToggle');
     if (themeToggle) {
-        themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+        const next = theme === 'dark' ? 'light' : 'dark';
+        themeToggle.textContent = themeToggleLabelFor(next);
     }
     if (typeof window.updateThemeNavLabel === 'function') {
         window.updateThemeNavLabel();
@@ -49,6 +58,11 @@ function toggleTheme() {
 }
 
 function updateHeaderClock() {
+    const headerDateEl = document.getElementById('headerDate');
+    const headerClockEl = document.getElementById('headerClock');
+    if (!headerDateEl || !headerClockEl) {
+        return;
+    }
     const now = new Date();
     const jDate = jalaali.toJalaali(now);
     const monthNamesFa = ['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
@@ -58,9 +72,9 @@ function updateHeaderClock() {
 
     if (getUiLanguage() === 'fa') {
         const dayName = weekdayNamesFa[now.getDay()];
-        document.getElementById('headerDate').textContent = `${dayName} ${formatFaPlain(jDate.jd)} ${monthNamesFa[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
+        headerDateEl.textContent = `${dayName} ${formatFaPlain(jDate.jd)} ${monthNamesFa[jDate.jm - 1]} ${formatFaPlain(jDate.jy)}`;
     } else {
-        document.getElementById('headerDate').textContent = new Intl.DateTimeFormat('en-US', {
+        headerDateEl.textContent = new Intl.DateTimeFormat('en-US', {
             weekday: 'long',
             month: 'long',
             day: 'numeric',
@@ -68,7 +82,7 @@ function updateHeaderClock() {
         }).format(now);
     }
 
-    document.getElementById('headerClock').textContent = now.toLocaleTimeString(locale, {
+    headerClockEl.textContent = now.toLocaleTimeString(locale, {
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit'
@@ -149,6 +163,15 @@ function showPageToast(message, type = 'success') {
     }, 2800);
 }
 
+function moodSnapshotText(mood) {
+    const lang = getUiLanguage() === 'fa' ? 'fa' : 'en';
+    const table = MOOD_SNAPSHOT_LABELS[lang];
+    if (mood && table[mood]) {
+        return table[mood];
+    }
+    return lang === 'fa' ? 'هنوز ثبت نشده — یک حالت انتخاب کن' : 'Not set — pick a mood below';
+}
+
 function loadDashboardSnapshot() {
     const calories = Number(localStorage.getItem('todayCalories')) || 1450;
     const snapshotCalories = document.getElementById('snapshotCalories');
@@ -157,13 +180,30 @@ function loadDashboardSnapshot() {
     }
     const snapshotMood = document.getElementById('snapshotMood');
     if (snapshotMood) {
-        snapshotMood.textContent = 'آرام و پرانرژی';
+        const savedMood = localStorage.getItem(MOOD_STORAGE_KEY) || '';
+        snapshotMood.textContent = moodSnapshotText(savedMood);
     }
 }
 
 const TIMER_STORAGE_KEY = 'dashboardTimerState';
 const STOPWATCH_STORAGE_KEY = 'dashboardStopwatchState';
 const MOOD_STORAGE_KEY = 'dashboardMoodCheckin';
+const MOOD_SNAPSHOT_LABELS = {
+    fa: {
+        awful: 'سنگین و نیاز به آرامش',
+        low: 'کم‌انرژی',
+        ok: 'متعادل',
+        good: 'مثبت و آماده اقدام',
+        great: 'پر انرژی و آماده چالش'
+    },
+    en: {
+        awful: 'Heavy — go gentle',
+        low: 'Low energy',
+        ok: 'Balanced',
+        good: 'Positive & ready',
+        great: 'High energy'
+    }
+};
 const WALLPAPER_STORAGE_KEY = 'dashboardWallpaper';
 const ADHAN_STORAGE_KEY_PREFIX = 'adhanEvents';
 const ADHAN_META_KEY_PREFIX = 'adhanEventsMeta';
@@ -698,14 +738,28 @@ function initializeMoodCheckin() {
         good: 'انرژی خوبه؛ یک کار مهم را کامل ببند و جشن کوچیک بگیر.',
         great: 'فوق‌العاده‌ای! سخت‌ترین کار روز را همین الان شروع کن.'
     };
-    const savedMood = localStorage.getItem(MOOD_STORAGE_KEY) || '';
+    let savedMood = localStorage.getItem(MOOD_STORAGE_KEY) || '';
+    if (savedMood && !Object.prototype.hasOwnProperty.call(moodMap, savedMood)) {
+        savedMood = '';
+    }
 
     function setMood(mood) {
-        localStorage.setItem(MOOD_STORAGE_KEY, mood);
+        if (!Object.prototype.hasOwnProperty.call(moodMap, mood)) {
+            mood = '';
+        }
+        if (mood) {
+            localStorage.setItem(MOOD_STORAGE_KEY, mood);
+        } else {
+            localStorage.removeItem(MOOD_STORAGE_KEY);
+        }
         root.querySelectorAll('.mood-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.mood === mood);
         });
-        hint.textContent = moodMap[mood] || 'حالت امروز را انتخاب کن.';
+        hint.textContent = mood ? moodMap[mood] : 'حالت امروز را انتخاب کن تا یک پیشنهاد کوتاه و کاربردی بگیری.';
+        const snapshotMood = document.getElementById('snapshotMood');
+        if (snapshotMood) {
+            snapshotMood.textContent = moodSnapshotText(mood);
+        }
     }
 
     root.querySelectorAll('.mood-btn').forEach(btn => {
@@ -2138,9 +2192,16 @@ window.addEventListener('storage', event => {
 });
 
 window.addEventListener('languagechange', () => {
+    const currentTheme = body.getAttribute('data-theme') || 'light';
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        const next = currentTheme === 'dark' ? 'light' : 'dark';
+        themeToggle.textContent = themeToggleLabelFor(next);
+    }
     if (document.getElementById('headerDate')) {
         updateHeaderClock();
     }
+    loadDashboardSnapshot();
     if (document.getElementById('timerDisplay') || document.getElementById('stopwatchDisplay') || document.getElementById('miniCalendar')) {
         loadDashboardSnapshot();
         renderTodaySchedule();
